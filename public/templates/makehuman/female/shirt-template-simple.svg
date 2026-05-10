@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#f5f5f5"/>
+  <rect x="156" y="100" width="200" height="300" fill="none" stroke="#999" stroke-width="3" stroke-dasharray="8,8"/>
+  <text x="256" y="450" text-anchor="middle" font-family="system-ui" font-size="20" fill="#999">SHIRT FRONT</text>
+  <text x="256" y="250" text-anchor="middle" font-family="system-ui" font-size="16" fill="#ccc">Draw your design here</text>
+</svg>

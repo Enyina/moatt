@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0E0E0E;
+  --background-alt: #000000;
+  --foreground: #FFFFFF;
+  --primary: #EA931D;
+  --primary-hover: #D4850F;
+  --surface: #171717;
+  --surface-hover: #222222;
+  --text-secondary: #CCCCCC;
+  --text-muted: #4C4B4B;
+  --border: rgba(255, 255, 255, 0.1);
+  --input-bg: #171717;
+  --input-border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] {
+  --background: #FFFFFF;
+  --background-alt: #F5F5F5;
+  --foreground: #1A1A1A;
+  --surface: #F5F5F5;
+  --surface-hover: #EFEFEF;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border: rgba(0, 0, 0, 0.1);
+  --input-bg: #FFFFFF;
+  --input-border: #E0E0E0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-surface: var(--surface);
+  --font-heading: var(--font-nunito);
+  --font-body: var(--font-dm);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-weight: 300;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 900;
+}
+
+.font-logo {
+  font-family: var(--font-pacifico);
+}
+
+.font-lily {
+  font-family: 'Lily Script One', cursive;
+}
