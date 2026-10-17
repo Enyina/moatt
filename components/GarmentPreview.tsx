@@ -28,7 +28,7 @@ function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',
  // Map artwork coordinates within the preview silhouette's full bounding box.
  const left=-1.5*w,right=1.5*w,bottom=hem,top=1.04;
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i);uv.setXY(i,(x-left)/(right-left),(y-bottom)/(top-bottom));}
- uv.needsUpdate=true;geo.computeVertexNormals();const shell=new THREE.ExtrudeGeometry(shape,{depth:.30,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:.015,bevelThickness:.015});shell.translate(0,0,-.15);return {panel:geo,shell};
+ uv.needsUpdate=true;geo.computeVertexNormals();const shell=new THREE.ExtrudeGeometry(shape,{depth:.72,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:.015,bevelThickness:.015});shell.translate(0,0,-.36);return {panel:geo,shell};
 }
 function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
@@ -38,8 +38,8 @@ function Garment({doc}:{doc:StudioDocument}){
  const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:.95}),[back,doc.baseColor]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
  return <group position={[0,1.54,0]}>
- <mesh geometry={geo.panel} position={[0,0,.17]} material={frontMat}/>
- <mesh geometry={geo.panel} rotation={[0,Math.PI,0]} position={[0,0,-.17]} material={backMat}/>
+ <mesh geometry={geo.panel} position={[0,0,.39]} material={frontMat}/>
+ <mesh geometry={geo.panel} rotation={[0,Math.PI,0]} position={[0,0,-.39]} material={backMat}/>
  <mesh geometry={geo.shell}><meshStandardMaterial color={doc.baseColor} roughness={.96}/></mesh>
  {doc.garment==='hoodie'&&<>
  <mesh position={[0,1.0,-.19]}><sphereGeometry args={[.49,24,18,0,Math.PI*2,0,Math.PI*.57]}/><meshStandardMaterial color={doc.baseColor} side={THREE.DoubleSide} roughness={.97}/></mesh>
@@ -52,7 +52,7 @@ function Mannequin({doc}:{doc:StudioDocument}){
  useEffect(()=>{let live=true;new GLTFLoader().load((process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/mannequin.glb',gltf=>{if(live)setAsset(gltf.scene)},undefined,()=>{if(live)setAsset(null)});return()=>{live=false}},[]);
  const height=doc.body==='tall'?1.09:1;
  return <group scale={[1,height,1]}>
- {asset?<primitive object={asset} scale={.56} position={[0,1.43,0]}/>:<>
+ {asset?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>:<>
  <mesh position={[0,3.05,0]}><sphereGeometry args={[.25,28,22]}/><meshStandardMaterial color="#af8f77" roughness={.92}/></mesh>
  <mesh position={[0,2.74,0]}><cylinderGeometry args={[.12,.14,.37,20]}/><meshStandardMaterial color="#af8f77"/></mesh>
  <mesh position={[0,.78,0]}><cylinderGeometry args={[.49,.43,.5,24]}/><meshStandardMaterial color="#383b43"/></mesh>
