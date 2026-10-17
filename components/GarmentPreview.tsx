@@ -51,13 +51,14 @@ function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
  const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized',doc.sleeve,doc.hem,doc.neck),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>{geo.panel.dispose();geo.shell.dispose()},[geo]);
- const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:front?'#ffffff':doc.baseColor,map:front||null,side:THREE.DoubleSide,roughness:.95}),[front,doc.baseColor]);
- const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:.95}),[back,doc.baseColor]);
+ const fabricRoughness=doc.material==='satin'?.24:doc.material==='denim'?.98:.86;
+ const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:front?'#ffffff':doc.baseColor,map:front||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[front,doc.baseColor,fabricRoughness]);
+ const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[back,doc.baseColor,fabricRoughness]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
  return <group position={[0,1.54,0]}>
  <mesh geometry={geo.panel} position={[0,0,.39]} material={frontMat}/>
  <mesh geometry={geo.panel} rotation={[0,Math.PI,0]} position={[0,0,-.39]} material={backMat}/>
- <mesh geometry={geo.shell}><meshStandardMaterial color={doc.baseColor} roughness={.96}/></mesh>
+ <mesh geometry={geo.shell}><meshStandardMaterial color={doc.baseColor} roughness={fabricRoughness}/></mesh>
  {doc.garment==='hoodie'&&<>
  <mesh position={[0,1.0,-.19]}><sphereGeometry args={[.49,24,18,0,Math.PI*2,0,Math.PI*.57]}/><meshStandardMaterial color={doc.baseColor} side={THREE.DoubleSide} roughness={.97}/></mesh>
  <mesh position={[0,-.19,.215]}><boxGeometry args={[.78,.33,.06]}/><meshStandardMaterial color={doc.baseColor}/></mesh>
