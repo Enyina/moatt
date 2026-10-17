@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('creates front and back designs and restores saved project',async({page})=>{
- await page.goto('/');await expect(page.getByText('MOATT')).toBeVisible();
+ await page.goto('/');await expect(page.getByText(/MOATT/)).toBeVisible();
  await page.getByRole('button',{name:'Add text'}).click();
  await expect(page.getByText('text: YOUR DESIGN')).toBeVisible();
  await page.getByLabel('Text',{exact:true}).fill('FRONT TEST');
