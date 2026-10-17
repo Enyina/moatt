@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent,PointerEvent} from 'react';
 import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
-import {renderArtwork,downloadBlob,savePng,drawLayer} from '../lib/render-design';
+import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 const Preview=dynamic(()=>import('./GarmentPreview'),{ssr:false,loading:()=> <div className="empty3d">Loading preview…</div>});
 type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument[]};
 const START:History={past:[],present:initialDocument(),future:[]};
