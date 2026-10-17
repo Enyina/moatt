@@ -72,3 +72,17 @@ test('nudges the selected layer with keyboard and can undo',async({page})=>{
  await page.getByRole('button',{name:'Undo'}).click();
  await expect(input).toHaveValue(String(before));
 });
+
+test('loads a verified mannequin and retains garment construction changes',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('combobox',{name:'Sleeve length'}).selectOption('long');
+ await page.getByRole('combobox',{name:'Hem length'}).selectOption('cropped');
+ await page.getByRole('combobox',{name:'Neckline'}).selectOption('wide');
+ const asset=page.waitForResponse(r=>r.url().includes('/models/mannequin.glb'));
+ await page.getByRole('button',{name:'3D preview'}).click();
+ expect((await asset).status()).toBe(200);
+ await page.reload();
+ await expect(page.getByRole('combobox',{name:'Sleeve length'})).toHaveValue('long');
+ await expect(page.getByRole('combobox',{name:'Hem length'})).toHaveValue('cropped');
+ await expect(page.getByRole('combobox',{name:'Neckline'})).toHaveValue('wide');
+});
