@@ -1,7 +1,7 @@
 'use client';
 import {Component,useEffect,useMemo,useState} from 'react';
 import type {ReactNode} from 'react';
-import {Canvas,useThree} from '@react-three/fiber';
+import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -63,6 +63,12 @@ function Mannequin({doc}:{doc:StudioDocument}){
  <Garment doc={doc}/>
  </group>;
 }
+function RenderingDiagnostics(){
+ const {gl}=useThree();
+ const tick=useMemo(()=>({count:0}),[]);
+ useFrame(()=>{tick.count++;if(tick.count%45===0){const canvas=gl.domElement;canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);}});
+ return null;
+}
 function CameraPosition({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.5,side==='front'?6:-6);camera.lookAt(0,1.4,0)},[camera,side]);return null}
 class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
@@ -71,7 +77,7 @@ class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
 export default function GarmentPreview({doc,side}:{doc:StudioDocument;side:Side}){
  return <PreviewBoundary><Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}>
  <color attach="background" args={['#252b35']}/><ambientLight intensity={2.1}/><directionalLight position={[4,8,6]} intensity={1.5}/>
- <Mannequin doc={doc}/><CameraPosition side={side}/>
+ <Mannequin doc={doc}/><CameraPosition side={side}/><RenderingDiagnostics/>
  <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
  <gridHelper args={[10,10,'#646e78','#38404c']} position={[0,-.75,0]}/>
  </Canvas></PreviewBoundary>;
