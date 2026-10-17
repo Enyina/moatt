@@ -92,6 +92,8 @@ test('keeps GPU allocations bounded across fabric and silhouette edits',async({p
  await page.getByRole('button',{name:'3D preview'}).click();
  const canvas=page.locator('.preview-stage canvas');
  await expect.poll(()=>canvas.getAttribute('data-gpu-textures')).not.toBeNull();
+ const baselineTextures=Number(await canvas.getAttribute('data-gpu-textures'));
+ const baselineGeometries=Number(await canvas.getAttribute('data-gpu-geometries'));
  for(let i=0;i<12;i++){
   await page.getByLabel('Fabric color').fill(i%2===0?'#ff4422':'#334455');
   await page.getByRole('combobox',{name:'Sleeve length'}).selectOption(i%2===0?'long':'short');
@@ -99,8 +101,9 @@ test('keeps GPU allocations bounded across fabric and silhouette edits',async({p
  await page.waitForTimeout(1000);
  const textures=Number(await canvas.getAttribute('data-gpu-textures'));
  const geometries=Number(await canvas.getAttribute('data-gpu-geometries'));
- expect(textures).toBeLessThanOrEqual(30);
- expect(geometries).toBeLessThanOrEqual(70);
+ console.log('GPU allocations',JSON.stringify({baselineTextures,baselineGeometries,textures,geometries}));
+ expect(textures-baselineTextures).toBeLessThanOrEqual(4);
+ expect(geometries-baselineGeometries).toBeLessThanOrEqual(4);
 });
 
 test('exports independent transparent artwork rather than fabric color',async({page})=>{
