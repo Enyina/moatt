@@ -63,6 +63,7 @@ interface WardrobeState {
   // CRUD
   deleteItem: (itemId: string) => Promise<boolean>;
   updateItem: (itemId: string, updates: Partial<WardrobeItem>) => Promise<boolean>;
+  saveDesignFromDataUrl: (dataUrl: string, name: string) => Promise<WardrobeItem>;
   
   // Error handling
   clearError: () => void;
@@ -278,6 +279,25 @@ export const useWardrobeStore = create<WardrobeState>()(
           });
           return false;
         }
+      },
+
+      saveDesignFromDataUrl: async (dataUrl, name) => {
+        const newItem: WardrobeItem = {
+          id: `design_${Date.now()}`,
+          name,
+          imageUrl: dataUrl,
+          category: 'texture',
+          tags: ['custom', 'design'],
+          createdAt: new Date().toISOString(),
+          isDefault: false,
+        };
+
+        set(state => ({
+          items: [newItem, ...state.items],
+          recentItems: [newItem, ...state.recentItems].slice(0, 5),
+        }));
+
+        return newItem;
       },
 
       // Clear error

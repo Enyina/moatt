@@ -133,37 +133,53 @@ export function ClothingEditor({
   // Fallback template creator (draws a simple shirt outline)
   const createFallbackTemplate = (canvas: fabric.Canvas) => {
     console.log('[ClothingEditor] Creating fallback template');
-    const centerX = width / 2;
-    const centerY = height / 2;
+    const isHoodie = useEditorStore.getState().product.metadata.category === 'hoodie';
 
-    // Shirt outline group
-    const shirtGroup = new fabric.Group([
-      // Front panel
-      new fabric.Rect({
-        left: centerX - 200,
-        top: centerY - 250,
-        width: 400,
-        height: 500,
-        fill: 'transparent',
-        stroke: '#999',
-        strokeWidth: 3,
-        strokeDashArray: [10, 10],
-      }),
-      // Label
-      new fabric.Text('SHIRT TEMPLATE (FRONT)', {
-        left: centerX,
-        top: centerY + 280,
-        fontSize: 36,
-        fill: '#999',
-        textAlign: 'center',
-        originX: 'center',
-      }),
-    ], {
-      selectable: false,
-      evented: false,
-    });
+    const createRegion = (x: number, y: number, w: number, h: number, label: string) => {
+      return new fabric.Group([
+        new fabric.Rect({
+          left: x,
+          top: y,
+          width: w,
+          height: h,
+          fill: 'transparent',
+          stroke: '#999',
+          strokeWidth: 2,
+          strokeDashArray: [10, 10],
+        }),
+        new fabric.Text(label, {
+          left: x + w / 2,
+          top: y + h / 2,
+          fontSize: 48,
+          fill: '#999',
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'center',
+        })
+      ], {
+        selectable: false,
+        evented: false,
+      });
+    };
 
-    canvas.add(shirtGroup);
+    if (isHoodie) {
+      const thirdWidth = width / 3;
+      const halfHeight = height / 2;
+      canvas.add(createRegion(0, 0, thirdWidth, halfHeight, 'FRONT'));
+      canvas.add(createRegion(thirdWidth, 0, thirdWidth, halfHeight, 'BACK'));
+      canvas.add(createRegion(thirdWidth * 2, 0, thirdWidth, halfHeight, 'HOOD'));
+      canvas.add(createRegion(0, halfHeight, thirdWidth, halfHeight, 'LEFT SLEEVE'));
+      canvas.add(createRegion(thirdWidth, halfHeight, thirdWidth, halfHeight, 'RIGHT SLEEVE'));
+      canvas.add(createRegion(thirdWidth * 2, halfHeight, thirdWidth, halfHeight, 'POCKET'));
+    } else {
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      canvas.add(createRegion(0, 0, halfWidth, halfHeight, 'FRONT'));
+      canvas.add(createRegion(halfWidth, 0, halfWidth, halfHeight, 'BACK'));
+      canvas.add(createRegion(0, halfHeight, halfWidth, halfHeight, 'LEFT SLEEVE'));
+      canvas.add(createRegion(halfWidth, halfHeight, halfWidth, halfHeight, 'RIGHT SLEEVE'));
+    }
+
     canvas.renderAll();
     setIsLoading(false); // CRITICAL: Stop loading spinner
   };

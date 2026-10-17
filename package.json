@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:platform": "tsc --noEmit --pretty false --skipLibCheck --jsx react-jsx --esModuleInterop --module esnext --moduleResolution bundler --target ES2017 src/lib/platform/garmentPlatform.contract.test.ts src/studio/core/studioState.contract.test.ts src/studio/core/designTools.contract.test.ts src/studio/core/studioExport.contract.test.ts src/studio/engine/threeToBabylon.contract.test.ts src/studio/engine/studioRenderInputs.contract.test.ts"
   },
   "dependencies": {
+    "@babylonjs/core": "^9.23.0",
+    "@babylonjs/loaders": "^9.23.0",
     "@fontsource/lily-script-one": "^5.2.8",
     "@fontsource/nunito-sans": "^5.2.7",
     "@react-three/drei": "^10.7.7",

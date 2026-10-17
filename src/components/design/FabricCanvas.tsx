@@ -1,30 +1,30 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
 import { useEditorStore } from '@/stores';
 
 interface FabricCanvasProps {
-  onTextureUpdate: (dataUrl: string) => void;
   width?: number;
   height?: number;
+  templateUrl?: string;
 }
 
 export function FabricCanvas({
-  onTextureUpdate,
   width = 2048,
-  height = 2048
+  height = 2048,
+  templateUrl = '/data/templates/shirt_uv.png' // Default template
 }: FabricCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
 
   const { 
     brushConfig, 
-    lastUV, 
-    selectedTool, 
-    shapeStartUV, 
-    shapePreviewUV 
+    selectedTool,
+    renderStage,
+    setFinalTexture,
+    fabricCanvasState,
+    setFabricCanvasState
   } = useEditorStore();
 
   // Initialize Canvas
@@ -34,187 +34,139 @@ export function FabricCanvas({
     const canvas = new fabric.Canvas(canvasRef.current, {
       width,
       height,
-      backgroundColor: 'transparent',
-      isDrawingMode: true,
+      backgroundColor: 'white',
+      isDrawingMode: selectedTool === 'brush' || selectedTool === 'eraser',
     });
 
     fabricRef.current = canvas;
 
-    // Ensure brush is properly initialized
-    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-
-    // Configure brush
-    const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
+    // Pro Upgrade: Advanced Brush Smoothing
+    const brush = new fabric.PencilBrush(canvas);
     brush.color = brushConfig.color;
     brush.width = brushConfig.size;
+    brush.decimate = 2; // High-end path simplification
+    brush.strokeLineCap = 'round';
+    brush.strokeLineJoin = 'round';
+    canvas.freeDrawingBrush = brush;
 
-    // Update texture on changes
-    const updateTexture = () => {
-      const dataUrl = canvas.toDataURL({
-        format: 'png',
-        quality: 1,
+    // Load existing state or default template
+    if (fabricCanvasState) {
+      canvas.loadFromJSON(fabricCanvasState, () => {
+        canvas.renderAll();
       });
-      onTextureUpdate(dataUrl);
+    } else {
+      // Load Template Image or Draw Silhouette
+      const actualTemplate = templateUrl.includes('shirt') ? '/templates/makehuman/female/shirt-template-simple.svg' : templateUrl;
+
+      fabric.loadSVGFromURL(actualTemplate, (objects, options) => {
+        if (!fabricRef.current) return;
+        const obj = fabric.util.groupSVGElements(objects, options);
+        obj.set({
+          selectable: false,
+          evented: false,
+          opacity: 0.1,
+        });
+        canvas.add(obj);
+        obj.center();
+        obj.scaleToWidth(width * 0.8);
+        canvas.renderAll();
+      });
+
+      // Pro: Draw Gown Fallback if needed
+      if (templateUrl.includes('gown')) {
+        const gown = new fabric.Path('M 500 100 L 700 100 L 850 800 L 350 800 Z', {
+          fill: 'transparent',
+          stroke: '#ccc',
+          strokeWidth: 2,
+          selectable: false,
+          opacity: 0.2
+        });
+        canvas.add(gown);
+        gown.center();
+        gown.scaleToHeight(height * 0.8);
+      }
+    }
+
+    // Sync state changes to store
+    const syncState = () => {
+      setFabricCanvasState(canvas.toJSON());
     };
 
-    canvas.on('mouse:up', updateTexture);
-    canvas.on('object:modified', updateTexture);
-    canvas.on('object:added', updateTexture);
+    canvas.on('path:created', syncState);
+    canvas.on('object:modified', syncState);
+    canvas.on('object:added', syncState);
+    canvas.on('object:removed', syncState);
 
     return () => {
+      canvas.off('path:created', syncState);
+      canvas.off('object:modified', syncState);
+      canvas.off('object:added', syncState);
+      canvas.off('object:removed', syncState);
       canvas.dispose();
       fabricRef.current = null;
     };
-  }, [width, height, onTextureUpdate]);
+  }, [width, height, templateUrl]); // Do NOT include fabricCanvasState here to avoid infinite loops
 
   // Sync brush config and tool
   useEffect(() => {
     const canvas = fabricRef.current;
     if (!canvas) return;
 
-    // Wait a tick for brush to be initialized
-    const timeoutId = setTimeout(() => {
-      if (!canvas.freeDrawingBrush) {
-        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-      }
+    canvas.isDrawingMode = selectedTool === 'brush' || selectedTool === 'eraser';
 
+    if (canvas.freeDrawingBrush) {
       const brush = canvas.freeDrawingBrush as fabric.PencilBrush;
-      if (brush) {
-        brush.color = brushConfig.color;
-        brush.width = brushConfig.size;
+      brush.color = brushConfig.color;
+      brush.width = brushConfig.size;
 
-        if (selectedTool === 'eraser') {
-          // @ts-ignore
-          canvas.freeDrawingBrush.globalCompositeOperation = 'destination-out';
-        } else {
-          // @ts-ignore
-          canvas.freeDrawingBrush.globalCompositeOperation = 'source-over';
-        }
+      if (selectedTool === 'eraser') {
+        // @ts-ignore
+        canvas.freeDrawingBrush.globalCompositeOperation = 'destination-out';
+      } else {
+        // @ts-ignore
+        canvas.freeDrawingBrush.globalCompositeOperation = 'source-over';
       }
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
+    }
   }, [brushConfig, selectedTool]);
 
-  // Handle 3D Raycasting (Painting from 3D View)
-  const lastPointRef = useRef<{ x: number, y: number } | null>(null);
-
+  // Handle Manual Export on Stage Change
   useEffect(() => {
-    const canvas = fabricRef.current;
-    if (!canvas || !lastUV) return;
-
-    const { uv, isFirst, isEnd } = lastUV;
-    const x = uv.x * width;
-    const y = (1 - uv.y) * height;
-
-    const brush = canvas.freeDrawingBrush;
-    if (!brush) return;
-
-    if (isFirst) {
-      // @ts-ignore
-      brush.onMouseDown({ x, y }, { e: {} });
-      lastPointRef.current = { x, y };
-    } else if (isEnd) {
-      if (lastPointRef.current) {
-        // @ts-ignore
-        brush.onMouseMove({ x, y }, { e: {} });
-      }
-      // @ts-ignore
-      brush.onMouseUp({ e: {} });
-      lastPointRef.current = null;
-      
-      const dataUrl = canvas.toDataURL({ format: 'png', quality: 1 });
-      onTextureUpdate(dataUrl);
-    } else {
-      if (lastPointRef.current) {
-        const prev = lastPointRef.current;
-        const dist = Math.sqrt(Math.pow(x - prev.x, 2) + Math.pow(y - prev.y, 2));
-        
-        if (dist > 10) {
-          const steps = 5;
-          for (let i = 1; i < steps; i++) {
-            const ix = prev.x + (x - prev.x) * (i / steps);
-            const iy = prev.y + (y - prev.y) * (i / steps);
-            // @ts-ignore
-            brush.onMouseMove({ x: ix, y: iy }, { e: {} });
-          }
-        }
-      }
-
-      // @ts-ignore
-      brush.onMouseMove({ x, y }, { e: {} });
-      lastPointRef.current = { x, y };
-      
-      const dataUrl = canvas.toDataURL({ format: 'png', quality: 0.5 });
-      onTextureUpdate(dataUrl);
-    }
-  }, [lastUV, width, height, onTextureUpdate]);
-
-  // Handle Shape Creation
-  const shapePreviewRef = useRef<fabric.Object | null>(null);
-
-  const isPainting = useEditorStore(state => state.isPainting);
-
-  useEffect(() => {
-    const canvas = fabricRef.current;
-    if (!canvas) return;
-
-    if (selectedTool !== 'shape') {
-      if (shapePreviewRef.current) {
-        canvas.remove(shapePreviewRef.current);
-        shapePreviewRef.current = null;
-      }
-      return;
-    }
-
-    if (isPainting && shapeStartUV && shapePreviewUV) {
-      const startX = shapeStartUV.x * width;
-      const startY = (1 - shapeStartUV.y) * height;
-      const endX = shapePreviewUV.x * width;
-      const endY = (1 - shapePreviewUV.y) * height;
-
-      if (!shapePreviewRef.current) {
-        const rect = new fabric.Rect({
-          left: Math.min(startX, endX),
-          top: Math.min(startY, endY),
-          width: Math.abs(endX - startX),
-          height: Math.abs(endY - startY),
-          fill: 'transparent',
-          stroke: '#EA931D',
-          strokeWidth: 4,
-          selectable: false,
-          strokeDashArray: [10, 5]
-        });
-        canvas.add(rect);
-        shapePreviewRef.current = rect;
-      } else {
-        const rect = shapePreviewRef.current as fabric.Rect;
-        rect.set({
-          left: Math.min(startX, endX),
-          top: Math.min(startY, endY),
-          width: Math.abs(endX - startX),
-          height: Math.abs(endY - startY)
-        });
-        canvas.renderAll();
-      }
-    } else if (!isPainting && shapePreviewRef.current) {
-      const rect = shapePreviewRef.current as fabric.Rect;
-      rect.set({ 
-        selectable: true,
-        strokeDashArray: [], 
-        strokeWidth: 2,
-        stroke: brushConfig.color
+    if (renderStage === 2 && fabricRef.current) {
+      const dataUrl = fabricRef.current.toDataURL({
+        format: 'png',
+        quality: 1,
       });
-      shapePreviewRef.current = null;
-      
-      const dataUrl = canvas.toDataURL({ format: 'png' });
-      onTextureUpdate(dataUrl);
+      setFinalTexture(dataUrl);
     }
-  }, [shapeStartUV, shapePreviewUV, isPainting, selectedTool, brushConfig, width, height, onTextureUpdate]);
+  }, [renderStage, setFinalTexture]);
 
   return (
-    <div ref={containerRef} className="hidden pointer-events-none">
-      <canvas ref={canvasRef} />
+    <div className="w-full h-full flex items-center justify-center bg-[#111] overflow-hidden p-8 relative">
+      {/* Precision Guides (Rulers) */}
+      <div className="absolute top-0 left-0 w-full h-6 bg-[#1A1A1A] border-b border-white/5 flex items-end px-8">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="flex-1 border-l border-white/10 h-2 text-[8px] text-white/20 pl-1 uppercase font-bold tracking-tighter">
+            {i * 10}%
+          </div>
+        ))}
+      </div>
+      <div className="absolute top-0 left-0 h-full w-6 bg-[#1A1A1A] border-r border-white/5 flex flex-col items-end py-8">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="flex-1 border-t border-white/10 w-2 text-[8px] text-white/20 pr-1 uppercase font-bold tracking-tighter [writing-mode:vertical-lr]">
+            {i * 10}%
+          </div>
+        ))}
+      </div>
+
+      {/* The Workspace */}
+      <div className="shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-white relative group" style={{ width: 'min(90%, 800px)', aspectRatio: '1/1' }}>
+        {/* UV Grid Overlay (Visual Only) */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-10">
+           <div className="w-full h-full bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px]" />
+        </div>
+        
+        <canvas ref={canvasRef} className="w-full h-full" />
+      </div>
     </div>
   );
 }

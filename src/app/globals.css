@@ -45,6 +45,16 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.moatt-number-input::-webkit-outer-spin-button,
+.moatt-number-input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.moatt-number-input {
+  appearance: textfield;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 900;

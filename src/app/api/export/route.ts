@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { AvatarState, ExportOptions, ExportResult } from '@/lib/types';
+import { ExportOptions, ExportResult } from '@/lib/types';
+
+interface ExportAvatarPayload {
+  clothingTexture?: string;
+  accessories?: Array<{
+    modelUrl?: string;
+    textureUrl?: string;
+    [key: string]: unknown;
+  }>;
+  modelUrl?: string;
+  name?: string;
+  version?: number;
+  [key: string]: unknown;
+}
 
 // Export directory
 const EXPORT_DIR = join(process.cwd(), 'exports');
@@ -10,7 +24,7 @@ const EXPORT_DIR = join(process.cwd(), 'exports');
 async function ensureExportDir() {
   try {
     await mkdir(EXPORT_DIR, { recursive: true });
-  } catch (error) {
+  } catch {
     // Directory might already exist
   }
 }
@@ -22,16 +36,24 @@ function generateFilename(options: ExportOptions): string {
   return `avatar-${timestamp}${extension}`;
 }
 
+function fallbackFilename(): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  return `avatar-${timestamp}.glb`;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse<ExportResult>> {
   try {
-    const { avatar, options } = await request.json();
+    const { avatar, options } = await request.json() as {
+      avatar?: ExportAvatarPayload;
+      options?: ExportOptions;
+    };
 
     // Validate input
     if (!avatar || !options) {
       return NextResponse.json({
         success: false,
         error: 'Missing required fields: avatar and options',
-        filename: generateFilename(options)
+        filename: fallbackFilename()
       }, { status: 400 });
     }
 
@@ -69,7 +91,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExportRes
       warnings.push('No clothing texture applied - using default material');
     }
 
-    if (avatar.accessories.length === 0 && options.includeAccessories) {
+    if ((avatar.accessories ?? []).length === 0 && options.includeAccessories) {
       warnings.push('No accessories to include in export');
     }
 
@@ -86,10 +108,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExportRes
         ...avatar,
         // Remove large data fields for cleaner export
         clothingTexture: avatar.clothingTexture ? '[TEXTURE_DATA]' : null,
-        accessories: avatar.accessories.map((acc : any) => ({
-          ...acc,
-          modelUrl: acc.modelUrl ? '[MODEL_DATA]' : null,
-          textureUrl: acc.textureUrl ? '[TEXTURE_DATA]' : null
+        accessories: (avatar.accessories ?? []).map((accessory) => ({
+          ...accessory,
+          modelUrl: accessory.modelUrl ? '[MODEL_DATA]' : null,
+          textureUrl: accessory.textureUrl ? '[TEXTURE_DATA]' : null
         }))
       },
       metadata: {
@@ -115,7 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExportRes
 
     // Log export for debugging
     console.log(`Export completed: ${filename}`);
-    console.log(`Avatar: ${avatar.name}`);
+    console.log(`Avatar: ${avatar.name ?? 'Untitled avatar'}`);
     console.log(`Format: ${options.format}, Quality: ${options.quality}`);
     if (warnings.length > 0) {
       console.log('Warnings:', warnings);
@@ -148,10 +170,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Download specific export file
     try {
       const filepath = join(EXPORT_DIR, filename);
-      const fs = require('fs');
-      
-      if (fs.existsSync(filepath)) {
-        const fileBuffer = fs.readFileSync(filepath);
+      if (existsSync(filepath)) {
+        const fileBuffer = readFileSync(filepath);
         const headers = new Headers();
         headers.set('Content-Type', 'application/octet-stream');
         headers.set('Content-Disposition', `attachment; filename="${filename}"`);
@@ -166,7 +186,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           error: 'Export file not found'
         }, { status: 404 });
       }
-    } catch (error) {
+    } catch {
       return NextResponse.json({
         success: false,
         error: 'Failed to download export file'
@@ -176,9 +196,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // List available exports
   try {
-    const fs = require('fs');
-    if (fs.existsSync(EXPORT_DIR)) {
-      const files = fs.readdirSync(EXPORT_DIR);
+    if (existsSync(EXPORT_DIR)) {
+      const files = readdirSync(EXPORT_DIR);
       return NextResponse.json({
         success: true,
         data: files.filter((file: string) => 
@@ -191,7 +210,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         data: []
       });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       success: false,
       error: 'Failed to list export files'

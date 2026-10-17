@@ -1,0 +1,66 @@
+import { FabricPreset } from '../types';
+
+export const FABRIC_PRESETS: Record<string, FabricPreset> = {
+  cotton: {
+    id: 'cotton',
+    name: 'Cotton',
+    roughness: 0.85,
+    metalness: 0,
+    normalScale: 0.25,
+    textureRepeat: 6,
+    normalMapUrl: '/textures/fabrics/cotton_normal.png',
+    roughnessMapUrl: '/textures/fabrics/cotton_roughness.png',
+  },
+  fleece: {
+    id: 'fleece',
+    name: 'Heavy Cotton / Fleece',
+    roughness: 0.95,
+    metalness: 0,
+    normalScale: 0.18,
+    textureRepeat: 4,
+    normalMapUrl: '/textures/fabrics/fleece_normal.png',
+    roughnessMapUrl: '/textures/fabrics/fleece_roughness.png',
+  },
+  denim: {
+    id: 'denim',
+    name: 'Denim',
+    roughness: 0.78,
+    metalness: 0,
+    normalScale: 0.45,
+    textureRepeat: 10,
+    normalMapUrl: '/textures/fabrics/denim_normal.png',
+    roughnessMapUrl: '/textures/fabrics/denim_roughness.png',
+  },
+  nylon: {
+    id: 'nylon',
+    name: 'Nylon',
+    roughness: 0.38,
+    metalness: 0,
+    normalScale: 0.12,
+    textureRepeat: 8,
+    normalMapUrl: '/textures/fabrics/nylon_normal.png',
+    roughnessMapUrl: '/textures/fabrics/nylon_roughness.png',
+  },
+  leather: {
+    id: 'leather',
+    name: 'Leather',
+    roughness: 0.42,
+    metalness: 0,
+    normalScale: 0.35,
+    textureRepeat: 5,
+    normalMapUrl: '/textures/fabrics/leather_normal.png',
+    roughnessMapUrl: '/textures/fabrics/leather_roughness.png',
+  },
+  silk: {
+    id: 'silk',
+    name: 'Silk',
+    roughness: 0.22,
+    metalness: 0,
+    normalScale: 0.08,
+    textureRepeat: 7,
+    normalMapUrl: '/textures/fabrics/silk_normal.png',
+    roughnessMapUrl: '/textures/fabrics/silk_roughness.png',
+  },
+};
+
+export const FABRIC_PRESET_LIST = Object.values(FABRIC_PRESETS);
