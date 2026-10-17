@@ -9,8 +9,25 @@ import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
 
 function useSideTexture(doc:StudioDocument,side:Side){
- const [texture,setTexture]=useState<THREE.CanvasTexture|null>(null);
- useEffect(()=>{let live=true;let next:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(canvas=>{if(!live)return;next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;next.needsUpdate=true;setTexture(next)}).catch(()=>{});return()=>{live=false;next?.dispose()}},[doc.layers[side],doc.baseColor,side]);
+ const texture=useMemo(()=>{
+  if(typeof document==='undefined')return null;
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;
+  const ctx=canvas.getContext('2d');if(ctx){ctx.fillStyle=doc.baseColor;ctx.fillRect(0,0,1024,1024)}
+  const next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;return next;
+ // A single GPU texture per garment side; edit operations update its canvas in place.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
+ useEffect(()=>{
+  let live=true;
+  renderArtwork(doc,side).then(result=>{
+   if(!live||!texture)return;
+   const target=texture.image as HTMLCanvasElement;
+   const ctx=target.getContext('2d');
+   if(ctx){ctx.clearRect(0,0,target.width,target.height);ctx.drawImage(result,0,0);texture.needsUpdate=true;}
+  }).catch(()=>{});
+  return()=>{live=false};
+ },[doc.layers[side],doc.baseColor,side,texture]);
+ useEffect(()=>()=>texture?.dispose(),[texture]);
  return texture;
 }
 function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',hemStyle:'standard'|'cropped',neck:'crew'|'wide'){
