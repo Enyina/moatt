@@ -16,6 +16,6 @@ The centralized `bin/ai-rules` resolver can preview effective Moatt rules:
 python3 /path/to/ai-engineering-config/bin/ai-rules resolve --workspace /path/to/moatt --project moatt --feature garment-editor
 ```
 
-Do not run full `render --apply` against this repository: it contains a hand-authored `AGENTS.md`, which the generator correctly refuses to overwrite. Use feature-level review PRs and merge existing instructions deliberately. Never auto-approve or silently commit agent-generated changes.
+Do not run full `render --apply` against this repository: it contains a hand-authored `AGENTS.md`, which the generator correctly refuses to overwrite. Use feature-level review PRs and merge existing instructions deliberately. After completed authorized work, make a focused commit and report what was saved. Keep release notes in simple everyday language. Do not silently push or publish, and never auto-approve changes to the governing rule system.
 
 No claim of actual running Codex, Cursor, Claude Code or Antigravity on this machine is made by the presence of their context files. Verify native loading in each app and run product tests independently.

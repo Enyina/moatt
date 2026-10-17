@@ -21,3 +21,9 @@ These complement (not replace) the pre-existing central `AGENTS.md`, `categories
 Local fallback invariants: keep one canonical versioned design document; front/back layers are independent; explicit gesture modes prevent drawing from orbiting the mannequin; test save/reload and exports; do not confuse a stylized model with physically accurate garments; report committed vs built/tested/deployed separately.
 
 Record and verify lessons in [docs/ENGINEERING-LEARNINGS.md](docs/ENGINEERING-LEARNINGS.md), then promote generalized, non-confidential rules into the private central library. Keep Moatt-specific rules scoped to Moatt.
+
+## Saving work and explaining updates
+
+When an authorized change is complete, save it in a focused Git commit with a clear description. Do not leave completed work uncommitted. Keep unrelated work and private information out of the commit. Follow this project's existing delivery and approval requirements; do not assume committing gives permission to push or publish. If a higher-priority rule or direct instruction prevents a commit, explain that clearly.
+
+For each meaningful change, update `RELEASE_NOTES.md` using **only everyday English that a person with no software background can understand**. Explain what changed, why it matters, and anything people still cannot use. Avoid technical language, implementation details, command names, source filenames, abbreviations and internal test names. Do not say a change is live or available until publication is verified. Keep technical checks in engineering reports, not release notes.
