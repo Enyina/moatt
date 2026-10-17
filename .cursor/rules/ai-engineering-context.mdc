@@ -1,0 +1,8 @@
+---
+description: Moatt project engineering instructions and provenance
+alwaysApply: true
+---
+
+Follow the existing repository `AGENTS.md` and relevant product specifications, especially `docs/PRODUCT-TO-USABLE.md`. Read the source files before implementation; protect the current product architecture. Moatt-specific 3D/editor rules apply only to Moatt, and must not become universal rules for other projects.
+
+Canonical shared personal policy: Enyina/ai-engineering-config, version 2fa5392dc21524c522b613cb6cc869fd3eace4f2. This reference is for provenance, not an automatic remote include. Do not import employer-only material or other-project rules.
