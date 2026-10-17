@@ -86,3 +86,19 @@ test('loads a verified mannequin and retains garment construction changes',async
  await expect(page.getByRole('combobox',{name:'Hem length'})).toHaveValue('cropped');
  await expect(page.getByRole('combobox',{name:'Neckline'})).toHaveValue('wide');
 });
+
+test('keeps GPU allocations bounded across fabric and silhouette edits',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ await expect.poll(()=>canvas.getAttribute('data-gpu-textures')).not.toBeNull();
+ for(let i=0;i<12;i++){
+  await page.getByLabel('Fabric color').fill(i%2===0?'#ff4422':'#334455');
+  await page.getByRole('combobox',{name:'Sleeve length'}).selectOption(i%2===0?'long':'short');
+ }
+ await page.waitForTimeout(1000);
+ const textures=Number(await canvas.getAttribute('data-gpu-textures'));
+ const geometries=Number(await canvas.getAttribute('data-gpu-geometries'));
+ expect(textures).toBeLessThanOrEqual(30);
+ expect(geometries).toBeLessThanOrEqual(70);
+});
