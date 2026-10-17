@@ -1,69 +1,56 @@
 'use client';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useState } from 'react';
-import * as THREE from 'three';
-import { Design, Side, STORAGE_KEY, newDesign, parseDesign } from '../lib/design';
-
-const COLORS=['#e9dfc9','#232f42','#983d40','#588270','#dddde5','#a47fbb'];
-function makeArtwork(text:string,background:string){
- const c=document.createElement('canvas');c.width=1024;c.height=1024;
- const ctx=c.getContext('2d')!;ctx.fillStyle=background;ctx.fillRect(0,0,1024,1024);
- ctx.fillStyle=background==='#232f42'?'#ffffff':'#26242a';
- ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 100px sans-serif';
- const words=text.slice(0,50).split(' ');let rows:string[]=[];let line='';
- for(const word of words){if(ctx.measureText(line+' '+word).width>780&&line){rows.push(line);line=word}else{line+=(line?' ':'')+word}}if(line)rows.push(line);
- rows=rows.slice(0,5);rows.forEach((s,i)=>ctx.fillText(s,512,450+(i-(rows.length-1)/2)*120,800));
- return c;
-}
-function useArtworkTexture(text:string,color:string){
- const texture=useMemo(()=>{if(typeof document==='undefined')return null;const t=new THREE.CanvasTexture(makeArtwork(text,color));t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t},[text,color]);
- useEffect(()=>()=>texture?.dispose(),[texture]);return texture;
-}
-function Mannequin({design,side}:{design:Design;side:Side}){
- const front=useArtworkTexture(design.artwork.front,design.baseColor);
- const back=useArtworkTexture(design.artwork.back,design.baseColor);
- const skin='#aa8a73';const wide=design.fit==='oversized'?1.16:1;
- const printGeo=useMemo(()=>new THREE.PlaneGeometry(1.45*wide,1.48),[wide]);
- const printMat=useMemo(()=>new THREE.MeshStandardMaterial({map:front,transparent:false,side:THREE.DoubleSide,roughness:.95}),[front]);
- const backMat=useMemo(()=>new THREE.MeshStandardMaterial({map:back,transparent:false,side:THREE.DoubleSide,roughness:.95}),[back]);
- useEffect(()=>()=>{printGeo.dispose();printMat.dispose();backMat.dispose()},[printGeo,printMat,backMat]);
- return <group>
-   <mesh position={[0,2.98,0]}><sphereGeometry args={[.25,24,24]}/><meshStandardMaterial color={skin}/></mesh>
-   <mesh position={[0,2.49,0]}><cylinderGeometry args={[.12,.13,.4,20]}/><meshStandardMaterial color={skin}/></mesh>
-   <mesh position={[0,1.62,0]} scale={[wide,1,1]}><cylinderGeometry args={[.94,.84,1.75,4,1]}/><meshStandardMaterial color={design.baseColor} roughness={.92} side={THREE.DoubleSide}/></mesh>
-   {[-1,1].map(sign=><group key={sign}>
-      <mesh position={[sign*1.04*wide,2.1,0]} rotation={[0,0,sign*.55]}><cylinderGeometry args={[.39,.33,.81,20]}/><meshStandardMaterial color={design.baseColor} roughness={.95}/></mesh>
-      <mesh position={[sign*1.33*wide,1.54,0]} rotation={[0,0,sign*.12]}><cylinderGeometry args={[.14,.15,.56,18]}/><meshStandardMaterial color={skin}/></mesh>
-      <mesh position={[sign*.35,.0,0]}><cylinderGeometry args={[.30,.20,1.35,20]}/><meshStandardMaterial color="#46444a"/></mesh>
-   </group>)}
-   {front&&<mesh position={[0,1.62,.845]} geometry={printGeo} material={printMat}/>}
-   {back&&<mesh position={[0,1.62,-.845]} rotation={[0,Math.PI,0]} geometry={printGeo} material={backMat}/>}
- </group>;
-}
-function CameraSide({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.6,side==='front'?6:-6);camera.lookAt(0,1.3,0);camera.updateProjectionMatrix()},[camera,side]);return null}
+import dynamic from 'next/dynamic';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import type {ChangeEvent,PointerEvent} from 'react';
+import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
+import {renderArtwork,downloadBlob,savePng,drawLayer} from '../lib/render-design';
+const Preview=dynamic(()=>import('./GarmentPreview'),{ssr:false,loading:()=> <div className="empty3d">Loading preview…</div>});
+type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument[]};
+const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
- const [design,setDesign]=useState<Design>(newDesign);const [side,setSide]=useState<Side>('front');const [hydrated,setHydrated]=useState(false);
- useEffect(()=>{const restored=parseDesign(localStorage.getItem(STORAGE_KEY));if(restored)setDesign(restored);setHydrated(true)},[]);
- useEffect(()=>{if(hydrated)localStorage.setItem(STORAGE_KEY,JSON.stringify(design))},[design,hydrated]);
- const change=(patch:Partial<Design>)=>setDesign(d=>({...d,...patch,updatedAt:new Date().toISOString()}));
- const artwork=(value:string)=>setDesign(d=>({...d,artwork:{...d.artwork,[side]:value},updatedAt:new Date().toISOString()}));
- const download=(name:string,blob:Blob)=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
- const exportPng=()=>{const c=makeArtwork(design.artwork[side],design.baseColor);c.toBlob(b=>{if(b)download('moatt-'+side+'.png',b)},'image/png')};
+ const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'>('2d'),[toast,setToast]=useState('');
+ const doc=history.present;const canvasRef=useRef<HTMLCanvasElement>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null);
+ const drag=useRef<{id:string;startX:number;startY:number;originX:number;originY:number;points?:number[]}|null>(null);
+ const notify=(text:string)=>{setToast(text);setTimeout(()=>setToast(''),3500)};
+ useEffect(()=>{try{const saved=localStorage.getItem(STORAGE_KEY);if(saved)setHistory({...START,present:decodeDocument(saved)})}catch(e){setSaveError('Could not restore saved design. '+String(e))}setHydrated(true)},[]);
+ useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(STORAGE_KEY,JSON.stringify(doc));setSaveError('')}catch{setSaveError('Saving failed. Export your project to avoid losing changes.')}},[doc,hydrated]);
+ const commit=useCallback((fn:(draft:StudioDocument)=>void)=>{setHistory(h=>({past:[...h.past.slice(-39),h.present],present:modify(h.present,fn),future:[]}))},[]);
+ const undo=()=>setHistory(h=>h.past.length?{past:h.past.slice(0,-1),present:h.past[h.past.length-1],future:[h.present,...h.future]}:h);
+ const redo=()=>setHistory(h=>h.future.length?{past:[...h.past,h.present],present:h.future[0],future:h.future.slice(1)}:h);
+ const current=doc.layers[side],active=current.find(l=>l.id===selected);
+ const layerAdd=(layer:Layer)=>{commit(d=>{d.layers[side].push(layer)});setSelected(layer.id);setTool('select')};
+ const update=(id:string,patch:Partial<Layer>)=>commit(d=>{const l=d.layers[side].find(l=>l.id===id);if(l&&!l.locked)Object.assign(l,patch)});
+ const position=(e:PointerEvent<HTMLCanvasElement>)=>{const r=e.currentTarget.getBoundingClientRect();return {x:clamp((e.clientX-r.left)*1024/r.width,0,1024),y:clamp((e.clientY-r.top)*1024/r.height,0,1024)}};
+ const paint=useCallback(async()=>{const canvas=canvasRef.current;if(!canvas)return;try{const image=await renderArtwork(doc,side);const ctx=canvas.getContext('2d');if(ctx){ctx.clearRect(0,0,1024,1024);ctx.drawImage(image,0,0)}}catch(e){setSaveError('Preview rendering failed: '+String(e))}},[doc,side]);
+ useEffect(()=>{void paint()},[paint]);
+ const hit=(p:{x:number;y:number})=>[...current].reverse().find(l=>!l.hidden&&!l.locked&&p.x>=l.x&&p.x<=l.x+l.width&&p.y>=l.y&&p.y<=l.y+l.height);
+ const pointerDown=(e:PointerEvent<HTMLCanvasElement>)=>{const p=position(e);e.currentTarget.setPointerCapture(e.pointerId);if(tool==='draw'){const id=uid();drag.current={id,startX:p.x,startY:p.y,originX:p.x,originY:p.y,points:[0,0]};return}if(tool==='erase'){const target=hit(p);if(target){commit(d=>{d.layers[side]=d.layers[side].filter(l=>l.id!==target.id)});setSelected(null)}return}const target=hit(p);setSelected(target?.id||null);if(target)drag.current={id:target.id,startX:p.x,startY:p.y,originX:target.x,originY:target.y}};
+ const pointerMove=(e:PointerEvent<HTMLCanvasElement>)=>{if(!drag.current)return;const p=position(e);if(tool==='draw'&&drag.current.points){drag.current.points.push(p.x-drag.current.originX,p.y-drag.current.originY);const c=canvasRef.current?.getContext('2d');if(c){const pts=drag.current.points;c.strokeStyle='#202329';c.lineWidth=14;c.lineCap='round';c.beginPath();if(pts.length>2){c.moveTo(drag.current.originX+pts[pts.length-4],drag.current.originY+pts[pts.length-3]);c.lineTo(p.x,p.y);c.stroke();}}}else if(tool==='select'){const d=drag.current;const el=document.querySelector('[data-layer-id="'+d.id+'"]') as HTMLElement|null;if(el)el.style.transform='translate('+((p.x-d.startX)*100/1024)+'%, '+((p.y-d.startY)*100/1024)+'%)';}};
+ const pointerUp=(e:PointerEvent<HTMLCanvasElement>)=>{const d=drag.current;drag.current=null;if(!d)return;const p=position(e);if(tool==='draw'&&d.points){const layer:Layer={id:d.id,kind:'stroke',x:d.originX,y:d.originY,width:1024,height:1024,rotation:0,value:'',color:'#202329',points:d.points};commit(x=>x.layers[side].push(layer));setSelected(d.id);return;}if(tool==='select'){const nx=clamp(d.originX+p.x-d.startX,-1024,2048),ny=clamp(d.originY+p.y-d.startY,-1024,2048);if(nx!==d.originX||ny!==d.originY)update(d.id,{x:nx,y:ny});}};
+ const exportProject=()=>downloadBlob(new Blob([JSON.stringify(doc,null,2)],{type:'application/json'}),'moatt-'+doc.name.replace(/[^a-z0-9-]/gi,'-')+'.json');
+ const saveSide=async(s:Side)=>{try{await savePng(await renderArtwork(doc,s),'moatt-'+s+'.png');notify(s+' PNG exported')}catch(e){notify(String(e))}};
+ const upload=async(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;if(!['image/png','image/jpeg','image/webp'].includes(f.type)||f.size>2_000_000){notify('Use a PNG, JPEG or WebP image under 2 MB');return}const reader=new FileReader();reader.onload=()=>{const id=uid();layerAdd({id,kind:'image',x:260,y:260,width:500,height:500,rotation:0,color:'#222222',value:String(reader.result)})};reader.readAsDataURL(f)};
+ const importProject=async(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;if(f.size>6_000_000){notify('Project too large');return}try{const parsed=decodeDocument(await f.text());if(!window.confirm('Replace current design? Export it first if needed.'))return;setHistory({past:[doc],present:parsed,future:[]});setSelected(null);notify('Project imported')}catch(e){notify('Invalid project: '+String(e))}};
+ useEffect(()=>{const onKey=(e:KeyboardEvent)=>{const target=e.target as HTMLElement;if(['INPUT','TEXTAREA','SELECT'].includes(target.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)redo();else undo()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}if(e.key==='Delete'&&selected) {commit(d=>{d.layers[side]=d.layers[side].filter(l=>l.id!==selected)});setSelected(null)}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[history,selected,side,commit]);
  return <main className="app">
-  <header className="header"><div className="brand">MOATT <span style={{fontSize:11,fontWeight:400,letterSpacing:'.08em'}}>STUDIO</span></div><div className="row"><button className="button" onClick={()=>download('moatt-design.json',new Blob([JSON.stringify(design,null,2)],{type:'application/json'}))}>Export project</button><button className="button primary" onClick={exportPng}>Export {side} PNG</button></div></header>
-  <aside className="panel">
-   <div className="section"><h3>Garment</h3><div className="choice selected">T-shirt — starter template</div><p className="hint">More patterns and garment types are scheduled after editor validation.</p></div>
-   <div className="section"><h3>Silhouette</h3><div className="row">{(['regular','oversized'] as const).map(f=><button className={'button '+(design.fit===f?'selected':'')} key={f} onClick={()=>change({fit:f})}>{f}</button>)}</div></div>
-   <div className="section"><h3>Fabric color</h3><div className="row">{COLORS.map(c=><button key={c} className="swatch" title={'Set '+c} style={{background:c,outline:design.baseColor===c?'2px solid #f3d48d':undefined}} onClick={()=>change({baseColor:c})}/>)}</div><label className="hint">Custom color <input aria-label="Custom fabric color" type="color" value={design.baseColor} onChange={e=>change({baseColor:e.target.value})}/></label></div>
-   <div className="section"><h3>Design tools</h3><p className="hint">Text artwork is applied separately to each garment side. Brush painting and layered graphics are next.</p></div>
-  </aside>
-  <section className="canvas" aria-label="3D garment preview"><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>setSide('front')}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>setSide('back')}>Back</button></div>
-  <Canvas camera={{position:[0,1.6,6],fov:42}} gl={{preserveDrawingBuffer:false}}><color attach="background" args={['#20242d']}/><ambientLight intensity={1.5}/><directionalLight position={[5,8,7]} intensity={2.3}/><directionalLight position={[-3,2,-4]} intensity={1}/><Mannequin design={design} side={side}/><CameraSide side={side}/><OrbitControls target={[0,1.3,0]} enablePan={false} minDistance={3} maxDistance={10}/><gridHelper args={[10,10,'#555b66','#343a43']} position={[0,-.7,0]}/></Canvas>
-  <div className="notice">Drag to rotate · Scroll to zoom · This is a stylized 3D preview, not simulated cloth.</div></section>
-  <aside className="panel right"><div className="section"><h3>Design project</h3><input className="field" aria-label="Project name" value={design.name} onChange={e=>change({name:e.target.value})}/><p className="hint">{hydrated?'Saved automatically in this browser':'Loading design…'}</p></div>
-   <div className="section"><h3>{side} artwork</h3><div className="control"><label htmlFor="artwork">Text print</label><input className="field" id="artwork" placeholder="Add a slogan or logo text" value={design.artwork[side]} maxLength={50} onChange={e=>artwork(e.target.value)}/><p className="hint">Switch sides to create separate back artwork. Export PNG is a flat print preview, not print-ready UV artwork.</p></div></div>
-   <div className="section"><h3>Manage</h3><button className="button" onClick={()=>{if(window.confirm('Reset your saved design?')){setDesign(newDesign());setSide('front')}}}>Reset design</button></div>
-  </aside>
+ <header className="header"><span className="brand">MOATT <small>STUDIO</small></span><div className="row"><button className="button" disabled={!history.past.length} onClick={undo}>Undo</button><button className="button" disabled={!history.future.length} onClick={redo}>Redo</button><button className="button" onClick={exportProject}>Save project</button><button className="button primary" onClick={()=>void saveSide(side)}>Export PNG</button></div></header>
+ <aside className="panel">
+ <div className="section"><h3>Garment</h3><div className="row">{(['tshirt','hoodie'] as const).map(g=><button key={g} className={'button '+(doc.garment===g?'selected':'')} onClick={()=>commit(d=>{d.garment=g})}>{g==='tshirt'?'T-shirt':'Hoodie'}</button>)}</div></div>
+ <div className="section"><h3>Fit and body</h3><label>Fit<select className="field" value={doc.fit} onChange={e=>commit(d=>{d.fit=e.target.value as StudioDocument['fit']})}><option value="regular">Regular</option><option value="oversized">Oversized</option></select></label><label>Mannequin<select className="field" value={doc.body} onChange={e=>commit(d=>{d.body=e.target.value as StudioDocument['body']})}><option value="standard">Standard</option><option value="tall">Tall</option></select></label></div>
+ <div className="section"><h3>Fabric color</h3><input aria-label="Fabric color" type="color" value={doc.baseColor} onChange={e=>commit(d=>{d.baseColor=e.target.value})}/></div>
+ <div className="section"><h3>Artwork tools</h3><div className="row">{(['select','draw','erase'] as Tool[]).map(t=><button key={t} className={'button '+(tool===t?'selected':'')} onClick={()=>setTool(t)}>{t}</button>)}</div><div className="row"><button className="button" onClick={()=>layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:'#202329',fontSize:85,value:'YOUR DESIGN'})}>Add text</button><button className="button" onClick={()=>fileRef.current?.click()}>Upload image</button></div><input type="file" hidden ref={fileRef} accept="image/png,image/jpeg,image/webp" onChange={e=>void upload(e)}/></div>
+ <p className="hint">2D: drag to move layers, or select Draw to paint. 3D: orbit and zoom independently. Preview geometry is illustrative, not a fitted sewing pattern.</p>
+ </aside>
+ <section className="canvas"><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button></div>
+ <div className="studio-stage" style={{display:tab==='2d'?'flex':'none'}}><div className="artboard"><canvas ref={canvasRef} width={1024} height={1024} aria-label={side+' artwork canvas'} style={{touchAction:'none',cursor:tool==='draw'?'crosshair':tool==='erase'?'not-allowed':'move'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null;void paint()}}/>{active&&tool==='select'&&<div className="selection-outline" data-layer-id={active.id} style={{left:active.x/1024*100+'%',top:active.y/1024*100+'%',width:active.width/1024*100+'%',height:active.height/1024*100+'%',transform:'rotate('+active.rotation+'deg)'}}/>}</div></div>
+ <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}><Preview doc={doc} side={side}/></div><div className="notice">{tab==='3d'?'Drag to orbit · scroll to zoom':'Artwork layout · front and back saved separately'}</div></section>
+ <aside className="panel right"><div className="section"><h3>Project</h3><input aria-label="Design title" className="field" value={doc.name} maxLength={120} onChange={e=>commit(d=>{d.name=e.target.value})}/><p className="hint">{saveError||(!hydrated?'Loading saved design…':'Autosaved in this browser')}</p><button className="button" onClick={()=>projectRef.current?.click()}>Import project</button><input hidden type="file" accept=".json,application/json" ref={projectRef} onChange={e=>void importProject(e)}/></div>
+ <div className="section"><h3>{side} layers ({current.length})</h3>{[...current].reverse().map(l=><div key={l.id} className="layer-row"><button className={'choice '+(selected===l.id?'selected':'')} onClick={()=>{setSelected(l.id);setTool('select')}}>{l.kind}: {l.kind==='text'?l.value.slice(0,12):l.kind==='stroke'?'brush stroke':'image'}</button><button aria-label="Delete layer" className="button" onClick={()=>{commit(d=>{d.layers[side]=d.layers[side].filter(x=>x.id!==l.id)});setSelected(null)}}>×</button></div>)}{!current.length&&<p className="hint">Add text, upload an image, or draw on the canvas.</p>}</div>
+ {active&&<div className="section"><h3>Selected layer</h3>{active.kind==='text'&&<><label>Text<textarea className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
+ {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
+ <label>Width<input className="field" type="number" value={Math.round(active.width)} onChange={e=>update(active.id,{width:clamp(Number(e.target.value),10,1024)})}/></label><label>Height<input className="field" type="number" value={Math.round(active.height)} onChange={e=>update(active.id,{height:clamp(Number(e.target.value),10,1024)})}/></label><label>Rotation<input className="field" type="range" min={-180} max={180} value={active.rotation} onChange={e=>update(active.id,{rotation:Number(e.target.value)})}/></label>
+ <div className="row"><button className="button" onClick={()=>update(active.id,{hidden:!active.hidden})}>{active.hidden?'Show':'Hide'}</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>=0&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]]})}>Bring forward</button><button className="button" onClick={()=>layerAdd({...active,id:uid(),x:active.x+30,y:active.y+30})}>Duplicate</button></div></div>}
+ <div className="section"><h3>Export</h3><button className="button" onClick={()=>void Promise.all([saveSide('front'),saveSide('back')])}>Export both artwork sides</button><p className="hint">PNG is a mockup artwork raster, not a calibrated factory print or production pattern.</p></div>
+ </aside>{toast&&<div className="toast" role="status">{toast}</div>}
  </main>;
 }
