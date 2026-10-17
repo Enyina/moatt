@@ -6,33 +6,69 @@ import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
 import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
-function Surface({doc,side}:{doc:StudioDocument;side:Side}){
+
+function useSideTexture(doc:StudioDocument,side:Side){
  const [texture,setTexture]=useState<THREE.CanvasTexture|null>(null);
- useEffect(()=>{let active=true;let current:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(c=>{if(!active)return;current=new THREE.CanvasTexture(c);current.colorSpace=THREE.SRGBColorSpace;setTexture(current)}).catch(()=>{});return()=>{active=false;current?.dispose()}},[doc,side]);
- const mat=useMemo(()=>new THREE.MeshStandardMaterial({color:doc.baseColor,roughness:.95}),[doc.baseColor]);useEffect(()=>()=>mat.dispose(),[mat]);
- const scale=doc.fit==='oversized'?1.14:1;
- return <group scale={[scale,1,1]}>
-  <mesh position={[0,1.6,0]} material={mat}><boxGeometry args={[1.85,1.8,.50]}/></mesh>
-  {[-1,1].map(n=><mesh key={n} position={[n*1.05,2.16,0]} rotation={[0,0,n*.4]} material={mat}><cylinderGeometry args={[.42,.35,.86,16]}/></mesh>)}
-  <mesh position={[0,1.57,.263]}><planeGeometry args={[1.75,1.70]}/><meshBasicMaterial map={texture||undefined} color={texture?'white':doc.baseColor} side={THREE.DoubleSide}/></mesh>
+ useEffect(()=>{let live=true;let next:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(canvas=>{if(!live)return;next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;next.needsUpdate=true;setTexture(next)}).catch(()=>{});return()=>{live=false;next?.dispose()}},[doc,side]);
+ return texture;
+}
+function garmentGeometry(hoodie:boolean,oversized:boolean){
+ const w=oversized?1.16:1, sleeve=hoodie?-.22:.60,hem=hoodie?-.72:-.85;
+ // The 2D artboard maps to this entire custom front/back silhouette.
+ const points=[
+ [-.63*w,1.02],[-.91*w,.95],[-1.47*w,sleeve],[-1.23*w,.17],
+ [-.96*w,.33],[-.87*w,hem],[.87*w,hem],[.96*w,.33],
+ [1.23*w,.17],[1.47*w,sleeve],[.91*w,.95],[.63*w,1.02],
+ [.30*w,.95],[.20*w,.77],[-.20*w,.77],[-.30*w,.95]
+ ];
+ const shape=new THREE.Shape();shape.moveTo(points[0][0],points[0][1]);for(const [x,y] of points.slice(1))shape.lineTo(x,y);shape.closePath();
+ const geo=new THREE.ShapeGeometry(shape);
+ const pos=geo.getAttribute('position'),uv=geo.getAttribute('uv');
+ // Map artwork coordinates within the preview silhouette's full bounding box.
+ const left=-1.5*w,right=1.5*w,bottom=hem,top=1.04;
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i);uv.setXY(i,(x-left)/(right-left),(y-bottom)/(top-bottom));}
+ uv.needsUpdate=true;geo.computeVertexNormals();return geo;
+}
+function Garment({doc}:{doc:StudioDocument}){
+ const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
+ const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized'),[doc.fit,doc.garment]);
+ useEffect(()=>()=>geo.dispose(),[geo]);
+ const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:front||null,side:THREE.DoubleSide,roughness:.95}),[front]);
+ const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:back||null,side:THREE.DoubleSide,roughness:.95}),[back]);
+ useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
+ return <group position={[0,1.54,0]}>
+ <mesh geometry={geo} position={[0,0,.19]} material={frontMat}/>
+ <mesh geometry={geo} rotation={[0,Math.PI,0]} position={[0,0,-.19]} material={backMat}/>
+ <mesh position={[0,.08,0]}><boxGeometry args={[1.5*(doc.fit==='oversized'?1.16:1),1.48,.36]}/><meshStandardMaterial color={doc.baseColor} roughness={.96}/></mesh>
+ {doc.garment==='hoodie'&&<>
+ <mesh position={[0,1.0,-.19]}><sphereGeometry args={[.49,24,18,0,Math.PI*2,0,Math.PI*.57]}/><meshStandardMaterial color={doc.baseColor} side={THREE.DoubleSide} roughness={.97}/></mesh>
+ <mesh position={[0,-.19,.215]}><boxGeometry args={[.78,.33,.06]}/><meshStandardMaterial color={doc.baseColor}/></mesh>
+ </>}
  </group>;
 }
-function Model({doc}:{doc:StudioDocument}){
- const skin='#a68a77',s=doc.body==='tall'?1.1:1;
- return <group scale={[1,s,1]}>
- <mesh position={[0,3,0]}><sphereGeometry args={[.27,20,20]}/><meshStandardMaterial color={skin}/></mesh>
- <mesh position={[0,2.65,0]}><cylinderGeometry args={[.13,.14,.35,16]}/><meshStandardMaterial color={skin}/></mesh>
- <Surface doc={doc} side="front"/><group rotation={[0,Math.PI,0]}><Surface doc={doc} side="back"/></group>
- {[-1,1].map(n=><group key={n}><mesh position={[n*1.33,1.47,0]}><cylinderGeometry args={[.14,.15,.7,16]}/><meshStandardMaterial color={skin}/></mesh><mesh position={[n*.43,.02,0]}><cylinderGeometry args={[.33,.22,1.48,16]}/><meshStandardMaterial color="#434b54"/></mesh></group>)}
- {doc.garment==='hoodie'&&<mesh position={[0,2.55,-.22]}><sphereGeometry args={[.57,24,16,0,Math.PI*2,0,Math.PI*.55]}/><meshStandardMaterial color={doc.baseColor} side={THREE.DoubleSide}/></mesh>}
+function Mannequin({doc}:{doc:StudioDocument}){
+ const height=doc.body==='tall'?1.09:1;
+ return <group scale={[1,height,1]}>
+ <mesh position={[0,3.05,0]}><sphereGeometry args={[.25,28,22]}/><meshStandardMaterial color="#af8f77" roughness={.92}/></mesh>
+ <mesh position={[0,2.74,0]}><cylinderGeometry args={[.12,.14,.37,20]}/><meshStandardMaterial color="#af8f77"/></mesh>
+ <mesh position={[0,.78,0]}><cylinderGeometry args={[.49,.43,.5,24]}/><meshStandardMaterial color="#383b43"/></mesh>
+ {[-1,1].map(n=><group key={n}>
+ <mesh position={[n*1.34,1.60,0]} rotation={[0,0,n*.12]}><cylinderGeometry args={[.135,.12,.68,20]}/><meshStandardMaterial color="#af8f77"/></mesh>
+ <mesh position={[n*.32,.02,0]}><cylinderGeometry args={[.25,.19,1.45,24]}/><meshStandardMaterial color="#393e48"/></mesh>
+ </group>)}
+ <Garment doc={doc}/>
  </group>;
 }
-function Position({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.5,side==='front'?6:-6);camera.lookAt(0,1.35,0)},[camera,side]);return null}
-class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}> {
- state={failed:false};
- static getDerivedStateFromError(){return {failed:true};}
- render(){return this.state.failed?<div role="alert" className="empty3d">3D preview is unavailable in this browser. You can still edit and export artwork in 2D.</div>:this.props.children;}
+function CameraPosition({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.5,side==='front'?6:-6);camera.lookAt(0,1.4,0)},[camera,side]);return null}
+class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
+ state={failed:false};static getDerivedStateFromError(){return {failed:true};}
+ render(){return this.state.failed?<div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>:this.props.children;}
 }
 export default function GarmentPreview({doc,side}:{doc:StudioDocument;side:Side}){
- return <PreviewBoundary><Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}><color attach="background" args={['#252b35']}/><ambientLight intensity={1.9}/><directionalLight position={[5,6,8]} intensity={1.7}/><Model doc={doc}/><Position side={side}/><OrbitControls target={[0,1.35,0]} minDistance={3.5} maxDistance={10} enablePan={false}/><gridHelper args={[10,10,'#646e78','#38404c']} position={[0,-.75,0]}/></Canvas></PreviewBoundary>;
+ return <PreviewBoundary><Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}>
+ <color attach="background" args={['#252b35']}/><ambientLight intensity={2.1}/><directionalLight position={[4,8,6]} intensity={1.5}/>
+ <Mannequin doc={doc}/><CameraPosition side={side}/>
+ <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
+ <gridHelper args={[10,10,'#646e78','#38404c']} position={[0,-.75,0]}/>
+ </Canvas></PreviewBoundary>;
 }
