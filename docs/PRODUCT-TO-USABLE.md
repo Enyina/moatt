@@ -101,3 +101,11 @@ Committed source now contains: v2 design document and v1 migration, front/back t
 CI run [39025853488](https://github.com/Enyina/moatt/actions/runs/39025853488) PASSED: typecheck, five unit tests, production build and 10 browser tests (desktop/mobile Chromium).
 
 **Still not objectively completed:** photo-realistic garment assets/fit, production UV/print-safe calibration, rich collar/sleeve construction, multi-session GPU performance measurement, manual cross-browser/device accessibility review, real screenshot fidelity comparison, deployment and independent user acceptance. Existing geometry is visibly a simplified prototype. Do not mark the entire original release gate done because a subset of tests passed.
+
+## Incremental implementation evidence — 2026-10-17 (continued)
+
+- Added a shared suggested artwork safety area and non-blocking front/back diagnostics. Its dimensions are illustrative guidance only, not calibrated manufacturer printable regions.
+- Replaced the purely rectangular shirt panels with a garment-shaped `ShapeGeometry` and explicit 2D UV coordinate mapping, plus hoodie silhouette and hood preview. These remain stylized flat meshes, **not fitted/sewn/simulated clothing**.
+- Added four unit checks for placement diagnostics, a visible editor safe-area guide, and browser trace retention in CI.
+- [GitHub CI run 39026492744](https://github.com/Enyina/moatt/actions/runs/39026492744) passed TypeScript, nine unit tests, production build and ten Chromium desktop/mobile tests.
+- **Not complete under original acceptance contract:** photorealistic production garments/mannequins, collar/sleeve construction parameter editing, physical UV/print calibration, sustained GPU/performance measurements, full keyboard and assistive-tech validation, manual visual review and deployment. Do not request owner acceptance testing until these are actually addressed.
