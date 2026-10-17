@@ -9,7 +9,7 @@ import {renderArtwork} from '../lib/render-design';
 
 function useSideTexture(doc:StudioDocument,side:Side){
  const [texture,setTexture]=useState<THREE.CanvasTexture|null>(null);
- useEffect(()=>{let live=true;let next:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(canvas=>{if(!live)return;next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;next.needsUpdate=true;setTexture(next)}).catch(()=>{});return()=>{live=false;next?.dispose()}},[doc,side]);
+ useEffect(()=>{let live=true;let next:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(canvas=>{if(!live)return;next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;next.needsUpdate=true;setTexture(next)}).catch(()=>{});return()=>{live=false;next?.dispose()}},[doc.layers[side],doc.baseColor,side]);
  return texture;
 }
 function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',hemStyle:'standard'|'cropped',neck:'crew'|'wide'){
@@ -33,8 +33,8 @@ function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
  const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized',doc.sleeve,doc.hem,doc.neck),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>geo.dispose(),[geo]);
- const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:front||null,side:THREE.DoubleSide,roughness:.95}),[front]);
- const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:back||null,side:THREE.DoubleSide,roughness:.95}),[back]);
+ const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:front?'#ffffff':doc.baseColor,map:front||null,side:THREE.DoubleSide,roughness:.95}),[front,doc.baseColor]);
+ const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:.95}),[back,doc.baseColor]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
  return <group position={[0,1.54,0]}>
  <mesh geometry={geo} position={[0,0,.19]} material={frontMat}/>
