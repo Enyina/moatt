@@ -6,6 +6,12 @@ Reverse Engineer First: inspect existing code, benchmark working garment visuali
 
 See https://github.com/Enyina/ai-engineering-config/blob/main/projects/moatt.md and https://github.com/Enyina/ai-engineering-config/blob/main/categories/web-product.md. Rules are also summarized here for agents without remote access. Revisit upstream revisions before adopting changes.
 
+## Just ask normally
+
+When asked to improve the garment editor, the user does not need to name a design system, rule category, project ID or command. Use this project's existing rules and product knowledge to understand the actual need. For meaningful design or coding decisions, compare useful approaches and credible public references, then explain your preferred approach and trade-offs in ordinary language. If the private personal configuration repo is locally accessible and authorized, use its one-sentence `bin/ask` helper internally from this project root; otherwise use existing project rules and accessible sources. Do not claim to have read a private repository that is not actually accessible. Avoid a long options exercise for trivial changes.
+
+Work within the existing Moatt scope; never automatically import employer guidance or game/portfolio-specific rules. When implementation is authorized, continue using the established test and commit/release-note process. The user should not have to run helper commands merely to get a recommendation.
+
 ## Product-to-usable execution contract (2026-10-17)
 
 Read [docs/PRODUCT-TO-USABLE.md](docs/PRODUCT-TO-USABLE.md) before major changes. It defines the end-to-end release gate and explicitly avoids owner approval checkpoints until the workflow is truly usable. Do not imply background execution or ask for acceptance until objective criteria are met.
