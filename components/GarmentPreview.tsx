@@ -49,7 +49,7 @@ function Garment({doc}:{doc:StudioDocument}){
 }
 function Mannequin({doc}:{doc:StudioDocument}){
  const [asset,setAsset]=useState<THREE.Group|null>(null);
- useEffect(()=>{let live=true;new GLTFLoader().load('/models/mannequin.glb',gltf=>{if(live)setAsset(gltf.scene)},undefined,()=>{if(live)setAsset(null)});return()=>{live=false}},[]);
+ useEffect(()=>{let live=true;new GLTFLoader().load((process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/mannequin.glb',gltf=>{if(live)setAsset(gltf.scene)},undefined,()=>{if(live)setAsset(null)});return()=>{live=false}},[]);
  const height=doc.body==='tall'?1.09:1;
  return <group scale={[1,height,1]}>
  {asset?<primitive object={asset} scale={.56} position={[0,1.43,0]}/>:<>
