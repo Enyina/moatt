@@ -92,3 +92,12 @@ Moatt v1 is a browser fashion **design and mockup studio** for regular people an
 | Owner acceptance request | Blocked until all gates pass | Not requested |
 
 **Work policy:** keep progressing without interrupting the owner for intermediate decisions. If progress is externally blocked, document the blocker precisely and make the best safe progress possible; never claim future unattended work has been scheduled.
+
+
+## Implementation evidence — 2026-10-17
+
+Committed source now contains: v2 design document and v1 migration, front/back text/image/stroke layers, basic drag/transform, visibility/lock/reorder, undo/redo, local autosave, validated JSON import/export, 2D PNG exports, 3D mockup screenshot, regular/oversized T-shirt and hoodie previews, two stylized mannequin presets, brush ink size/color, WebGL failure fallback.
+
+CI run [39025853488](https://github.com/Enyina/moatt/actions/runs/39025853488) PASSED: typecheck, five unit tests, production build and 10 browser tests (desktop/mobile Chromium).
+
+**Still not objectively completed:** photo-realistic garment assets/fit, production UV/print-safe calibration, rich collar/sleeve construction, multi-session GPU performance measurement, manual cross-browser/device accessibility review, real screenshot fidelity comparison, deployment and independent user acceptance. Existing geometry is visibly a simplified prototype. Do not mark the entire original release gate done because a subset of tests passed.
