@@ -119,3 +119,15 @@ CI run [39025853488](https://github.com/Enyina/moatt/actions/runs/39025853488) P
 - Investigated properly licensed CC0 mannequin assets. The available connector could not import the binary GLB into the repository, so **no external mannequin asset has been installed**. Do not report asset integration as complete.
 
 The acceptance gate remains open for material improvements to visual quality, physical fit and construction, explicit export-space calibration, real-device validation and deployment.
+
+## 2026-10-17 continuation — release review evidence
+
+- Integrated a reproducibly downloaded, Git-blob-verified CC0 mannequin (UMRAM-Bilkent / Quaternius) with a procedural fallback; licensing and asset identity are recorded in `docs/ASSET-PROVENANCE.md`. Its geometry remains **low-poly**, not a photorealistic fit avatar.
+- Visually audited desktop/mobile Playwright screenshots. Corrected the initially sideways mannequin, torso/clothing intersection, extreme shirt width, and hidden forearms. Review screenshots revealed quality defects that ordinary canvas-presence tests missed.
+- Replaced multiple transient CanvasTextures with stable per-side textures updated in-place. Verified GPU textures 2 → 2 and geometries 4 → 4 in desktop/mobile Chromium repeated-edit stress run 39028527243.
+- Added visual cotton/denim/satin roughness presets and transparent print-artwork PNG exports (separate from fabric-colored previews), with schema migration and tests.
+- Added mobile-first viewport arrangement and mobile shortcut controls.
+- Added Firefox and WebKit cross-browser runs; Firefox headless can lack WebGL, so the app's explicit accessible 3D-unavailable fallback is tested instead of incorrectly requiring a GPU context. This is an environment fallback, **not evidence that 3D works on Firefox hardware**.
+- Next.js static export and GitHub Pages workflow are configured. Static build succeeds, but Pages deployment is blocked by account-level permission: the repository lacks an enabled Pages site, and GitHub Actions token cannot create it (`Resource not accessible by integration`). Owner/admin must enable GitHub Pages with GitHub Actions as source, or connect an authorized hosting provider. The workflow now retains a static website ZIP even when Pages enablement fails.
+
+**Still blocking final acceptance request:** live hosted URL, independent real-device/visual validation, garment fidelity still below the professional reference tools, and uncalibrated physical fit / actual production patterns (deferred beyond the mockup-only v1). Treat the implemented studio as a design mockup product, not garment CAD.
