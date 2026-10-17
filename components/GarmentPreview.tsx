@@ -4,6 +4,7 @@ import type {ReactNode} from 'react';
 import {Canvas,useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
 
@@ -47,15 +48,18 @@ function Garment({doc}:{doc:StudioDocument}){
  </group>;
 }
 function Mannequin({doc}:{doc:StudioDocument}){
+ const [asset,setAsset]=useState<THREE.Group|null>(null);
+ useEffect(()=>{let live=true;new GLTFLoader().load('/models/mannequin.glb',gltf=>{if(live)setAsset(gltf.scene)},undefined,()=>{if(live)setAsset(null)});return()=>{live=false}},[]);
  const height=doc.body==='tall'?1.09:1;
  return <group scale={[1,height,1]}>
+ {asset?<primitive object={asset} scale={.56} position={[0,1.43,0]}/>:<>
  <mesh position={[0,3.05,0]}><sphereGeometry args={[.25,28,22]}/><meshStandardMaterial color="#af8f77" roughness={.92}/></mesh>
  <mesh position={[0,2.74,0]}><cylinderGeometry args={[.12,.14,.37,20]}/><meshStandardMaterial color="#af8f77"/></mesh>
  <mesh position={[0,.78,0]}><cylinderGeometry args={[.49,.43,.5,24]}/><meshStandardMaterial color="#383b43"/></mesh>
  {[-1,1].map(n=><group key={n}>
  <mesh position={[n*1.34,1.60,0]} rotation={[0,0,n*.12]}><cylinderGeometry args={[.135,.12,.68,20]}/><meshStandardMaterial color="#af8f77"/></mesh>
  <mesh position={[n*.32,.02,0]}><cylinderGeometry args={[.25,.19,1.45,24]}/><meshStandardMaterial color="#393e48"/></mesh>
- </group>)}
+ </group>)}</>}
  <Garment doc={doc}/>
  </group>;
 }
