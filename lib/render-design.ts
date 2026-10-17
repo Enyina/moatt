@@ -4,7 +4,7 @@ export function drawLayer(ctx:CanvasRenderingContext2D,l:Layer){
  if(l.hidden)return;
  ctx.save();ctx.translate(l.x+l.width/2,l.y+l.height/2);ctx.rotate(l.rotation*Math.PI/180);ctx.translate(-l.width/2,-l.height/2);
  if(l.kind==='text'){ctx.fillStyle=l.color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+Math.max(12,Math.min(l.fontSize||96,320))+'px sans-serif';const lines=l.value.split('\n').slice(0,8);lines.forEach((line,i)=>ctx.fillText(line,l.width/2,l.height/2+(i-(lines.length-1)/2)*(l.fontSize||96)*1.1,l.width));}
- if(l.kind==='stroke'&&l.points?.length){ctx.strokeStyle=l.color;ctx.lineWidth=14;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();for(let i=0;i<l.points.length;i+=2){if(i===0)ctx.moveTo(l.points[i],l.points[i+1]);else ctx.lineTo(l.points[i],l.points[i+1]);}if(l.points.length===2)ctx.lineTo(l.points[0]+.01,l.points[1]);ctx.stroke();}
+ if(l.kind==='stroke'&&l.points?.length){ctx.strokeStyle=l.color;ctx.lineWidth=Math.max(1,Math.min(l.fontSize||14,80));ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();for(let i=0;i<l.points.length;i+=2){if(i===0)ctx.moveTo(l.points[i],l.points[i+1]);else ctx.lineTo(l.points[i],l.points[i+1]);}if(l.points.length===2)ctx.lineTo(l.points[0]+.01,l.points[1]);ctx.stroke();}
  ctx.restore();
 }
 export async function renderArtwork(doc:StudioDocument,side:Side):Promise<HTMLCanvasElement>{
