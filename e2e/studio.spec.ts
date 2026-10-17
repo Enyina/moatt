@@ -47,3 +47,28 @@ test('round trips project JSON through import',async({page})=>{
  await page.locator('input[type=file][accept*="application/json"]').setInputFiles({name:'round-trip.json',mimeType:'application/json',buffer:json});
  await expect(page.getByLabel('Design title')).toHaveValue('Round trip design');
 });
+
+test('captures editable garment and 3D design evidence',async({page},testInfo)=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('MOATT');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const view=page.locator('.preview-stage canvas');
+ await expect(view).toBeVisible();
+ await expect.poll(async()=>view.evaluate((node)=>{const c=node as HTMLCanvasElement;return c.width>0&&c.height>0})).toBeTruthy();
+ await page.screenshot({path:testInfo.outputPath('garment-preview.png'),fullPage:true});
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await page.screenshot({path:testInfo.outputPath('artwork-editor.png'),fullPage:true});
+});
+test('nudges the selected layer with keyboard and can undo',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Add text'}).click();
+ const input=page.getByLabel('X',{exact:true});
+ const before=Number(await input.inputValue());
+ await page.locator('.artboard canvas').click({position:{x:15,y:15}});
+ await page.getByText('text: YOUR DESIGN').click();
+ await page.keyboard.press('ArrowRight');
+ await expect(input).toHaveValue(String(before+1));
+ await page.getByRole('button',{name:'Undo'}).click();
+ await expect(input).toHaveValue(String(before));
+});
