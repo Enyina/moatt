@@ -12,14 +12,14 @@ function useSideTexture(doc:StudioDocument,side:Side){
  useEffect(()=>{let live=true;let next:THREE.CanvasTexture|null=null;renderArtwork(doc,side).then(canvas=>{if(!live)return;next=new THREE.CanvasTexture(canvas);next.colorSpace=THREE.SRGBColorSpace;next.needsUpdate=true;setTexture(next)}).catch(()=>{});return()=>{live=false;next?.dispose()}},[doc,side]);
  return texture;
 }
-function garmentGeometry(hoodie:boolean,oversized:boolean){
- const w=oversized?1.16:1, sleeve=hoodie?-.22:.60,hem=hoodie?-.72:-.85;
+function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',hemStyle:'standard'|'cropped',neck:'crew'|'wide'){
+ const w=oversized?1.16:1, sleeveY=sleeve==='long'?-.60:(hoodie?-.22:.60),hem=hemStyle==='cropped'?-.38:(hoodie?-.72:-.85),neckWidth=neck==='wide'?.43:.30;
  // The 2D artboard maps to this entire custom front/back silhouette.
  const points=[
- [-.63*w,1.02],[-.91*w,.95],[-1.47*w,sleeve],[-1.23*w,.17],
+ [-.63*w,1.02],[-.91*w,.95],[-1.47*w,sleeveY],[-1.23*w,.17],
  [-.96*w,.33],[-.87*w,hem],[.87*w,hem],[.96*w,.33],
- [1.23*w,.17],[1.47*w,sleeve],[.91*w,.95],[.63*w,1.02],
- [.30*w,.95],[.20*w,.77],[-.20*w,.77],[-.30*w,.95]
+ [1.23*w,.17],[1.47*w,sleeveY],[.91*w,.95],[.63*w,1.02],
+ [neckWidth*w,.95],[neckWidth*.70*w,.77],[-neckWidth*.70*w,.77],[-neckWidth*w,.95]
  ];
  const shape=new THREE.Shape();shape.moveTo(points[0][0],points[0][1]);for(const [x,y] of points.slice(1))shape.lineTo(x,y);shape.closePath();
  const geo=new THREE.ShapeGeometry(shape);
@@ -31,7 +31,7 @@ function garmentGeometry(hoodie:boolean,oversized:boolean){
 }
 function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
- const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized'),[doc.fit,doc.garment]);
+ const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized',doc.sleeve,doc.hem,doc.neck),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>geo.dispose(),[geo]);
  const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:front||null,side:THREE.DoubleSide,roughness:.95}),[front]);
  const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#ffffff',map:back||null,side:THREE.DoubleSide,roughness:.95}),[back]);
