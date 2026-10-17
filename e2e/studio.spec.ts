@@ -4,12 +4,12 @@ test('creates front and back designs and restores saved project',async({page})=>
  await page.getByRole('button',{name:'Add text'}).click();
  await expect(page.getByText('text: YOUR DESIGN')).toBeVisible();
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('FRONT TEST');
- await page.getByRole('button',{name:'Back'}).click();
+ await page.getByRole('button',{name:'Back',exact:true}).click();
  await page.getByRole('button',{name:'Add text'}).click();
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK TEST');
  await expect(page.getByText('text: BACK TEST')).toBeVisible();
  await page.reload();
- await page.getByRole('button',{name:'Back'}).click();
+ await page.getByRole('button',{name:'Back',exact:true}).click();
  await expect(page.getByText('text: BACK TEST')).toBeVisible();
  await page.getByRole('button',{name:'Front'}).click();
  await expect(page.getByText('text: FRONT TEST')).toBeVisible();
@@ -27,7 +27,7 @@ test('uploads artwork and exports a PNG',async({page})=>{
 test('draws on artwork without invoking 3D orbit and opens the mannequin',async({page},testInfo)=>{
  await page.goto('/');
  await page.getByRole('button',{name:'draw',exact:true}).click();
- const artboard=page.locator('.artboard canvas');const b=await artboard.boundingBox();expect(b).toBeTruthy();
+ const artboard=page.locator('.artboard canvas');await artboard.scrollIntoViewIfNeeded();const b=await artboard.boundingBox();expect(b).toBeTruthy();
  if(testInfo.project.name==='mobile'){await page.touchscreen.tap(b!.x+b!.width/2,b!.y+b!.height/2)}else{await page.mouse.move(b!.x+b!.width/3,b!.y+b!.height/3);await page.mouse.down();await page.mouse.move(b!.x+b!.width/2,b!.y+b!.height/2,{steps:6});await page.mouse.up();}
  await expect(page.getByText(/stroke: brush stroke/)).toBeVisible();
  await page.getByRole('button',{name:'3D preview'}).click();
