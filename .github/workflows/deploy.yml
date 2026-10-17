@@ -45,3 +45,24 @@ jobs:
       - name: Deploy
         id: deploy
         uses: actions/deploy-pages@v4
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check published website and mannequin
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://enyina.github.io/moatt"
+          for i in $(seq 1 12); do
+            if curl --fail --location --silent --show-error "$BASE/" -o /tmp/moatt-home.html && grep -q "MOATT" /tmp/moatt-home.html && curl --fail --location --silent --show-error "$BASE/models/mannequin.glb" -o /tmp/moatt-model.glb; then
+              test "$(wc -c </tmp/moatt-model.glb)" -gt 10000
+              echo "Published Moatt site and mannequin asset verified"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Published website failed smoke checks" >&2
+          exit 1
