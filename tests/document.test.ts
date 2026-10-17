@@ -7,3 +7,8 @@ describe('Studio document',()=>{
  it('rejects untrusted HTML image URLs',()=>{const d=initialDocument();d.layers.front.push({id:'bad',kind:'image',x:10,y:10,width:100,height:100,rotation:0,color:'#000000',value:'javascript:alert(1)'});expect(()=>decodeDocument(JSON.stringify(d))).toThrow('Unsupported image')});
  it('rejects invalid artwork coordinates',()=>{const d=initialDocument();d.layers.back.push({id:'bad',kind:'text',x:Infinity,y:0,width:100,height:100,rotation:0,color:'#000000',value:'X'});expect(()=>decodeDocument(JSON.stringify(d))).toThrow()});
 });
+
+describe('Garment construction options',()=>{
+ it('round trips garment construction choices',()=>{const d=initialDocument();d.sleeve='long';d.neck='wide';d.hem='cropped';const saved=decodeDocument(JSON.stringify(d));expect([saved.sleeve,saved.neck,saved.hem]).toEqual(['long','wide','cropped'])});
+ it('defaults missing construction choices in older v2 documents',()=>{const d=initialDocument();const legacy=JSON.parse(JSON.stringify(d));delete legacy.sleeve;delete legacy.neck;delete legacy.hem;const restored=decodeDocument(JSON.stringify(legacy));expect([restored.sleeve,restored.neck,restored.hem]).toEqual(['short','crew','standard'])});
+});
