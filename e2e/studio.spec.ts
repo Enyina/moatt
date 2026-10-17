@@ -102,3 +102,20 @@ test('keeps GPU allocations bounded across fabric and silhouette edits',async({p
  expect(textures).toBeLessThanOrEqual(30);
  expect(geometries).toBeLessThanOrEqual(70);
 });
+
+test('exports independent transparent artwork rather than fabric color',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Add text'}).click();
+ const download=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Export PNG',exact:true}).click();
+ const stream=await (await download).createReadStream();
+ const chunks:Buffer[]=[];for await(const chunk of stream)chunks.push(Buffer.from(chunk));
+ const encoded=Buffer.concat(chunks).toString('base64');
+ const alpha=await page.evaluate(async(encoded)=>{
+  const img=new Image();img.src='data:image/png;base64,'+encoded;await img.decode();
+  const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
+  const ctx=canvas.getContext('2d')!;ctx.drawImage(img,0,0);
+  return ctx.getImageData(0,0,1,1).data[3];
+ },encoded);
+ expect(alpha).toBe(0);
+});
