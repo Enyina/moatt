@@ -55,10 +55,11 @@ function Garment({doc}:{doc:StudioDocument}){
  const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:front?'#ffffff':doc.baseColor,map:front||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[front,doc.baseColor,fabricRoughness]);
  const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[back,doc.baseColor,fabricRoughness]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
- return <group position={[0,1.54,0]}>
+ return <group position={[0,1.54,0]} scale={[.65,.91,1]}>
  <mesh geometry={geo.panel} position={[0,0,.39]} material={frontMat}/>
  <mesh geometry={geo.panel} rotation={[0,Math.PI,0]} position={[0,0,-.39]} material={backMat}/>
  <mesh geometry={geo.shell}><meshStandardMaterial color={doc.baseColor} roughness={fabricRoughness}/></mesh>
+ {doc.sleeve==='short'&&[-1,1].map(n=><mesh key={n} position={[n*1.18,-.43,0]} rotation={[0,0,n*.12]}><cylinderGeometry args={[.14,.115,.84,18]}/><meshStandardMaterial color="#b5b5b5" roughness={.91}/></mesh>)}
  {doc.garment==='hoodie'&&<>
  <mesh position={[0,1.0,-.19]}><sphereGeometry args={[.49,24,18,0,Math.PI*2,0,Math.PI*.57]}/><meshStandardMaterial color={doc.baseColor} side={THREE.DoubleSide} roughness={.97}/></mesh>
  <mesh position={[0,-.19,.215]}><boxGeometry args={[.78,.33,.06]}/><meshStandardMaterial color={doc.baseColor}/></mesh>
