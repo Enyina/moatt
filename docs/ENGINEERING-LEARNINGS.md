@@ -23,3 +23,10 @@ Evidence: GitHub Actions run 39025853488 passed TypeScript, five document unit t
 Learnings: Keep Vitest and Playwright discovery separate; use exact accessible locators when labels overlap; scroll canvas into view before touch simulation; distinguish persisted design data from transient view selection.
 Caveats: These checks do not measure asset fidelity, sustained GPU resource consumption, or real device hardware performance. The mannequin is still stylized. Do not claim professional garment construction.
 Central scope: shared testing workflow and web/3D editor category.
+
+## 2026-10-17 — Garment surface and print-bounds distinctions
+Status: implemented; visual-fidelity validation remains open.
+Observation: Rectangular geometry made the 3D preview misleadingly different from clothing. A garment-outline ShapeGeometry can replace a rectangular front/back surface without adding cloth physics, but this remains a conceptual mockup.
+Rule candidate: Explicitly distinguish artboard coordinates, preview UV mapping, recommended artwork boundaries, and *verified production print dimensions*. Never present one as another.
+Verification: typecheck, rendering smoke/browser test, and visual comparison on real devices. Real print measurement calibration deferred.
+Scope for promotion: 3D editor category once visual validation is performed.
