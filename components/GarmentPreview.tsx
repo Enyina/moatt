@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useMemo,useState} from 'react';
+import {Component,useEffect,useMemo,useState} from 'react';
+import type {ReactNode} from 'react';
 import {Canvas,useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
@@ -27,6 +28,11 @@ function Model({doc}:{doc:StudioDocument}){
  </group>;
 }
 function Position({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.5,side==='front'?6:-6);camera.lookAt(0,1.35,0)},[camera,side]);return null}
+class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}> {
+ state={failed:false};
+ static getDerivedStateFromError(){return {failed:true};}
+ render(){return this.state.failed?<div role="alert" className="empty3d">3D preview is unavailable in this browser. You can still edit and export artwork in 2D.</div>:this.props.children;}
+}
 export default function GarmentPreview({doc,side}:{doc:StudioDocument;side:Side}){
- return <Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}><color attach="background" args={['#252b35']}/><ambientLight intensity={1.9}/><directionalLight position={[5,6,8]} intensity={1.7}/><Model doc={doc}/><Position side={side}/><OrbitControls target={[0,1.35,0]} minDistance={3.5} maxDistance={10} enablePan={false}/><gridHelper args={[10,10,'#646e78','#38404c']} position={[0,-.75,0]}/></Canvas>;
+ return <PreviewBoundary><Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}><color attach="background" args={['#252b35']}/><ambientLight intensity={1.9}/><directionalLight position={[5,6,8]} intensity={1.7}/><Model doc={doc}/><Position side={side}/><OrbitControls target={[0,1.35,0]} minDistance={3.5} maxDistance={10} enablePan={false}/><gridHelper args={[10,10,'#646e78','#38404c']} position={[0,-.75,0]}/></Canvas></PreviewBoundary>;
 }
