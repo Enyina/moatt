@@ -9,6 +9,7 @@ test('creates front and back designs and restores saved project',async({page})=>
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK TEST');
  await expect(page.getByText('text: BACK TEST')).toBeVisible();
  await page.reload();
+ await page.getByRole('button',{name:'Back'}).click();
  await expect(page.getByText('text: BACK TEST')).toBeVisible();
  await page.getByRole('button',{name:'Front'}).click();
  await expect(page.getByText('text: FRONT TEST')).toBeVisible();
