@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Boundary parser validates external JSON values before use. */
 export type Side = 'front'|'back';
 export type Garment = 'tshirt'|'hoodie';
 export type Tool = 'select'|'draw'|'erase';
