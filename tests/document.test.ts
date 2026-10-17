@@ -12,3 +12,8 @@ describe('Garment construction options',()=>{
  it('round trips garment construction choices',()=>{const d=initialDocument();d.sleeve='long';d.neck='wide';d.hem='cropped';const saved=decodeDocument(JSON.stringify(d));expect([saved.sleeve,saved.neck,saved.hem]).toEqual(['long','wide','cropped'])});
  it('defaults missing construction choices in older v2 documents',()=>{const d=initialDocument();const legacy=JSON.parse(JSON.stringify(d));delete legacy.sleeve;delete legacy.neck;delete legacy.hem;const restored=decodeDocument(JSON.stringify(legacy));expect([restored.sleeve,restored.neck,restored.hem]).toEqual(['short','crew','standard'])});
 });
+
+describe('Material appearance preset',()=>{
+ it('preserves fabric choice',()=>{const d=initialDocument();d.material='satin';expect(decodeDocument(JSON.stringify(d)).material).toBe('satin')});
+ it('defaults older saved designs to cotton',()=>{const d=JSON.parse(JSON.stringify(initialDocument()));delete d.material;expect(decodeDocument(JSON.stringify(d)).material).toBe('cotton')});
+});
