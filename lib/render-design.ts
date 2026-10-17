@@ -7,9 +7,9 @@ export function drawLayer(ctx:CanvasRenderingContext2D,l:Layer){
  if(l.kind==='stroke'&&l.points?.length){ctx.strokeStyle=l.color;ctx.lineWidth=Math.max(1,Math.min(l.fontSize||14,80));ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();for(let i=0;i<l.points.length;i+=2){if(i===0)ctx.moveTo(l.points[i],l.points[i+1]);else ctx.lineTo(l.points[i],l.points[i+1]);}if(l.points.length===2)ctx.lineTo(l.points[0]+.01,l.points[1]);ctx.stroke();}
  ctx.restore();
 }
-export async function renderArtwork(doc:StudioDocument,side:Side):Promise<HTMLCanvasElement>{
+export async function renderArtwork(doc:StudioDocument,side:Side,transparent=false):Promise<HTMLCanvasElement>{
  const canvas=document.createElement('canvas');canvas.width=SIZE;canvas.height=SIZE;const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');
- ctx.fillStyle=doc.baseColor;ctx.fillRect(0,0,SIZE,SIZE);
+ if(!transparent){ctx.fillStyle=doc.baseColor;ctx.fillRect(0,0,SIZE,SIZE);}
  for(const l of doc.layers[side]){if(l.hidden)continue;if(l.kind!=='image'){drawLayer(ctx,l);continue}
  const image=new Image();image.src=l.value;try{await image.decode()}catch{continue}ctx.save();ctx.translate(l.x+l.width/2,l.y+l.height/2);ctx.rotate(l.rotation*Math.PI/180);ctx.drawImage(image,-l.width/2,-l.height/2,l.width,l.height);ctx.restore();
  }
