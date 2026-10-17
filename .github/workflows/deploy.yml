@@ -29,6 +29,7 @@ jobs:
         env:
           GITHUB_PAGES: '1'
           NEXT_PUBLIC_BASE_PATH: '/moatt'
+      - run: node scripts/check-static-release.mjs
       - run: touch out/.nojekyll
       - uses: actions/upload-artifact@v4
         with:
