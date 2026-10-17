@@ -15,3 +15,11 @@ Central destination: `rules/CORE-ENGINEERING.md`.
 
 ## Ongoing process
 For every meaningful defect or architectural decision: record observed behavior, reproducible evidence, cause, user impact, test, selected scope and proposed rule change. Keep reusable sanitized rules in the private AI config repo, not inside project-specific assumptions.
+
+
+## 2026-10-17 — Integration checks identified mistakes early
+Status: validated by GitHub Actions.
+Evidence: GitHub Actions run 39025853488 passed TypeScript, five document unit tests, the production build, and 10 desktop/mobile Playwright cases.
+Learnings: Keep Vitest and Playwright discovery separate; use exact accessible locators when labels overlap; scroll canvas into view before touch simulation; distinguish persisted design data from transient view selection.
+Caveats: These checks do not measure asset fidelity, sustained GPU resource consumption, or real device hardware performance. The mannequin is still stylized. Do not claim professional garment construction.
+Central scope: shared testing workflow and web/3D editor category.
