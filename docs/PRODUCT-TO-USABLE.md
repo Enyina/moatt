@@ -109,3 +109,13 @@ CI run [39025853488](https://github.com/Enyina/moatt/actions/runs/39025853488) P
 - Added four unit checks for placement diagnostics, a visible editor safe-area guide, and browser trace retention in CI.
 - [GitHub CI run 39026492744](https://github.com/Enyina/moatt/actions/runs/39026492744) passed TypeScript, nine unit tests, production build and ten Chromium desktop/mobile tests.
 - **Not complete under original acceptance contract:** photorealistic production garments/mannequins, collar/sleeve construction parameter editing, physical UV/print calibration, sustained GPU/performance measurements, full keyboard and assistive-tech validation, manual visual review and deployment. Do not request owner acceptance testing until these are actually addressed.
+
+## Continued engineering pass (2026-10-17)
+
+- Added editable sleeve length, hem length and neckline as fields in the versioned project document. Older v2 documents load with backward-compatible defaults.
+- Changed custom garment geometry to respond to these parameters, with explicit persistence and migration unit tests.
+- Added keyboard-based nudge controls (1 unit or 10 with Shift) and additional Playwright output screenshots for design/3D views.
+- [GitHub Actions 39026997451](https://github.com/Enyina/moatt/actions/runs/39026997451) passed typecheck, unit tests, production build and desktop/mobile browser regression.
+- Investigated properly licensed CC0 mannequin assets. The available connector could not import the binary GLB into the repository, so **no external mannequin asset has been installed**. Do not report asset integration as complete.
+
+The acceptance gate remains open for material improvements to visual quality, physical fit and construction, explicit export-space calibration, real-device validation and deployment.
