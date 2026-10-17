@@ -30,6 +30,11 @@ jobs:
           GITHUB_PAGES: '1'
           NEXT_PUBLIC_BASE_PATH: '/moatt'
       - run: touch out/.nojekyll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moatt-static-site
+          path: './out'
+          retention-days: 7
       - uses: actions/configure-pages@v5
         with:
           enablement: true
