@@ -64,3 +64,12 @@ Implemented in branch \`feat/concept-to-supplier-review\`, PR #5. New functional
 ## Engineering learning
 
 Evidence from existing tests demonstrated that a 3D canvas can display a reversed back-side decal while all smoke tests pass. Separate the material UV contract from the drawing surface, unit-test mirror orientation mathematically and always capture paired front/back screenshots. Candidate Moatt-specific rule; promote to shared 3D guidance only after cross-device evidence.
+
+
+## Visual fidelity checkpoint — October 27, 2026
+
+- The default figure is a locally authored, smooth, neutral studio display mannequin. The earlier licensed low-poly mesh can still be chosen explicitly for comparison.
+- Procedural cotton/denim/satin texture tiles are deterministic and checked with unit tests. Physical material profiles use different bump strengths, roughness, sheen and satin anisotropy.
+- Browser tests verify selecting the studio versus classic mannequin, selecting all three fabrics, and capturing material screenshots. A canvas snapshot must *actually change* across fabrics. This goes beyond assertions that a dropdown value changed.
+- Mannequin and garment visuals remain approximations. No photogrammetry, skin realism, cloth draping solver, fabric scanning, body measurement standards or apparel print calibration are claimed.
+- Evidence is tied to the exact commit's CI. Independently inspect screenshot artifacts at normal zoom and enlarged fabric close-ups before final aesthetic sign-off.
