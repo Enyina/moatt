@@ -62,7 +62,7 @@ test('captures editable garment and 3D design evidence',async({page},testInfo)=>
   await expect.poll(async()=>view.evaluate(node=>{
    const canvas=node as HTMLCanvasElement;return canvas.width>0&&canvas.height>0;
   }),{timeout:15000}).toBeTruthy();
-  await expect(view).toHaveAttribute('data-mannequin-status','loaded',{timeout:20000});
+  await expect(view).toHaveAttribute('data-mannequin-status','studio-ready',{timeout:20000});
  }
  await page.screenshot({path:testInfo.outputPath('garment-preview.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
@@ -86,8 +86,9 @@ test('loads a verified mannequin and retains garment construction changes',async
  await page.getByRole('combobox',{name:'Sleeve length'}).selectOption('long');
  await page.getByRole('combobox',{name:'Hem length'}).selectOption('cropped');
  await page.getByRole('combobox',{name:'Neckline'}).selectOption('wide');
- const asset=page.waitForResponse(r=>r.url().includes('/models/mannequin.glb'),{timeout:6000}).catch(()=>null);
  await page.getByRole('button',{name:'3D preview'}).click();
+ const asset=page.waitForResponse(r=>r.url().includes('/models/mannequin.glb'),{timeout:10000}).catch(()=>null);
+ await page.getByRole('button',{name:'Classic mannequin'}).click();
  const response=await asset;
  if(response)expect(response.status()).toBe(200);
  else await expect(page.getByRole('alert').filter({hasText:'3D rendering is unavailable'})).toBeVisible();
