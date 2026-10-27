@@ -18,8 +18,8 @@ Visit http://localhost:3000. CI runs typecheck, Vitest unit tests, the productio
 
 ## Workflows present in source
 
-- T-shirt and hoodie silhouette presets, adjustable sleeves/hem/neckline/pockets, regular/oversized fit, standard/tall mannequin presets, cotton/denim/satin appearance and fabric colors
-- A 1024×1024 artboard and a verified CC0 mannequin GLB (with procedural fallback), with distinct front/back artwork
+- Rounded T-shirt and hoodie mockup silhouettes, adjustable sleeves/hem/neckline/pockets, regular/oversized fit and mannequin presets; procedurally rendered cotton/denim/satin weaves, physical highlight profiles and fabric colors
+- A 1024×1024 artboard, a smooth procedural studio mannequin (default), and a verified CC0 legacy mannequin GLB (optional), with distinct front/back artwork
 - Layered text, image upload (PNG/JPEG/WebP), drawing strokes, selection, basic dragging, width/height/rotation, show/hide, lock, duplicate, delete, reorder forward
 - Undo/redo, browser-local autosave, a multi-design library and colorway duplication, JSON project export/import with schema migration from v1 and asset checks
 - Independent transparent PNG exports for both sides; 3D preview screenshot from the viewport
@@ -39,8 +39,8 @@ The text idea helper recognizes a limited set of words, **not arbitrary sketches
 
 ## Assets and hosting
 
-The mannequin is downloaded during dev/build by `scripts/sync-mannequin.mjs` and checked against a pinned Git blob SHA. Its CC0 license and provenance are documented in `docs/ASSET-PROVENANCE.md`. `npm run assets:verify` fails if the pinned source cannot be verified.
+The optional classic mannequin is downloaded during dev/build by `scripts/sync-mannequin.mjs` and checked against a pinned Git blob SHA. Its CC0 license and provenance are documented in `docs/ASSET-PROVENANCE.md`. `npm run assets:verify` fails if the pinned source cannot be verified.
 
-The project builds as a static Next.js website. The GitHub Pages workflow also uploads a static-site artifact, but **hosting remains blocked** until Pages is enabled for this repository or another hosting provider is connected. Build success does not establish a live website.
+The smooth default mannequin and fabric textures are generated locally in code; these are visual approximations, not scanned assets or cloth physics. The project builds as a static Next.js website. The GitHub Pages workflow also uploads a static-site artifact, but **hosting remains blocked** until Pages is enabled for this repository or another hosting provider is connected. Build success does not establish a live website.
 
 Visual output is a conceptual clothing mockup, **not reliable apparel fitting, calibrated print positioning or professional manufacturing CAD**.
