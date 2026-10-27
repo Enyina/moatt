@@ -41,3 +41,20 @@ Save several designs in your browser, open an earlier one, make a new design, or
 Choose a visual pocket style, save your brand name and add supplier questions. The 3D design previews now have gently rounded surfaces and corrected artwork direction on the back.
 
 The mannequin and clothing remain illustrations, not proof of fit or manufacturing-ready garments.
+
+
+## October 27, 2026 — Clearer clothing and mannequin previews
+
+**A smoother mannequin**
+
+Moatt now opens with a simple, smooth display mannequin instead of the visibly blocky character. You can still switch to the older character to compare.
+
+**Clothes look less flat**
+
+T-shirt and hoodie outlines now have softer shoulders and edges. We've added gentle folds and finishing details, improved the studio lighting, and refined the look of the clothing around the mannequin.
+
+**Fabrics have different surface character**
+
+Cotton has a fine, soft weave; denim has stronger diagonal texture; satin has a smoother surface with brighter highlights. The artwork editor and 3D preview share the same visual fabric choice, while exported print artwork remains transparent.
+
+These changes improve the *appearance* of your designs, but they do not provide true cloth simulation, exact sizes or factory-approved production files. They are not published to the live website yet.
