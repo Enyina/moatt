@@ -23,7 +23,14 @@ export function createSupplierReviewHtml(doc:StudioDocument,frontPng:string,back
   detail('Neckline',words(doc.neck)),
   detail('Material appearance',words(doc.material)+' (visual preset, not a fabric specification)'),
   detail('Visual color',color+' (screen color only; request a physical sample)'),
-  detail('Visible artwork',visibleCount(doc,'front')+' front / '+visibleCount(doc,'back')+' back layers')
+  detail('Visible artwork',visibleCount(doc,'front')+' front / '+visibleCount(doc,'back')+' back layers'),
+  detail('Brand (user supplied)',doc.brief.brand||'Not provided'),
+  detail('Intended customer (user supplied)',doc.brief.targetCustomer||'Not provided'),
+  detail('Fabric composition (unverified)',doc.brief.fabricComposition||'Not confirmed'),
+  detail('Fabric weight (unverified)',doc.brief.fabricWeight||'Not confirmed'),
+  detail('Sizing and measurements (unverified)',doc.brief.sizingNotes||'Not confirmed'),
+  detail('Construction requests (unverified)',doc.brief.constructionNotes||'Not confirmed'),
+  detail('Other production questions',doc.brief.productionNotes||'Not provided')
  ].join('\n');
  return [
   '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
