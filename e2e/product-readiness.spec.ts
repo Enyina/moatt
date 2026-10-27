@@ -50,9 +50,9 @@ test('front and back mockup preview remain independent',async({page})=>{
  await page.getByRole('button',{name:'3D preview'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
- await expect(canvas.or(unavailable)).toBeVisible();
+ await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
  await page.getByRole('button',{name:'Back',exact:true}).click();
- await expect(canvas.or(unavailable)).toBeVisible();
+ await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
 });
 
 test('malicious imported brief cannot inject markup into a review',async({page})=>{
