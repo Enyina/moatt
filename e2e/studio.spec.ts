@@ -99,6 +99,7 @@ test('loads a verified mannequin and retains garment construction changes',async
 });
 
 test('keeps GPU allocations bounded across fabric and silhouette edits',async({page})=>{
+ test.setTimeout(90_000); // 24 material/geometry updates can be slow under CI software WebGL; assertions stay strict.
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
  const canvas=page.locator('.preview-stage canvas');
