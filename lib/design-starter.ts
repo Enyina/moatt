@@ -57,7 +57,7 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
   if(slogans.length===0){
    for(const match of idea.matchAll(/\b(front|back)\s+(?:text|says|reads)\s*:\s*([^\n.,]{2,80})/gi)){
     slogans.push({side:match[1].toLowerCase() as Side,value:match[2].trim()});
-    if(slogans.length===2)break;
+    if(slogans.length>=2)break;
    }
   }
   for(const slogan of slogans){
