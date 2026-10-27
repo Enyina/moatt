@@ -55,9 +55,9 @@ function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',
  const shape=new THREE.Shape();
  // A continuous curved silhouette, in contrast with the former pointed, flat slab.
  shape.moveTo(-n,.96);
- shape.quadraticCurveTo(-.50*w,1.07,-.74*w,.99);
- shape.quadraticCurveTo(-.86*w,.97,-.96*w,.89);
- shape.quadraticCurveTo(-1.14*w,long?.59:.75,-1.32*w,cuffY);
+ shape.quadraticCurveTo(-.49*w,.98,-.74*w,.91);
+ shape.quadraticCurveTo(-.86*w,.88,-.96*w,.81);
+ shape.quadraticCurveTo(-1.14*w,long?.59:.71,-1.32*w,cuffY);
  shape.quadraticCurveTo(-1.39*w,cuffY-.09,-1.21*w,cuffY-.13);
  shape.quadraticCurveTo(-1.05*w,cuffY-.14,-.90*w,.38);
  shape.quadraticCurveTo(-.87*w,-.12,-.84*w,hem+.13);
@@ -67,9 +67,9 @@ function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',
  shape.quadraticCurveTo(.87*w,-.12,.90*w,.38);
  shape.quadraticCurveTo(1.05*w,cuffY-.14,1.21*w,cuffY-.13);
  shape.quadraticCurveTo(1.39*w,cuffY-.09,1.32*w,cuffY);
- shape.quadraticCurveTo(1.14*w,long?.59:.75,.96*w,.89);
- shape.quadraticCurveTo(.86*w,.97,.74*w,.99);
- shape.quadraticCurveTo(.50*w,1.07,n,.96);
+ shape.quadraticCurveTo(1.14*w,long?.59:.71,.96*w,.81);
+ shape.quadraticCurveTo(.86*w,.88,.74*w,.91);
+ shape.quadraticCurveTo(.49*w,.98,n,.96);
  shape.quadraticCurveTo(n*.66,.77,0,.76);
  shape.quadraticCurveTo(-n*.66,.77,-n,.96);
  shape.closePath();
