@@ -62,6 +62,7 @@ test('captures editable garment and 3D design evidence',async({page},testInfo)=>
   await expect.poll(async()=>view.evaluate(node=>{
    const canvas=node as HTMLCanvasElement;return canvas.width>0&&canvas.height>0;
   }),{timeout:15000}).toBeTruthy();
+  await expect(view).toHaveAttribute('data-mannequin-status','loaded',{timeout:20000});
  }
  await page.screenshot({path:testInfo.outputPath('garment-preview.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
