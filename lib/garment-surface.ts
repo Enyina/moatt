@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /**
  * Gives a triangulated garment art panel a modest rounded body shape.
@@ -44,7 +45,10 @@ export function curvedArtworkSurface(input:THREE.BufferGeometry,halfWidth:number
  const surface=new THREE.BufferGeometry();
  surface.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
  surface.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
- surface.computeVertexNormals();
- surface.computeBoundingBox();
- return surface;
+ // Welding matching triangle vertices prevents a flat-faceted, paper-like shirt.
+ // Preserve UV splits where artwork seams genuinely differ.
+ const smooth=mergeVertices(surface,1e-5);
+ smooth.computeVertexNormals();smooth.computeBoundingBox();
+ surface.dispose();
+ return smooth;
 }
