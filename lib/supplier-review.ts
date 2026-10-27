@@ -21,6 +21,7 @@ export function createSupplierReviewHtml(doc:StudioDocument,frontPng:string,back
   detail('Sleeves',words(doc.sleeve)),
   detail('Hem',words(doc.hem)),
   detail('Neckline',words(doc.neck)),
+  detail('Pocket preview',words(doc.pocket)+' (visual option only; confirm pattern)'),
   detail('Material appearance',words(doc.material)+' (visual preset, not a fabric specification)'),
   detail('Visual color',color+' (screen color only; request a physical sample)'),
   detail('Visible artwork',visibleCount(doc,'front')+' front / '+visibleCount(doc,'back')+' back layers'),
