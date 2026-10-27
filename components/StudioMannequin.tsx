@@ -15,8 +15,10 @@ function Limb({from,to,upperRadius,lowerRadius,material}:{from:[number,number,nu
  // Endpoints are values chosen inside the static mannequin definition.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[...from,...to]);
- return <mesh position={data.center} quaternion={data.rotation} material={material} castShadow>
-  <cylinderGeometry args={[upperRadius,lowerRadius,data.length,30,1,true]}/>
+ return <mesh position={data.center} quaternion={data.rotation}
+ scale={[(upperRadius+lowerRadius)/2,data.length/2+upperRadius,(upperRadius+lowerRadius)/2]}
+ material={material} castShadow>
+  <sphereGeometry args={[1,32,24]}/>
  </mesh>;
 }
 export default function StudioMannequin(){
@@ -24,7 +26,7 @@ export default function StudioMannequin(){
  const neckMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#515761',roughness:.62}),[]);
  useEffect(()=>()=>{material.dispose();neckMat.dispose()},[material,neckMat]);
  return <group>
-  <mesh position={[0,2.83,0]} material={material} castShadow>
+  <mesh position={[0,2.86,0]} scale={[.88,1.17,.87]} material={material} castShadow>
    <sphereGeometry args={[.265,48,32]}/>
   </mesh>
   <mesh position={[0,2.48,0]} material={neckMat} castShadow>
