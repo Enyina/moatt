@@ -1,0 +1,66 @@
+# Moatt product acceptance and automation evidence
+
+Updated: 2026-10-27. Scope: browser-based conceptual garment mockup studio. **This document does not certify fabric fit or manufacturing validity.**
+
+## Test contract
+
+All gates apply to the code being shipped, not just the previous release. A pass on an earlier commit is not a pass on a newer commit. Run:
+
+\`\`\`bash
+npm install
+npm run assets:verify
+npm run typecheck
+npm test
+npm run build
+node scripts/check-static-release.mjs
+npx playwright install --with-deps chromium firefox webkit
+npm run e2e
+\`\`\`
+
+CI workflow name: **Moatt CI**. Its verification job runs all steps and uploads browser artifacts. To claim a gate passed, link its run and final commit SHA. Never claim all green while the workflow is queued or running.
+
+## Automation matrix
+
+| ID | Scenario | Gate | Evidence |
+| --- | --- | --- | --- |
+| DOC-01 | Fresh default document serializes and restores independent front/back layers | P0 | tests/document.test.ts |
+| DOC-02 | Older v1/v2 projects migrate without losing wording or changing defaults unpredictably | P0 | tests/document.test.ts; tests/product-readiness.test.ts |
+| DOC-03 | Reject image script URLs, unsupported formats and corrupt artwork | P0 | tests/document.test.ts |
+| IDEA-01 | Recognize garment, fit, material, color and front/back wording | P1 | tests/concept-to-review.test.ts |
+| IDEA-02 | Keep existing artwork and allow undo after idea draft | P0 | tests/concept-to-review.test.ts; e2e/concept-to-review.spec.ts |
+| IDEA-03 | Unknown details (embroidery, actual pocket pattern) explicitly require review | P1 | tests/concept-to-review.test.ts |
+| IDEA-04 | Pocket style from supported description is editable, versioned and reversible | P1 | tests/construction-options.test.ts; e2e/construction-options.spec.ts |
+| ART-01 | Front/back text edited independently, persists across reload | P0 | e2e/studio.spec.ts |
+| ART-02 | Upload PNG; reject unsupported large uploads | P0 | e2e/studio.spec.ts; manual input restriction |
+| ART-03 | Draw strokes without starting 3D orbit controls | P0 | e2e/studio.spec.ts |
+| ART-04 | Selection keyboard nudges and undo/redo work | P0 | e2e/studio.spec.ts |
+| ART-05 | Art-only PNG exports remain transparent | P0 | e2e/studio.spec.ts |
+| 3D-01 | Backside UV reverses exactly once; front and back V coordinates match | P0 | tests/product-readiness.test.ts |
+| 3D-02 | Curved panel includes positive surface depth and rejects missing geometry | P1 | tests/product-readiness.test.ts |
+| 3D-03 | Garment detail controls persist and textures/geometries remain bounded over repeated edits | P0 | e2e/studio.spec.ts |
+| 3D-04 | Browser without WebGL offers an edit-capable fallback | P0 | e2e/studio.spec.ts |
+| LIB-01 | Save, open and delete multiple different projects in the same browser | P0 | tests/product-readiness.test.ts; e2e/product-readiness.spec.ts |
+| LIB-02 | Duplicate colorway keeps artwork, changes independently and supports undo | P1 | tests/construction-options.test.ts; e2e/construction-options.spec.ts |
+| LIB-03 | Damaged saved entry is skipped, size limit enforced and storage quota failure surfaces | P0 | tests/product-readiness.test.ts |
+| BRIEF-01 | User-supplied brand, fabric and measurements survive reload/import | P0 | tests/product-readiness.test.ts; e2e/product-readiness.spec.ts |
+| BRIEF-02 | Export both design sides and unverified manufacturing questions | P0 | tests/concept-to-review.test.ts; e2e/concept-to-review.spec.ts |
+| BRIEF-03 | HTML and unsafe image URL injection in supplied information is rejected/escaped | P0 | tests/product-readiness.test.ts; e2e/product-readiness.spec.ts |
+| MOB-01 | Functional mobile tools and responsive viewport | P0 | e2e/construction-options.spec.ts |
+| BUILD-01 | TypeScript, tests, static build, licensed 3D asset and publishable artifact are reproducible | P0 | GitHub Actions, current HEAD |
+| DEPLOY-01 | Published website and mannequin asset actually load at production URL | P0 | GitHub Pages deploy and smoke jobs; open |
+| DEVICE-01 | Touch interactions on physical iOS/Android device, accessible keyboard use and realistic appearance | P0 | Independent physical and visual acceptance; open |
+
+## Release decisions
+
+- **Release-blocking P0:** any saved-artwork loss, misleading manufacture-ready claims, mismatched front/back preview, missed browser controls, failed build/typecheck/asset verification, or failed cross-browser behavior.
+- **Important P1:** convenience features may be deferred with explicit limitations, but they must not damage P0 behavior.
+- **Cannot be proved by automation alone:** real fabric fit and drape; supplier-approved measurements, calibrated printable regions; physical touch/GPU performance on an actual device; creative attractiveness and customer preference; actual manufacturer feedback. These need valid external samples, real-device runs, or customer acceptance.
+- Browser-local library is **not cloud storage** or collaborative sharing. The printable supplier review is **not a factory tech pack**. The rule-based text parser is **not generative AI**. The rounded surface is **not cloth simulation**.
+
+## Release status for this change
+
+Implemented in branch \`feat/concept-to-supplier-review\`, PR #5. New functionality is committed; only report verification as passed after the *latest branch SHA* completes CI. Production publishing and external garment accuracy verification are separate gates.
+
+## Engineering learning
+
+Evidence from existing tests demonstrated that a 3D canvas can display a reversed back-side decal while all smoke tests pass. Separate the material UV contract from the drawing surface, unit-test mirror orientation mathematically and always capture paired front/back screenshots. Candidate Moatt-specific rule; promote to shared 3D guidance only after cross-device evidence.
