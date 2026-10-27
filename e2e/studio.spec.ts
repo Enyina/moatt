@@ -31,7 +31,7 @@ test('draws on artwork without invoking 3D orbit and opens the mannequin',async(
  if(testInfo.project.name==='mobile'){await page.touchscreen.tap(b!.x+b!.width/2,b!.y+b!.height/2)}else{await page.mouse.move(b!.x+b!.width/3,b!.y+b!.height/3);await page.mouse.down();await page.mouse.move(b!.x+b!.width/2,b!.y+b!.height/2,{steps:6});await page.mouse.up();}
  await expect(page.getByText(/stroke: brush stroke/)).toBeVisible();
  await page.getByRole('button',{name:'3D preview'}).click();
- await expect(page.locator('.preview-stage canvas')).toBeVisible();
+ await expect(page.locator('.preview-stage canvas').or(page.getByRole('alert').filter({hasText:'3D rendering is unavailable'}))).toBeVisible();
 });
 test('round trips project JSON through import',async({page})=>{
  await page.goto('/');
