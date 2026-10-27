@@ -46,7 +46,7 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
   if(color){d.baseColor=color[1];recognized.push(color[2]+' color');}
   const slogans: Array<{side:Side;value:string}>=[];
   for(const match of idea.matchAll(/["“]([^"”\n]{1,80})["”]/g)){
-   if(slogans.length===2)break;
+   if(slogans.length>=2)break;
    const before=idea.slice(Math.max(0,match.index-35),match.index);
    const after=idea.slice(match.index+match[0].length,match.index+match[0].length+25);
    const side:Side=/\bback\b/i.test(before+' '+after)?'back':'front';
