@@ -187,10 +187,10 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  },[]);
  if(webgl==='checking')return <div role="status" className="empty3d">Checking 3D support…</div>;
  if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
- return <PreviewBoundary><Canvas shadows camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,2]}>
+ return <PreviewBoundary><Canvas camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
  <color attach="background" args={['#292f39']}/>
  <ambientLight intensity={.85}/><hemisphereLight args={['#e6ebff','#30303c',1.2]}/>
- <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4" castShadow shadow-mapSize={[1024,1024]} shadow-bias={-.0006} shadow-normalBias={.025}/>
+ <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4"/>
  <directionalLight position={[-4,2,3]} intensity={.9} color="#d4e1ff"/>
  <directionalLight position={[1,5,-4]} intensity={1.6} color="#ffffff"/>
  <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side}/><RenderingDiagnostics/>
