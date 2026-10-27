@@ -50,7 +50,7 @@ function useFabricBump(material:StudioDocument['material']){
  return bump;
 }
 function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',hemStyle:'standard'|'cropped',neck:'crew'|'wide'){
- const w=oversized?1.13:1,hem=hemStyle==='cropped'?-.40:(hoodie?-.73:-.89),n=(neck==='wide'?.43:.31)*w;
+ const w=oversized?1.13:1,hem=hemStyle==='cropped'?-.22:(hoodie?-.55:-.48),n=(neck==='wide'?.43:.31)*w;
  const long=sleeve==='long',cuffY=long?-.50:(hoodie?.37:.51);
  const shape=new THREE.Shape();
  // A continuous curved silhouette, in contrast with the former pointed, flat slab.
@@ -106,7 +106,7 @@ function Garment({doc}:{doc:StudioDocument}){
  [bump,doc.material,doc.baseColor]);
  const seamMat=useMemo(()=>new THREE.MeshStandardMaterial({color:doc.baseColor,roughness:.95}),[doc.baseColor]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose();clothMat.dispose();seamMat.dispose()},[frontMat,backMat,clothMat,seamMat]);
- const long=doc.sleeve==='long',hem=doc.hem==='cropped'?-.40:(doc.garment==='hoodie'?-.73:-.89);
+ const long=doc.sleeve==='long',hem=doc.hem==='cropped'?-.22:(doc.garment==='hoodie'?-.55:-.48);
  const cuffY=long?-.51:doc.garment==='hoodie'?.36:.50;
  return <group position={[0,1.54,0]} scale={[.65,.91,1]}>
   <mesh geometry={geo.shell} material={clothMat} castShadow receiveShadow/>
