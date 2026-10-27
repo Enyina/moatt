@@ -7,16 +7,24 @@ import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
 import {draftFromIdea,IDEA_EXAMPLES} from '../lib/design-starter';
 import {createSupplierReviewHtml} from '../lib/supplier-review';
+import {loadLibrary,saveToLibrary,openFromLibrary,deleteFromLibrary} from '../lib/design-library';
+import type {LibraryEntry} from '../lib/design-library';
 const Preview=dynamic(()=>import('./GarmentPreview'),{ssr:false,loading:()=> <div className="empty3d">Loading preview…</div>});
 type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument[]};
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
+ const [savedDesigns,setSavedDesigns]=useState<LibraryEntry[]>([]);
  const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'>('2d'),[toast,setToast]=useState(''),[brushColor,setBrushColor]=useState('#202329'),[brushWidth,setBrushWidth]=useState(14);
  const doc=history.present;const printIssues=analyzePrintPlacement(doc);const canvasRef=useRef<HTMLCanvasElement>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null);
  const drag=useRef<{id:string;startX:number;startY:number;originX:number;originY:number;points?:number[]}|null>(null);
  const notify=(text:string)=>{setToast(text);setTimeout(()=>setToast(''),3500)};
- useEffect(()=>{try{const saved=localStorage.getItem(STORAGE_KEY);if(saved)setHistory({...START,present:decodeDocument(saved)})}catch(e){setSaveError('Could not restore saved design. '+String(e))}setHydrated(true)},[]);
+ useEffect(()=>{try{
+  const saved=localStorage.getItem(STORAGE_KEY);
+  if(saved)setHistory({...START,present:decodeDocument(saved)});
+  setSavedDesigns(loadLibrary(localStorage));
+ }catch(e){setSaveError('Could not restore saved design. '+String(e))}
+ setHydrated(true)},[]);
  useEffect(()=>{if(!hydrated)return;try{localStorage.setItem(STORAGE_KEY,JSON.stringify(doc));setSaveError('')}catch{setSaveError('Saving failed. Export your project to avoid losing changes.')}},[doc,hydrated]);
  const commit=useCallback((fn:(draft:StudioDocument)=>void)=>{setHistory(h=>({past:[...h.past.slice(-39),h.present],present:modify(h.present,fn),future:[]}))},[]);
  const undo=()=>setHistory(h=>h.past.length?{past:h.past.slice(0,-1),present:h.past[h.past.length-1],future:[h.present,...h.future]}:h);
@@ -31,6 +39,27 @@ export default function Studio(){
  const pointerDown=(e:PointerEvent<HTMLCanvasElement>)=>{const p=position(e);e.currentTarget.setPointerCapture(e.pointerId);if(tool==='draw'){const id=uid();drag.current={id,startX:p.x,startY:p.y,originX:p.x,originY:p.y,points:[0,0]};return}if(tool==='erase'){const target=hit(p);if(target){commit(d=>{d.layers[side]=d.layers[side].filter(l=>l.id!==target.id)});setSelected(null)}return}const target=hit(p);setSelected(target?.id||null);if(target)drag.current={id:target.id,startX:p.x,startY:p.y,originX:target.x,originY:target.y}};
  const pointerMove=(e:PointerEvent<HTMLCanvasElement>)=>{if(!drag.current)return;const p=position(e);if(tool==='draw'&&drag.current.points){drag.current.points.push(p.x-drag.current.originX,p.y-drag.current.originY);const c=canvasRef.current?.getContext('2d');if(c){const pts=drag.current.points;c.strokeStyle=brushColor;c.lineWidth=brushWidth;c.lineCap='round';c.beginPath();if(pts.length>2){c.moveTo(drag.current.originX+pts[pts.length-4],drag.current.originY+pts[pts.length-3]);c.lineTo(p.x,p.y);c.stroke();}}}else if(tool==='select'){const d=drag.current;const el=document.querySelector('[data-layer-id="'+d.id+'"]') as HTMLElement|null;if(el)el.style.transform='translate('+((p.x-d.startX)*100/1024)+'%, '+((p.y-d.startY)*100/1024)+'%)';}};
  const pointerUp=(e:PointerEvent<HTMLCanvasElement>)=>{const d=drag.current;drag.current=null;if(!d)return;const p=position(e);if(tool==='draw'&&d.points){const layer:Layer={id:d.id,kind:'stroke',x:d.originX,y:d.originY,width:1024,height:1024,rotation:0,value:'',color:brushColor,fontSize:brushWidth,points:d.points};commit(x=>x.layers[side].push(layer));setSelected(d.id);return;}if(tool==='select'){const nx=clamp(d.originX+p.x-d.startX,-1024,2048),ny=clamp(d.originY+p.y-d.startY,-1024,2048);if(nx!==d.originX||ny!==d.originY)update(d.id,{x:nx,y:ny});else{const el=document.querySelector('[data-layer-id="'+d.id+'"]') as HTMLElement|null;if(el)el.style.transform='';}}};
+ const storeDesign=()=>{try{
+  const saved=saveToLibrary(localStorage,doc);
+  setSavedDesigns(saved);notify('Design saved in your browser library. Download a backup for safety.');
+ }catch(e){notify('Could not save design: '+String(e));}};
+ const openDesign=(id:string)=>{
+  if(!window.confirm('Open this saved design? Your current design will stay in browser autosave only until you save it to the library or export it.'))return;
+  try{const next=openFromLibrary(localStorage,id);
+   setHistory(h=>({past:[...h.past.slice(-39),h.present],present:next,future:[]}));
+   setSelected(null);setSide('front');setTool('select');setTab('2d');notify('Design opened.');
+  }catch(e){notify('Could not open design: '+String(e));}
+ };
+ const removeDesign=(id:string)=>{
+  if(!window.confirm('Delete this saved design from your browser library? Export a backup first if needed.'))return;
+  try{setSavedDesigns(deleteFromLibrary(localStorage,id));notify('Saved design deleted.');}
+  catch(e){notify('Could not delete design: '+String(e));}
+ };
+ const newDesign=()=>{
+  if(!window.confirm('Start a new design? Save the current design to your library or export a backup first.'))return;
+  setHistory(h=>({past:[...h.past.slice(-39),h.present],present:initialDocument(),future:[]}));
+  setSelected(null);setSide('front');setTool('select');setTab('2d');notify('New design ready.');
+ };
  const applyIdea=()=>{
   try{
    const draft=draftFromIdea(idea,doc);
@@ -73,6 +102,21 @@ export default function Studio(){
  <div className="studio-stage" style={{display:tab==='2d'?'flex':'none'}}><div className="artboard"><canvas ref={canvasRef} width={1024} height={1024} aria-label={side+' artwork canvas'} style={{touchAction:'none',cursor:tool==='draw'?'crosshair':tool==='erase'?'not-allowed':'move'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null;void paint()}}/><div aria-hidden="true" className="safe-guide" style={{left:SAFE_REGION.left/1024*100+'%',top:SAFE_REGION.top/1024*100+'%',width:(SAFE_REGION.right-SAFE_REGION.left)/1024*100+'%',height:(SAFE_REGION.bottom-SAFE_REGION.top)/1024*100+'%'}}/>{active&&tool==='select'&&<div className="selection-outline" data-layer-id={active.id} style={{left:active.x/1024*100+'%',top:active.y/1024*100+'%',width:active.width/1024*100+'%',height:active.height/1024*100+'%',transform:'rotate('+active.rotation+'deg)'}}/>}</div></div>
  <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}><Preview doc={doc} side={side}/></div><div className="notice">{tab==='3d'?'Drag to orbit · scroll to zoom':'Artwork layout · front and back saved separately'}</div></section>
  <aside className="panel right"><div className="section"><h3>Project</h3><input aria-label="Design title" className="field" value={doc.name} maxLength={120} onChange={e=>commit(d=>{d.name=e.target.value})}/><p className="hint">{saveError||(!hydrated?'Loading saved design…':'Autosaved in this browser')}</p><button className="button" onClick={()=>projectRef.current?.click()}>Import project</button><input hidden type="file" accept=".json,application/json" ref={projectRef} onChange={e=>void importProject(e)}/></div>
+ <div className="section"><h3>My designs</h3>
+ <div className="row"><button className="button primary" onClick={storeDesign}>Save to my designs</button><button className="button" onClick={newDesign}>New design</button></div>
+ <p className="hint">Stored on this browser only. Download JSON backups before clearing browser data or switching devices.</p>
+ {savedDesigns.length===0?<p className="hint">No designs in your local library yet.</p>:
+ savedDesigns.map(item=><div className="layer-row" key={item.id}><button className="choice" aria-label={'Open '+item.name} onClick={()=>openDesign(item.id)}>{item.name} · {item.savedAt.slice(0,10)}</button><button className="button" aria-label={'Delete '+item.name} onClick={()=>removeDesign(item.id)}>×</button></div>)}
+ </div>
+ <div className="section"><h3>Brand and supplier notes</h3><p className="hint">Optional information you provide for a supplier discussion. All physical details require independent verification.</p>
+ {([
+ ['brand','Brand name'],['targetCustomer','Target customer'],['fabricComposition','Requested fabric composition'],
+ ['fabricWeight','Requested fabric weight'],['sizingNotes','Requested sizing / measurements'],
+ ['constructionNotes','Construction requests'],['productionNotes','Additional supplier questions']
+ ] as Array<[keyof StudioDocument['brief'],string]>).map(([key,label])=>
+ <label key={key}>{label}<textarea aria-label={label} className="field" rows={key==='brand'?1:2} maxLength={2000} value={doc.brief[key]}
+ onChange={e=>commit(d=>{d.brief[key]=e.target.value.slice(0,2000)})}/></label>)}
+ </div>
  <div className="section"><h3>{side} layers ({current.length})</h3>{[...current].reverse().map(l=><div key={l.id} className="layer-row"><button className={'choice '+(selected===l.id?'selected':'')} onClick={()=>{setSelected(l.id);setTool('select')}}>{l.kind}: {l.kind==='text'?l.value.slice(0,12):l.kind==='stroke'?'brush stroke':'image'}</button><button aria-label="Delete layer" className="button" onClick={()=>{commit(d=>{d.layers[side]=d.layers[side].filter(x=>x.id!==l.id)});setSelected(null)}}>×</button></div>)}{!current.length&&<p className="hint">Add text, upload an image, or draw on the canvas.</p>}</div>
  {active&&<div className="section"><h3>Selected layer</h3>{active.kind==='text'&&<><label>Text<textarea aria-label="Selected layer text" className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
  {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
