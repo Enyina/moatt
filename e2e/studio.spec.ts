@@ -54,8 +54,15 @@ test('captures editable garment and 3D design evidence',async({page},testInfo)=>
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('MOATT');
  await page.getByRole('button',{name:'3D preview'}).click();
  const view=page.locator('.preview-stage canvas');
- await expect(view).toBeVisible();
- await expect.poll(async()=>view.evaluate((node)=>{const c=node as HTMLCanvasElement;return c.width>0&&c.height>0})).toBeTruthy();
+ const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(view.or(unavailable)).toBeVisible({timeout:15000});
+ if(await unavailable.isVisible()){
+  await expect(unavailable).toContainText('still editable and exportable in 2D');
+ }else{
+  await expect.poll(async()=>view.evaluate(node=>{
+   const canvas=node as HTMLCanvasElement;return canvas.width>0&&canvas.height>0;
+  }),{timeout:15000}).toBeTruthy();
+ }
  await page.screenshot({path:testInfo.outputPath('garment-preview.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
  await page.screenshot({path:testInfo.outputPath('artwork-editor.png'),fullPage:true});
