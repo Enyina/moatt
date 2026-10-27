@@ -166,7 +166,7 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
 function RenderingDiagnostics(){
  const {gl}=useThree();
  const tick=useMemo(()=>({count:0}),[]);
- useFrame(()=>{tick.count++;if(tick.count===1||tick.count%12===0){const canvas=gl.domElement;canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);}});
+ useFrame(()=>{tick.count++;const canvas=gl.domElement;canvas.dataset.renderFrames=String(tick.count);canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);});
  return null;
 }
 function CameraPosition({side}:{side:Side}){const {camera,invalidate}=useThree();useEffect(()=>{camera.position.set(0,1.65,side==='front'?5.7:-5.7);camera.lookAt(0,1.55,0);invalidate()},[camera,side,invalidate]);return null}
