@@ -49,3 +49,20 @@ test('fabric changes visibly alter rendered pixels rather than only labels',asyn
  const satin=await image();
  expect(new Set([cotton,denim,satin]).size).toBe(3);
 });
+
+test('repaints after edits but does not continuously waste frames while idle',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
+ if(await fallback.isVisible())return;
+ await expect.poll(async()=>Number(await canvas.getAttribute('data-render-frames'))).toBeGreaterThan(0);
+ await page.waitForTimeout(600);
+ const before=Number(await canvas.getAttribute('data-render-frames'));
+ await page.waitForTimeout(500);
+ const after=Number(await canvas.getAttribute('data-render-frames'));
+ expect(after-before).toBeLessThanOrEqual(6);
+ await page.getByLabel('Fabric color').fill('#a34a48');
+ await expect.poll(async()=>Number(await canvas.getAttribute('data-render-frames')),{timeout:15000}).toBeGreaterThan(after);
+});
