@@ -40,6 +40,8 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
   if(/\blong sleeves?\b/i.test(idea)){d.sleeve='long';recognized.push('long sleeves');}
   else if(/\bshort sleeves?\b/i.test(idea)){d.sleeve='short';recognized.push('short sleeves');}
   if(/\bcropped\b/i.test(idea)){d.hem='cropped';recognized.push('cropped hem');}
+  if(/\b(kangaroo|pouch) pocket\b/i.test(idea)&&d.garment==='hoodie'){d.pocket='kangaroo';recognized.push('kangaroo pocket');}
+  else if(/\b(chest|front) pocket\b/i.test(idea)){d.pocket='chest';recognized.push('chest pocket');}
   if(/\bwide neck(line)?\b/i.test(idea)){d.neck='wide';recognized.push('wide neckline');}
   if(/\b(cotton|denim|satin)\b/i.test(idea)){const material=idea.match(/\b(cotton|denim|satin)\b/i)![1].toLowerCase() as StudioDocument['material'];d.material=material;recognized.push(material+' appearance');}
   const color=palette.find(([test])=>test.test(idea));
