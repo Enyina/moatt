@@ -10,3 +10,5 @@
  .mobile-quick{display:flex;position:absolute;z-index:3;bottom:32px;left:12px;gap:7px}
  .mobile-quick .button{background:#e7d5aa;color:#13161b;font-weight:600}
 }
+
+.idea-input{min-height:98px;resize:vertical;line-height:1.5}
