@@ -30,3 +30,12 @@ Observation: Rectangular geometry made the 3D preview misleadingly different fro
 Rule candidate: Explicitly distinguish artboard coordinates, preview UV mapping, recommended artwork boundaries, and *verified production print dimensions*. Never present one as another.
 Verification: typecheck, rendering smoke/browser test, and visual comparison on real devices. Real print measurement calibration deferred.
 Scope for promotion: 3D editor category once visual validation is performed.
+
+
+## 2026-10-27 — Style choices need visible rendering evidence
+
+Observation: changing only roughness values did not create recognizable cotton, denim and satin textile detail. The previous GLB figure was verifiably loaded, but looked blocky and distracted from the garments.
+
+Implementation: keep the pinned original GLB as an explicitly selectable reference; default to a consistent, faceless studio figure. Add deterministic, material-specific weave height maps and matching 2D preview color variation; model sleeves and neckline with softer curves and garment-specific finishing. Verify render output differs between material settings using browser-captured pixels and screenshot comparisons, without claiming scanned PBR quality.
+
+Candidate reusable guidance: any style or material control must lead to a real, testable change in rendered output, not just internal state; validate appearance separately from GPU/render correctness.
