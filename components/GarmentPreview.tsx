@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
+import {curvedArtworkSurface} from '../lib/garment-surface';
 
 function useSideTexture(doc:StudioDocument,side:Side){
  const texture=useMemo(()=>{
@@ -45,19 +46,24 @@ function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',
  // Map artwork coordinates within the preview silhouette's full bounding box.
  const left=-1.5*w,right=1.5*w,bottom=hem,top=1.04;
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i);uv.setXY(i,(x-left)/(right-left),(y-bottom)/(top-bottom));}
- uv.needsUpdate=true;geo.computeVertexNormals();const shell=new THREE.ExtrudeGeometry(shape,{depth:.72,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:.015,bevelThickness:.015});shell.translate(0,0,-.36);return {panel:geo,shell};
+ uv.needsUpdate=true;geo.computeVertexNormals();
+ const panel=curvedArtworkSurface(geo,w,hem,false);
+ const backPanel=curvedArtworkSurface(geo,w,hem,true);
+ geo.dispose();
+ const shell=new THREE.ExtrudeGeometry(shape,{depth:.72,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:.015,bevelThickness:.015});
+ shell.translate(0,0,-.36);return {panel,backPanel,shell};
 }
 function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back');
  const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized',doc.sleeve,doc.hem,doc.neck),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
- useEffect(()=>()=>{geo.panel.dispose();geo.shell.dispose()},[geo]);
+ useEffect(()=>()=>{geo.panel.dispose();geo.backPanel.dispose();geo.shell.dispose()},[geo]);
  const fabricRoughness=doc.material==='satin'?.24:doc.material==='denim'?.98:.86;
  const frontMat=useMemo(()=>new THREE.MeshStandardMaterial({color:front?'#ffffff':doc.baseColor,map:front||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[front,doc.baseColor,fabricRoughness]);
  const backMat=useMemo(()=>new THREE.MeshStandardMaterial({color:back?'#ffffff':doc.baseColor,map:back||null,side:THREE.DoubleSide,roughness:fabricRoughness}),[back,doc.baseColor,fabricRoughness]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose()},[frontMat,backMat]);
  return <group position={[0,1.54,0]} scale={[.65,.91,1]}>
  <mesh geometry={geo.panel} position={[0,0,.39]} material={frontMat}/>
- <mesh geometry={geo.panel} rotation={[0,Math.PI,0]} position={[0,0,-.39]} material={backMat}/>
+ <mesh geometry={geo.backPanel} rotation={[0,Math.PI,0]} position={[0,0,-.39]} material={backMat}/>
  <mesh geometry={geo.shell}><meshStandardMaterial color={doc.baseColor} roughness={fabricRoughness}/></mesh>
  {doc.sleeve==='short'&&[-1,1].map(n=><mesh key={n} position={[n*1.18,-.43,0]} rotation={[0,0,n*.12]}><cylinderGeometry args={[.14,.115,.84,18]}/><meshStandardMaterial color="#b5b5b5" roughness={.91}/></mesh>)}
  {doc.garment==='hoodie'&&<>
