@@ -101,6 +101,19 @@ class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
  render(){return this.state.failed?<div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>:this.props.children;}
 }
 export default function GarmentPreview({doc,side}:{doc:StudioDocument;side:Side}){
+ const [webgl,setWebgl]=useState<'checking'|'available'|'unavailable'>('checking');
+ useEffect(()=>{
+  let available=false;
+  try{
+   const probe=document.createElement('canvas');
+   const gl=probe.getContext('webgl2')||probe.getContext('webgl');
+   available=Boolean(gl);
+   gl?.getExtension('WEBGL_lose_context')?.loseContext();
+  }catch{available=false;}
+  setWebgl(available?'available':'unavailable');
+ },[]);
+ if(webgl==='checking')return <div role="status" className="empty3d">Checking 3D support…</div>;
+ if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
  return <PreviewBoundary><Canvas camera={{position:[0,1.5,6],fov:42}} gl={{preserveDrawingBuffer:true}} dpr={[1,2]}>
  <color attach="background" args={['#252b35']}/><ambientLight intensity={2.1}/><directionalLight position={[4,8,6]} intensity={1.5}/>
  <Mannequin doc={doc}/><CameraPosition side={side}/><RenderingDiagnostics/>
