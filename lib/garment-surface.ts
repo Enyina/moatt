@@ -16,7 +16,11 @@ export function curvedArtworkSurface(input:THREE.BufferGeometry,halfWidth:number
  const curve=(x:number,y:number)=>{
   const normalizedX=Math.min(1,Math.abs(x)/(1.05*halfWidth));
   const height=Math.min(1,Math.max(0,(y-bottom)/(1.04-bottom)));
-  return 0.16*(1-normalizedX*normalizedX)*Math.sin(Math.PI*height);
+  const envelope=(1-normalizedX*normalizedX)*Math.sin(Math.PI*height);
+  const drape=.105*envelope;
+  const softFold=.021*envelope*Math.sin(5*x+height*9);
+  const lowerFold=.016*envelope*(1-height)*Math.sin(12*x-height*4);
+  return drape+softFold+lowerFold;
  };
  for(let tri=0;tri<triangles;tri++){
   const a=vertex(indices?indices.getX(tri*3):tri*3);
