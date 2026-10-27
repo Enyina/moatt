@@ -22,7 +22,7 @@ function Limb({from,to,upperRadius,lowerRadius,material}:{from:[number,number,nu
  </mesh>;
 }
 export default function StudioMannequin(){
- const material=useMemo(()=>new THREE.MeshPhysicalMaterial({color:'#636872',roughness:.55,metalness:.08,clearcoat:.16,clearcoatRoughness:.44}),[]);
+ const material=useMemo(()=>new THREE.MeshStandardMaterial({color:'#74777e',roughness:.9,metalness:0}),[]);
  const neckMat=useMemo(()=>new THREE.MeshStandardMaterial({color:'#515761',roughness:.62}),[]);
  useEffect(()=>()=>{material.dispose();neckMat.dispose()},[material,neckMat]);
  return <group>
