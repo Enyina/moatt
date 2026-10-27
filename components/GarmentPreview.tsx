@@ -12,6 +12,7 @@ import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
 import StudioMannequin from './StudioMannequin';
 
 function useSideTexture(doc:StudioDocument,side:Side){
+ const invalidate=useThree(state=>state.invalidate);
  const texture=useMemo(()=>{
   if(typeof document==='undefined')return null;
   const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;
@@ -26,10 +27,10 @@ function useSideTexture(doc:StudioDocument,side:Side){
    if(!live||!texture)return;
    const target=texture.image as HTMLCanvasElement;
    const ctx=target.getContext('2d');
-   if(ctx){ctx.clearRect(0,0,target.width,target.height);ctx.drawImage(result,0,0);texture.needsUpdate=true;}
+   if(ctx){ctx.clearRect(0,0,target.width,target.height);ctx.drawImage(result,0,0);texture.needsUpdate=true;invalidate();}
   }).catch(()=>{});
   return()=>{live=false};
- },[doc.layers[side],doc.baseColor,doc.material,side,texture]);
+ },[doc.layers[side],doc.baseColor,doc.material,side,texture,invalidate]);
  useEffect(()=>()=>texture?.dispose(),[texture]);
  return texture;
 }
@@ -168,7 +169,7 @@ function RenderingDiagnostics(){
  useFrame(()=>{tick.count++;if(tick.count===1||tick.count%12===0){const canvas=gl.domElement;canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);}});
  return null;
 }
-function CameraPosition({side}:{side:Side}){const {camera}=useThree();useEffect(()=>{camera.position.set(0,1.5,side==='front'?6:-6);camera.lookAt(0,1.4,0)},[camera,side]);return null}
+function CameraPosition({side}:{side:Side}){const {camera,invalidate}=useThree();useEffect(()=>{camera.position.set(0,1.65,side==='front'?5.7:-5.7);camera.lookAt(0,1.55,0);invalidate()},[camera,side,invalidate]);return null}
 class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
  render(){return this.state.failed?<div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>:this.props.children;}
@@ -187,7 +188,7 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  },[]);
  if(webgl==='checking')return <div role="status" className="empty3d">Checking 3D support…</div>;
  if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
- return <PreviewBoundary><Canvas camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
+ return <PreviewBoundary><Canvas frameloop="demand" camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
  <color attach="background" args={['#292f39']}/>
  <ambientLight intensity={.85}/><hemisphereLight args={['#e6ebff','#30303c',1.2]}/>
  <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4"/>
