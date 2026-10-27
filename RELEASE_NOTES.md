@@ -25,3 +25,13 @@ Describe a hoodie or T-shirt, its color, fit, fabric appearance and optional wor
 You can save a document showing the front and back designs, selected garment options and questions to settle with a clothing maker. This is for discussion only. It does not contain verified measurements, sewing patterns or manufacturing instructions.
 
 These improvements are committed for review, but are not confirmed live on a published website.
+
+**Keep a small collection of designs**
+
+Save several designs in your browser, open an earlier one, make a new design, or copy an existing design to try another color. Download backup files if you want to keep your work safe across devices.
+
+**More clothing details and brand notes**
+
+Choose a visual pocket style, save your brand name and add supplier questions. The 3D design previews now have gently rounded surfaces and corrected artwork direction on the back.
+
+The mannequin and clothing remain illustrations, not proof of fit or manufacturing-ready garments.
