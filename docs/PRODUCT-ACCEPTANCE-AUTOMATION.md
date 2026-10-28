@@ -84,3 +84,11 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **BROWSER-01:** Front/back 3D scenes and different garment configurations are captured across supported browsers; graphical fallbacks must remain functional.
 - **PERFORMANCE-01:** Preview stays demand-rendered; resource counts, texture allocations and re-render after edits remain bounded.
 - **VISUAL-OPEN:** Screenshot appearance, realistic folds and actual mannequin anatomy still require human review and, for physical fit, independent external measurements. Passing vertex tests is **not** proof of visual realism.
+
+## Presentation export acceptance — October 28, 2026
+
+- **PRES-01:** A full-width editable-project presentation shows front and back in a single canvas regardless of WebGL support.
+- **PRES-02:** The export produces a real, opaque PNG at 2400 x 1500, with the current garment name, color, material and independent side artwork.
+- **PRES-03:** A user switching between regular/oversized, hoodie/T-shirt and textile choices sees different rendered pixels; images are not generated from inert controls.
+- **PRES-04:** Preview/export are independent of the 3D renderer; moving between 2D/3D/presentation does not discard artwork or switch the saved side.
+- **PRES-05:** Screen-reader labeling and responsive preview should remain usable; visual aesthetic assessment and practical third-party acceptance remain distinct from passing CI.
