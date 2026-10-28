@@ -73,3 +73,14 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - Browser tests verify selecting the studio versus classic mannequin, selecting all three fabrics, and capturing material screenshots. A canvas snapshot must *actually change* across fabrics. This goes beyond assertions that a dropdown value changed.
 - Mannequin and garment visuals remain approximations. No photogrammetry, skin realism, cloth draping solver, fabric scanning, body measurement standards or apparel print calibration are claimed.
 - Evidence is tied to the exact commit's CI. Independently inspect screenshot artifacts at normal zoom and enlarged fabric close-ups before final aesthetic sign-off.
+
+
+## October 28 — Volumetric clothing and mannequin acceptance
+
+- **VOLUME-01:** Front/back surfaces have finite, smoothly shaded 3D depth and outward normals, not a flat 2D polygon. Unit tests inspect bounds, normals and mesh budgets.
+- **VOLUME-02:** The front and back texture coordinates are each readable in their viewing direction, and changing sides never alters the stored 2D artwork.
+- **VOLUME-03:** Sleeve length and size modify real sleeve geometry. The neck remains an opening surrounded by a band.
+- **MANNEQUIN-01:** Arms, legs, head and torso use connected, continuous sculpted surfaces instead of visibly separate elbow and knee balls.
+- **BROWSER-01:** Front/back 3D scenes and different garment configurations are captured across supported browsers; graphical fallbacks must remain functional.
+- **PERFORMANCE-01:** Preview stays demand-rendered; resource counts, texture allocations and re-render after edits remain bounded.
+- **VISUAL-OPEN:** Screenshot appearance, realistic folds and actual mannequin anatomy still require human review and, for physical fit, independent external measurements. Passing vertex tests is **not** proof of visual realism.
