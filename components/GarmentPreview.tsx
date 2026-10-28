@@ -10,6 +10,7 @@ import {renderArtwork} from '../lib/render-design';
 import {createGarmentMesh,disposeGarmentMesh} from '../lib/garment-mesh';
 import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
 import StudioMannequin from './StudioMannequin';
+import LicensedAvatarReference from './LicensedAvatarReference';
 
 function useSideTexture(doc:StudioDocument,side:Side){
  const invalidate=useThree(state=>state.invalidate);
@@ -99,7 +100,7 @@ function Garment({doc}:{doc:StudioDocument}){
   </>}
  </group>;
 }
-export type ModelStyle='studio'|'classic';
+export type ModelStyle='studio'|'classic'|'realistic';
 function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
  const {gl}=useThree();
  const [asset,setAsset]=useState<THREE.Group|null>(null);
@@ -110,15 +111,16 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
   return()=>{live=false};
  },[style]);
  useEffect(()=>{
-  gl.domElement.dataset.mannequinStatus=style==='studio'?'studio-ready':asset?'loaded':'asset-fallback';
+  gl.domElement.dataset.mannequinStatus=style==='studio'?'studio-ready':style==='realistic'?'realistic-reference':asset?'loaded':'asset-fallback';
   gl.domElement.dataset.fabricMaterial=doc.material;
  },[asset,doc.material,gl,style]);
  const height=doc.body==='tall'?1.09:1;
  return <group scale={[1,height,1]}>
-  {style==='classic'&&asset
+  {style==='realistic'?<LicensedAvatarReference doc={doc}/>:
+   style==='classic'&&asset
    ?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>
    :<StudioMannequin sleeve={doc.sleeve}/>}
-  <Garment doc={doc}/>
+  {style!=='realistic'&&<Garment doc={doc}/>}
  </group>;
 }
 function RenderingDiagnostics(){
