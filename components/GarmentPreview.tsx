@@ -117,7 +117,7 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
  return <group scale={[1,height,1]}>
   {style==='classic'&&asset
    ?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>
-   :<StudioMannequin/>}
+   :<StudioMannequin sleeve={doc.sleeve}/>}
   <Garment doc={doc}/>
  </group>;
 }
