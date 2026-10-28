@@ -51,7 +51,12 @@ function useFabricBump(material:StudioDocument['material']){
  return bump;
 }
 function Garment({doc}:{doc:StudioDocument}){
+ const {gl}=useThree();
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back'),bump=useFabricBump(doc.material);
+ useEffect(()=>{
+  gl.domElement.dataset.garmentTopology='volume-torso-sleeves-v1';
+  gl.domElement.dataset.garmentKind=doc.garment;
+ },[gl,doc.garment]);
  const geo=useMemo(()=>createGarmentMesh({garment:doc.garment,fit:doc.fit,sleeve:doc.sleeve,hem:doc.hem,neck:doc.neck}),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>disposeGarmentMesh(geo),[geo]);
  const profile=FABRIC_PROFILES[doc.material];
@@ -82,8 +87,8 @@ function Garment({doc}:{doc:StudioDocument}){
    <boxGeometry args={[.31,.28,.035]}/>
   </mesh>}
   {doc.garment==='hoodie'&&<>
-   <mesh position={[0,1.025,-.18]} material={clothMat}>
-    <sphereGeometry args={[.47,28,20,0,Math.PI*2,0,Math.PI*.63]}/>
+   <mesh position={[0,.99,-.52]} material={clothMat}>
+    <sphereGeometry args={[.345,28,20,0,Math.PI*2,0,Math.PI*.59]}/>
    </mesh>
    {([-1,1] as const).map(sign=><mesh key={'drawstring'+sign} position={[sign*.18,.52,.47]} material={seamMat}>
     <cylinderGeometry args={[.012,.012,.43,8]}/>
@@ -112,7 +117,7 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
  return <group scale={[1,height,1]}>
   {style==='classic'&&asset
    ?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>
-   :<StudioMannequin/>}
+   :<StudioMannequin sleeve={doc.sleeve}/>}
   <Garment doc={doc}/>
  </group>;
 }
@@ -149,7 +154,7 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  <directionalLight position={[1,5,-4]} intensity={1.6} color="#ffffff"/>
  <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side}/><RenderingDiagnostics/>
  <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
- <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.06,0]} receiveShadow>
+ <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.40,0]} receiveShadow>
   <circleGeometry args={[4.7,64]}/>
   <meshStandardMaterial color="#343a44" roughness={.96}/>
  </mesh>

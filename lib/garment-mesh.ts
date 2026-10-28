@@ -19,7 +19,7 @@ export function garmentDimensions(shape:GarmentShape){
  const ease=shape.fit==='oversized'?1.16:1;
  const hem=shape.hem==='cropped'?-.19:shape.garment==='hoodie'?-.59:-.48;
  const neckline=shape.neck==='wide'?.42:.315;
- return {ease,hem,neckline,top:.97};
+ return {ease,hem,neckline,top:.90};
 }
 type BodyRing={y:number;rx:number;rz:number;centerZ:number};
 /** Smooth profile with a genuine open neck and softly lowered shoulders. */
@@ -33,8 +33,8 @@ export function torsoProfile(shape:GarmentShape):BodyRing[]{
   {y:.51,rx:.97*ease,rz:.405*ease,centerZ:0},
   {y:.72,rx:1.01*ease,rz:.38*ease,centerZ:-.012},
   {y:.81,rx:.89*ease,rz:.33*ease,centerZ:-.025},
-  {y:.91,rx:neckline*1.34,rz:.235,centerZ:-.025},
-  {y:.97,rx:neckline,rz:.21,centerZ:-.025}
+  {y:.86,rx:neckline*1.52,rz:.245,centerZ:-.025},
+  {y:.90,rx:neckline,rz:.21,centerZ:-.025}
  ];
 }
 function profileAt(profiles:BodyRing[],t:number):BodyRing{
@@ -79,7 +79,7 @@ function torsoHalf(shape:GarmentShape,side:'front'|'back',horizontal=24,vertical
 }
 function sleeve(shape:GarmentShape,sign:-1|1,radial=18,longitudinal=18):THREE.BufferGeometry{
  const long=shape.sleeve==='long',ease=shape.fit==='oversized'?1.16:1;
- const from=new THREE.Vector3(sign*.93*ease,.69,0);
+ const from=new THREE.Vector3(sign*.87*ease,.63,0);
  const to=new THREE.Vector3(sign*(long?1.70:1.47)*ease,long?-.40:.34,.035);
  const along=to.clone().sub(from).normalize();
  const across=new THREE.Vector3(0,0,1);
@@ -89,7 +89,8 @@ function sleeve(shape:GarmentShape,sign:-1|1,radial=18,longitudinal=18):THREE.Bu
   const t=row/longitudinal;
   const center=from.clone().lerp(to,t);
   center.y-=.043*Math.sin(Math.PI*t);
-  const r=(.355*(1-t)+(.24+(long?0:.02))*t)*ease;
+  const join=THREE.MathUtils.smoothstep(t,0,.22);
+  const r=(.15*(1-join)+(.26*(1-t)+(long?.205:.21)*t)*join)*ease;
   for(let col=0;col<=radial;col++){
    const angle=2*Math.PI*col/radial;
    const pt=center.clone().addScaledVector(up,Math.cos(angle)*r).addScaledVector(across,Math.sin(angle)*r*.84);
@@ -119,13 +120,14 @@ function ellipseBand(xRadius:number,zRadius:number,y:number,tube:number):THREE.B
 }
 function sleeveBand(shape:GarmentShape,sign:-1|1):THREE.BufferGeometry{
  const long=shape.sleeve==='long',ease=shape.fit==='oversized'?1.16:1;
- const from=new THREE.Vector3(sign*.93*ease,.69,0),end=new THREE.Vector3(sign*(long?1.70:1.47)*ease,long?-.40:.34,.035);
+ const from=new THREE.Vector3(sign*.87*ease,.63,0),end=new THREE.Vector3(sign*(long?1.70:1.47)*ease,long?-.40:.34,.035);
  const axis=end.clone().sub(from).normalize();
- const ring=new THREE.TorusGeometry(long?.237*ease:.255*ease,.023,8,24);
+ const ring=new THREE.TorusGeometry((long?.205:.21)*ease,.02,8,24);
  
  ring.rotateX(Math.PI/2);
  ring.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis));
  ring.translate(end.x,end.y,end.z);
+ ring.computeBoundingBox();
  return ring;
 }
 export function createGarmentMesh(shape:GarmentShape):GarmentMeshSet{
@@ -133,7 +135,7 @@ export function createGarmentMesh(shape:GarmentShape):GarmentMeshSet{
  return {
   front:torsoHalf(shape,'front'),back:torsoHalf(shape,'back'),
   sleeves:[sleeve(shape,-1),sleeve(shape,1)],
-  neckBand:ellipseBand(neckline,.21,.967,.075),
+  neckBand:ellipseBand(neckline,.21,.899,.047),
   hemBand:ellipseBand(.81*ease,.32*ease,hem+.018,.034),
   cuffBands:[sleeveBand(shape,-1),sleeveBand(shape,1)]
  };

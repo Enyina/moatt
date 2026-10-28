@@ -1,0 +1,46 @@
+import {test,expect} from '@playwright/test';
+
+test('real torso volume and continuous sleeve mesh are installed and visible',async({page},testInfo)=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
+ if(await unavailable.isVisible())return;
+ await expect(canvas).toHaveAttribute('data-garment-topology','volume-torso-sleeves-v1');
+ await expect(canvas).toHaveAttribute('data-mannequin-status','studio-ready');
+ await expect.poll(()=>canvas.getAttribute('data-gpu-geometries')).not.toBeNull();
+ await page.screenshot({path:testInfo.outputPath('volume-tshirt-front.png'),fullPage:true});
+ await page.getByRole('button',{name:'Hoodie'}).click();
+ await expect(canvas).toHaveAttribute('data-garment-kind','hoodie');
+ await page.getByRole('combobox',{name:'Sleeve length'}).selectOption('long');
+ await page.getByRole('combobox',{name:'Hem length'}).selectOption('cropped');
+ await page.screenshot({path:testInfo.outputPath('volume-hoodie-long-sleeve.png'),fullPage:true});
+});
+test('front and back artwork stay separately visible on rounded surfaces',async({page},testInfo)=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('FRONT VOLUME');
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK VOLUME');
+ await page.getByRole('button',{name:'Front',exact:true}).click();
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
+ if(await unavailable.isVisible())return;
+ await expect(canvas).toHaveAttribute('data-garment-topology','volume-torso-sleeves-v1');
+ await page.waitForTimeout(300);
+ const front=await canvas.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ await page.screenshot({path:testInfo.outputPath('volume-artwork-front.png'),fullPage:true});
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await page.waitForTimeout(350);
+ const back=await canvas.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ await page.screenshot({path:testInfo.outputPath('volume-artwork-back.png'),fullPage:true});
+ expect(front).not.toBe(back);
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await expect(page.getByText('text: BACK VOLUME')).toBeVisible();
+ await page.getByRole('button',{name:'Front',exact:true}).click();
+ await expect(page.getByText('text: FRONT VOLUME')).toBeVisible();
+});
