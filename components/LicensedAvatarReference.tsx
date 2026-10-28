@@ -28,6 +28,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  },[]);
  useEffect(()=>()=>{uniforms.front.value.dispose();uniforms.back.value.dispose()},[uniforms]);
  const ownMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
+ const garmentMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
  useEffect(()=>{
   let active=true;
   setModel(null);setGarment(null);setFailed(false);
@@ -67,7 +68,8 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
      clone.customProgramCacheKey=()=> 'moatt-cc0-projected-print-v1';
      return clone;
     });
-    mesh.material=Array.isArray(mesh.material)?ownMaterials.current:ownMaterials.current[0];
+    garmentMaterials.current=[...ownMaterials.current];
+    mesh.material=Array.isArray(mesh.material)?garmentMaterials.current:garmentMaterials.current[0];
     // Hide torso and upper-arm skin under the upper garment. The original CC0 meshes
     // contain individual body/garment layers; their raw neutral rest pose slightly intersects.
     body.scene.traverse(child=>{
@@ -93,7 +95,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
     setModel(scene);setGarment(mesh);invalidate();
    })
    .catch(()=>{if(active){setFailed(true);invalidate();}});
-  return()=>{active=false;ownMaterials.current.forEach(m=>m.dispose());ownMaterials.current=[];};
+  return()=>{active=false;ownMaterials.current.forEach(m=>m.dispose());ownMaterials.current=[];garmentMaterials.current=[];};
  // Shader uses external uniform objects, updated without rebuilding programs after edits.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[doc.garment,invalidate,uniforms]);
@@ -111,7 +113,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
     ctx.drawImage(source,0,0);
     texture.needsUpdate=true;
    }
-   ownMaterials.current.forEach(m=>m.color.set(doc.baseColor));
+   garmentMaterials.current.forEach(m=>m.color.set(doc.baseColor));
    gl.domElement.dataset.referenceArtwork='ready';
    invalidate();
   }).catch(()=>{if(active){gl.domElement.dataset.referenceArtwork='failed';invalidate();}});
