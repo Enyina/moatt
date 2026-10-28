@@ -29,11 +29,11 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   setModel(null);setGarment(null);setFailed(false);
   const prefix=(process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/realistic/';
   const loader=new GLTFLoader();
-  Promise.all([loader.loadAsync(prefix+'base_body.glb'),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb')])
-   .then(([body,clothes])=>{
+  Promise.all([loader.loadAsync(prefix+'base_body.glb'),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb'),loader.loadAsync(prefix+'clothing_jeans.glb'),loader.loadAsync(prefix+'clothing_shoes.glb')])
+   .then(([body,clothes,jeans,shoes])=>{
     if(!active)return;
     const scene=new THREE.Group();
-    scene.add(body.scene,clothes.scene);
+    scene.add(body.scene,clothes.scene,jeans.scene,shoes.scene);
     const bbox=new THREE.Box3().setFromObject(body.scene);
     const height=bbox.max.y-bbox.min.y;
     if(!Number.isFinite(height)||height<=.01)throw Error('Invalid body model bounds');
@@ -46,6 +46,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
     ownMaterials.current=original.map(material=>{
      if(!(material instanceof THREE.MeshStandardMaterial))throw Error('Incompatible garment material');
      const clone=material.clone();
+     clone.map=null; // The source albedo is pre-dyed blue; remove it so the owner's garment color is authoritative.
      clone.color.set(doc.baseColor);
      clone.onBeforeCompile=(shader)=>{
       shader.uniforms.moattFrontInk=uniforms.front;
@@ -63,6 +64,27 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
      return clone;
     });
     mesh.material=Array.isArray(mesh.material)?ownMaterials.current:ownMaterials.current[0];
+    // Hide torso and upper-arm skin under the upper garment. The original CC0 meshes
+    // contain individual body/garment layers; their raw neutral rest pose slightly intersects.
+    body.scene.traverse(child=>{
+     if(!(child instanceof THREE.Mesh)||!child.name.toLowerCase().includes('body'))return;
+     const original=Array.isArray(child.material)?child.material:[child.material];
+     const hidden=original.map(mat=>{
+      if(!(mat instanceof THREE.MeshStandardMaterial))return mat;
+      const clone=mat.clone();
+      clone.onBeforeCompile=(shader)=>{
+       shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
+       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMoattBodyPosition=position;');
+       shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
+       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
+        '#include <map_fragment>\nif ((vMoattBodyPosition.y>0.93 && vMoattBodyPosition.y<1.50 && abs(vMoattBodyPosition.x)<0.37) || (vMoattBodyPosition.y>1.24 && vMoattBodyPosition.y<1.52 && abs(vMoattBodyPosition.x)<0.63)) discard;');
+      };
+      clone.customProgramCacheKey=()=> 'moatt-covered-body-surface-v1';
+      ownMaterials.current.push(clone);
+      return clone;
+     });
+     child.material=Array.isArray(child.material)?hidden:hidden[0];
+    });
     scene.traverse(child=>{if(child instanceof THREE.Mesh){child.castShadow=false;child.frustumCulled=false;}});
     setModel(scene);setGarment(mesh);invalidate();
    })
