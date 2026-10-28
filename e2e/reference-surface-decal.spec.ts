@@ -25,18 +25,27 @@ test('real fitted cloth shows readable chest artwork where the garment is, not o
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('REAL PRINT');
  await expect.poll(imageData,{timeout:25000}).not.toBe(baseline);
  await expect(canvas).toHaveAttribute('data-reference-artwork','ready',{timeout:25000});
- const actual=await canvas.evaluate(c=>{
-  const source=c as HTMLCanvasElement;
-  const off=document.createElement('canvas');off.width=source.width;off.height=source.height;
-  const ctx=off.getContext('2d')!;ctx.drawImage(source,0,0);
-  const w=off.width,h=off.height;
-  // Chest occupies central upper-middle area of garment close-up, rather than at the hem.
-  const pixels=ctx.getImageData(Math.floor(w*.32),Math.floor(h*.18),Math.floor(w*.36),Math.floor(h*.43)).data;
-  let dark=0;for(let i=0;i<pixels.length;i+=4){if(pixels[i]<80&&pixels[i+1]<80&&pixels[i+2]<80)dark++;}
-  return {w,h,dark};
- });
+ const actual=await canvas.evaluate(async(c,baselineImage)=>{
+  const source=c as HTMLCanvasElement,w=source.width,h=source.height;
+  const old=new Image();old.src=baselineImage;await old.decode();
+  const before=document.createElement('canvas'),after=document.createElement('canvas');
+  before.width=after.width=w;before.height=after.height=h;
+  const beforeCtx=before.getContext('2d')!,afterCtx=after.getContext('2d')!;
+  beforeCtx.drawImage(old,0,0);afterCtx.drawImage(source,0,0);
+  const x=Math.floor(w*.30),y=Math.floor(h*.22),width=Math.floor(w*.4),height=Math.floor(h*.38);
+  const oldPixels=beforeCtx.getImageData(x,y,width,height).data;
+  const newPixels=afterCtx.getImageData(x,y,width,height).data;
+  const bands=[0,0,0,0,0];let changed=0;
+  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){
+   const i=(yy*width+xx)*4;
+   const delta=Math.abs(oldPixels[i]-newPixels[i])+Math.abs(oldPixels[i+1]-newPixels[i+1])+Math.abs(oldPixels[i+2]-newPixels[i+2]);
+   if(delta>100){changed++;bands[Math.min(4,Math.floor(xx*5/width))]++;}
+  }
+  return {w,h,changed,bands};
+ },baseline);
  expect(actual.w).toBeGreaterThan(500);
- expect(actual.dark,'Chest art must produce readable high-contrast ink near center, not solely near hem').toBeGreaterThan(65);
+ expect(actual.changed,'The actual chest must contain substantial visible artwork, not just two letters or a background change').toBeGreaterThan(450);
+ expect(actual.bands.filter(b=>b>30).length,'Artwork must span the chest rather than appearing as isolated edge fragments').toBeGreaterThanOrEqual(3);
  await page.screenshot({path:testInfo.outputPath('chest-decal-readable-text.png'),fullPage:true});
  await page.getByRole('button',{name:'Back',exact:true}).click();
  await page.getByRole('button',{name:'Add text'}).click();
