@@ -126,3 +126,7 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **DECAL-03:** Add text to the original 2D artboard and verify it changes a substantial number of actual WebGL canvas pixels spread across at least 3 chest-width bands. The prior 2-letter artifact must fail this gate.
 - **DECAL-04:** Resource counts must remain bounded across repeated text edits. Use persistent GPU CanvasTextures; don't allocate textures per keystroke.
 - **DECAL-05:** Mannequin and fabric still require aesthetic acceptance, consistent silhouettes and realistic draping before any claim that Moatt replaces professional clothing-design software.
+
+- **FABRIC-FITTED-01:** Switching cotton/denim/satin in the editor updates a distinct PBR material profile on the licensed fitted garment (roughness, sheen, weave bump, anisotropy) without changing the underlying printable artwork or source mesh.
+- **FABRIC-FITTED-02:** Browser screenshots must capture all three material profiles and assert actual rendered canvas pixels change; compare visual texture and avoid declaring success from the selector value alone.
+- **FABRIC-FITTED-03:** GPU texture/resource counts must remain bounded when switching material, and textures and materials must be disposed on scene teardown. Printed front and back art should remain legible.
