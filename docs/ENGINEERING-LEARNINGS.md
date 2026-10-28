@@ -86,3 +86,9 @@ Evidence: Moatt's licensed-garment branch passed 57 unit tests and 144 cross-bro
 Correction: Build independent, triangulated front/back decals by ray-sampling garment geometry at rest. Cull opposite-facing decal surfaces explicitly, make the artwork independently visible above skinned cloth, and reuse existing CanvasTextures during edits. Keep the print region an illustrated design reference, not factory-calibrated placement. Add geometry normals and coverage contracts plus real browser screenshot *before/after* pixel-difference tests with minimum spread across the chest—not just evidence that any pixels changed.
 
 Status: screenshot acceptance is still required for the final commit. If complete lettering is not visible, do not merge; passing integration tests is insufficient.
+
+### Fabric rendering after correct print placement
+
+Full front/back typography is now legible in the visual screenshots at commit `fb6b538` (CI run 40725289566: 57 unit tests, 144 browser tests). The remaining fitted garment looked like uniform matte plastic. A source GLB with its original blue albedo removed has no believable cotton, denim or satin surface without additional material properties.
+
+Keep the source fitted cloth mesh, but use separate authored `MeshPhysicalMaterial` profiles for cotton, denim and satin (micro-bump height tile, correct repeat, roughness, fabric sheen and anisotropy) instead of changing only a combobox label. Change fabric profiles in place without reloading/replacing the underlying GLB, dispose old bump textures after a material switch and inspect comparative screenshots. These are procedural previews, **not** scanned physical fabric textures or simulation of draping.
