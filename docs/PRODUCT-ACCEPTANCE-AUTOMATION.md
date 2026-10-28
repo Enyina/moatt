@@ -117,3 +117,12 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **NATIVE-UV-01:** Inspect the pinned actual GLB's UV island coordinates, not arbitrary space-based projection. Hoodie torso front V≈.115–.325; T-shirt front V≈.30–.70. They are not interchangeable and must have separate mapping tables.
 - **NATIVE-UV-02:** Unit tests include coordinates sampled from the published fitted hoodie/T-shirt models on both sides, verify normalized local print area and reject unrelated UV islands.
 - **VISUAL-REJECT:** 140 passing browser tests did not justify acceptance of fragmented "ST RY 2026" lettering in garment-only screenshot. Native-UV mapping must be verified against new actual pixel and screenshot evidence; simply loading a source GLB remains insufficient.
+
+
+### Garment surface decal QA (updated)
+
+- **DECAL-01:** Ray-sample original cloth geometry for chest artwork; reject failed ray coverage under 65%, invalid geometry, and backward-facing print normals.
+- **DECAL-02:** Front and back decals must be visible only from the correct camera side; covered by mesh depth is a visual regression. Preserve separate art and correct reverse-side orientation.
+- **DECAL-03:** Add text to the original 2D artboard and verify it changes a substantial number of actual WebGL canvas pixels spread across at least 3 chest-width bands. The prior 2-letter artifact must fail this gate.
+- **DECAL-04:** Resource counts must remain bounded across repeated text edits. Use persistent GPU CanvasTextures; don't allocate textures per keystroke.
+- **DECAL-05:** Mannequin and fabric still require aesthetic acceptance, consistent silhouettes and realistic draping before any claim that Moatt replaces professional clothing-design software.
