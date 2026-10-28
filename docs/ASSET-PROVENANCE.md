@@ -22,3 +22,10 @@ Moatt now optionally downloads three *generated* GLB assets from the public Char
 Source: https://github.com/kblood/CharacterCreator. Origin project `LICENSE-NOTES.md` declares the generated `output/*.glb` CC0-1.0; it documents that the sources are MakeHuman system CC0 meshes/textures plus author-generated derivatives. **The upstream application's source code is GPL-3.0-or-later; none of it is copied into Moatt.** Moatt's downloader is independently authored and validates full Git object SHA-1 plus GLB headers and expected byte length before installation.
 
 The new **Human fit reference** button loads these original body-fitted assets as a reference, leaving the existing separately authored Moatt garment preview available for editing. The reference currently **does not receive the user's front/back artwork or tailoring choices**, so it is not ready as a final designer outcome or physical fit simulation. It must not be used as a production pattern, and external third-party source hosting remains an operational dependency at build time.
+
+### Additional complete-outfit reference assets
+
+- `output/clothing_jeans.glb` — Git blob SHA `10b38785efef7196bc9903c9d8cdf236d28dc584`
+- `output/clothing_shoes.glb` — Git blob SHA `aab06a01a235242c7e8aac4fda83278c6e0b42f4`
+
+These generated GLBs are also listed as CC0-1.0 by upstream `LICENSE-NOTES.md`. Each must pass Git blob and GLB-header verification. The first browser screenshot showed the source body from the waist down, making the supposedly professional look physically incomplete; we now bundle pants/shoes rather than pretending that output is ready.
