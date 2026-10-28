@@ -13,10 +13,16 @@ test('fitted human reference wears a full outfit and uses actual editable front 
  await expect(view).toHaveAttribute('data-reference-status','loaded',{timeout:80000});
  await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
  const first=await view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ await expect.poll(()=>view.getAttribute('data-gpu-textures')).not.toBeNull();
+ const baselineTextures=Number(await view.getAttribute('data-gpu-textures'));
  await page.screenshot({path:testInfo.outputPath('human-fitted-full-outfit.png'),fullPage:true});
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('A DIFFERENT DESIGN');
  await expect.poll(async()=>view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png')),{timeout:25000}).not.toBe(first);
  await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ for(let i=0;i<6;i++)await page.getByRole('textbox',{name:'Selected layer text'}).fill('LIVE UPDATE '+i);
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ const afterTextures=Number(await view.getAttribute('data-gpu-textures'));
+ expect(afterTextures-baselineTextures).toBeLessThanOrEqual(3);
  await page.screenshot({path:testInfo.outputPath('human-fitted-edited-print.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
  await expect(page.getByText('text: A DIFFERENT')).toBeVisible();
