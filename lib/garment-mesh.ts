@@ -126,6 +126,7 @@ function sleeveBand(shape:GarmentShape,sign:-1|1):THREE.BufferGeometry{
  ring.rotateX(Math.PI/2);
  ring.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis));
  ring.translate(end.x,end.y,end.z);
+ ring.computeBoundingBox();
  return ring;
 }
 export function createGarmentMesh(shape:GarmentShape):GarmentMeshSet{
