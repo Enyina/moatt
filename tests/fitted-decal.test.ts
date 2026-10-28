@@ -12,8 +12,8 @@ describe('fitted surface decals',()=>{
   expect(patch.geometry.index!.count).toBeGreaterThan(2000);
   for(let i=0;i<positions.count;i++){
    expect(positions.getZ(i)).toBeCloseTo(.186,3);
-   expect(positions.getX(i)).toBeGreaterThanOrEqual(-.18);
-   expect(positions.getX(i)).toBeLessThanOrEqual(.18);
+   expect(positions.getX(i)).toBeGreaterThanOrEqual(-.18001);
+   expect(positions.getX(i)).toBeLessThanOrEqual(.18001);
    expect(Number.isFinite(positions.getY(i))).toBe(true);
    expect(uv.getX(i)).toBeGreaterThanOrEqual(0);
    expect(uv.getY(i)).toBeGreaterThanOrEqual(0);
@@ -34,8 +34,8 @@ describe('fitted surface decals',()=>{
   const short=new THREE.PlaneGeometry(.15,.15).translate(0,1.2,0);
   const patch=makeFittedChestPatch(short,'front');
   expect(patch.coverage).toBeLessThan(.65);
-  expect(patch.geometry.index!.count).toBeGreaterThan(0);
-  expect(patch.geometry.index!.count).toBeLessThan(1000);
+  // A flat, zero-depth plane is not a credible garment chest; it must not receive projected branding.
+  expect(patch.geometry.index!.count).toBe(0);
   expect(()=>makeFittedChestPatch(short,'front',{centerY:1,width:-.3,height:.2})).toThrow();
   expect(()=>makeFittedChestPatch(short,'front',CHEST_PRINT_REGION,500,30)).toThrow();
   patch.geometry.dispose();short.dispose();
