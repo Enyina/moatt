@@ -5,10 +5,10 @@ import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import {renderArtwork} from '../lib/render-design';
+import {fittedArtworkShader} from '../lib/fitted-artwork-map';
 import type {StudioDocument} from '../lib/studio-document';
 
 type ArtUniform={value:THREE.Texture};
-const printFragment="vec2 moattUv=vec2((vMoattClothPosition.x + 0.22)/0.44, (vMoattClothPosition.y - 0.98)/0.42);\nif(moattUv.x>0.0 && moattUv.x<1.0 && moattUv.y>0.0 && moattUv.y<1.0 &&\n   abs(vMoattClothPosition.z)>0.012){\n vec4 moattInk= vMoattClothPosition.z>0.0\n   ?texture2D(moattFrontInk,moattUv)\n   :texture2D(moattBackInk,vec2(1.0-moattUv.x,moattUv.y));\n diffuseColor.rgb=mix(diffuseColor.rgb,moattInk.rgb,moattInk.a);\n}";
 /**
  * Original CC0 body-fitted garment + projective print reference.
  * Print region is approximate; no factory-calibrated fit or UV dimensions are claimed.
@@ -48,6 +48,9 @@ export default function LicensedAvatarReference({doc,display='human'}:{doc:Studi
     scene.position.set(-(bbox.min.x+bbox.max.x)*.5*scalar,display==='ghost'?1.58-(bbox.min.y+bbox.max.y)*.5*scalar:-bbox.min.y*scalar-.26,-(bbox.min.z+bbox.max.z)*.5*scalar);
     const mesh=clothes.scene.getObjectByName('Cloth_'+doc.garment) as THREE.Mesh|undefined;
     if(!mesh||!(mesh instanceof THREE.Mesh))throw Error('Missing licensed fitted garment geometry');
+    const surfaceUv=mesh.geometry.getAttribute('uv');
+    if(!surfaceUv)throw Error('Licensed garment missing native UV layout');
+    mesh.geometry.setAttribute('moattSurfaceUv',surfaceUv);
     const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
     ownMaterials.current=original.map(material=>{
      if(!(material instanceof THREE.MeshStandardMaterial))throw Error('Incompatible garment material');
@@ -58,15 +61,15 @@ export default function LicensedAvatarReference({doc,display='human'}:{doc:Studi
       shader.uniforms.moattFrontInk=uniforms.front;
       shader.uniforms.moattBackInk=uniforms.back;
       shader.vertexShader=shader.vertexShader.replace('#include <common>',
-       '#include <common>\nvarying vec3 vMoattClothPosition;');
+       '#include <common>\nattribute vec2 moattSurfaceUv;\nvarying vec2 vMoattGarmentUv;\nvarying vec3 vMoattClothPosition;');
       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-       '#include <begin_vertex>\nvMoattClothPosition=position;');
+       '#include <begin_vertex>\nvMoattClothPosition=position;\nvMoattGarmentUv=moattSurfaceUv;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
-       '#include <common>\nvarying vec3 vMoattClothPosition;\nuniform sampler2D moattFrontInk;\nuniform sampler2D moattBackInk;');
+       '#include <common>\nvarying vec3 vMoattClothPosition;\nvarying vec2 vMoattGarmentUv;\nuniform sampler2D moattFrontInk;\nuniform sampler2D moattBackInk;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
-       '#include <map_fragment>\n'+printFragment);
+       '#include <map_fragment>\n'+fittedArtworkShader(doc.garment));
      };
-     clone.customProgramCacheKey=()=> 'moatt-cc0-projected-print-v1';
+     clone.customProgramCacheKey=()=> 'moatt-cc0-native-uv-print-'+doc.garment+'-v2';
      return clone;
     });
     garmentMaterials.current=[...ownMaterials.current];
