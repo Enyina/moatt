@@ -45,3 +45,14 @@ Candidate reusable guidance: any style or material control must lead to a real, 
 While adding fabric bump maps, smoother garment geometry and studio lighting, browser tests under software WebGL began timing out despite unit/type/build success. Updating 3D geometry every frame or using realtime shadow maps is not justified when the scene remains static between user actions.
 
 Improvement: render the WebGL preview on demand, call renderer invalidation after asynchronous canvas-texture updates and after camera resets, retain OrbitControls change invalidation, and update GPU counters on each actually rendered frame. Browser tests now assert the mannequin is not redrawn continuously while idle and that changes cause new rendered frames. This is a candidate practice until CI on the final revision passes; review on real mobile hardware remains essential.
+
+
+## 2026-10-28 — Replace the source of flat-garment previews
+
+Observed: the layered front/back shapes were still flat compared with a real sweatshirt. Changing only outline curves, bump strength and lights could not address the underlying geometry.
+
+Implementation: create a continuous, rounded torso from height-dependent elliptical sections; generate both sides with their own UV maps, tapered 3D sleeves and real open neck/cuff geometry. A connected matte mannequin replaces visibly segmented display limbs. Keep artwork in the original canonical document and project it onto both sides without changing the user's file schema. Model generation has finite-vertex budgets, disposal contracts, front/back UV normal checks and screenshot-based browser coverage.
+
+Known gaps: these are original approximations rather than scanned bodies or cloth-simulation CAD. Source inspiration: MakeHuman makes its asset models CC0 while its application source is AGPL/GPL; Poly Haven publishes CC0 fabric assets. We did not import that software, its code, or scanned texture assets in this change. See https://www.makehumancommunity.org/about/license.html and https://polyhaven.com/license.
+
+Review status: only mark quality green when fresh CI and actual screenshot inspection on this exact revision agree.
