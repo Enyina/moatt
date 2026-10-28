@@ -14,12 +14,13 @@ export default function StudioMannequin(){
  useEffect(()=>()=>{matte.dispose();Object.values(sculpt).forEach(mesh=>mesh.dispose())},[matte,sculpt]);
  return <group>
   <mesh geometry={sculpt.head} material={matte}/>
+  <mesh position={[0,2.52,.015]} scale={[.145,.17,.15]} material={matte}><sphereGeometry args={[1,24,20]}/></mesh>
   <mesh geometry={sculpt.torso} material={matte}/>
   <mesh geometry={sculpt.leftArm} material={matte}/>
   <mesh geometry={sculpt.rightArm} material={matte}/>
   <mesh geometry={sculpt.leftLeg} material={matte}/>
   <mesh geometry={sculpt.rightLeg} material={matte}/>
-  {([-1,1] as const).map(sign=><mesh key={'foot'+sign} position={[sign*.29,.10,.21]} scale={[.16,.105,.27]} material={matte}>
+  {([-1,1] as const).map(sign=><mesh key={'foot'+sign} position={[sign*.29,-.25,.21]} scale={[.16,.105,.27]} material={matte}>
    <sphereGeometry args={[1,24,16]}/>
   </mesh>)}
  </group>;
