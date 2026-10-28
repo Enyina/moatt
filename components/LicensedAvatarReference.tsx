@@ -5,128 +5,151 @@ import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import {renderArtwork} from '../lib/render-design';
-import {fittedArtworkShader} from '../lib/fitted-artwork-map';
+import {makeFittedChestPatch} from '../lib/fitted-decal';
 import type {StudioDocument} from '../lib/studio-document';
 
-type ArtUniform={value:THREE.Texture};
 /**
- * Original CC0 body-fitted garment + projective print reference.
- * Print region is approximate; no factory-calibrated fit or UV dimensions are claimed.
+ * CC0 body-fitted clothing, with our separately-authored artwork projected on a
+ * sampled fabric-surface decal. This is NOT a calibrated print or sizing model.
  */
-export default function LicensedAvatarReference({doc,display='human'}:{doc:StudioDocument;display?:'human'|'ghost'}){
+export default function LicensedAvatarReference({doc,display='ghost'}:{doc:StudioDocument;display?:'human'|'ghost'}){
  const [model,setModel]=useState<THREE.Group|null>(null);
- const [garment,setGarment]=useState<THREE.Mesh|null>(null);
  const [failed,setFailed]=useState(false);
  const {gl,invalidate}=useThree();
- const uniforms=useMemo(()=>{
+ // Textures are reused for every keystroke. No GPU allocations during ordinary editing.
+ const textures=useMemo(()=>{
   const make=()=>{
    const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;
-   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
-   tex.needsUpdate=true;return tex;
+   const texture=new THREE.CanvasTexture(canvas);
+   texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;
+   return texture;
   };
-  return {front:{value:make()} as ArtUniform,back:{value:make()} as ArtUniform};
+  return {front:make(),back:make()};
  },[]);
- useEffect(()=>()=>{uniforms.front.value.dispose();uniforms.back.value.dispose()},[uniforms]);
- const ownMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
+ useEffect(()=>()=>{textures.front.dispose();textures.back.dispose()},[textures]);
+ const materials=useRef<THREE.Material[]>([]);
+ const overlays=useRef<THREE.BufferGeometry[]>([]);
  const garmentMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
  useEffect(()=>{
   let active=true;
-  setModel(null);setGarment(null);setFailed(false);
+  setModel(null);setFailed(false);
+  gl.domElement.dataset.referenceStatus='loading';
+  gl.domElement.dataset.referenceArtwork='loading';
+  gl.domElement.dataset.referenceProjection='curved-surface-decal-v1';
   const prefix=(process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/realistic/';
   const loader=new GLTFLoader();
-  Promise.all([display==='human'?loader.loadAsync(prefix+'base_body.glb'):Promise.resolve(null),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb'),display==='human'?loader.loadAsync(prefix+'clothing_jeans.glb'):Promise.resolve(null),display==='human'?loader.loadAsync(prefix+'clothing_shoes.glb'):Promise.resolve(null)])
-   .then(([body,clothes,jeans,shoes])=>{
-    if(!active)return;
-    const scene=new THREE.Group();
-    if(body&&jeans&&shoes)scene.add(body.scene,clothes.scene,jeans.scene,shoes.scene);
-    else scene.add(clothes.scene);
-    const bbox=new THREE.Box3().setFromObject(body?body.scene:clothes.scene);
-    const height=bbox.max.y-bbox.min.y;
-    if(!Number.isFinite(height)||height<=.01)throw Error('Invalid body model bounds');
-    const scalar=(display==='ghost'?2.35:3.25)/height;
-    scene.scale.setScalar(scalar);
-    scene.position.set(-(bbox.min.x+bbox.max.x)*.5*scalar,display==='ghost'?1.58-(bbox.min.y+bbox.max.y)*.5*scalar:-bbox.min.y*scalar-.26,-(bbox.min.z+bbox.max.z)*.5*scalar);
-    const mesh=clothes.scene.getObjectByName('Cloth_'+doc.garment) as THREE.Mesh|undefined;
-    if(!mesh||!(mesh instanceof THREE.Mesh))throw Error('Missing licensed fitted garment geometry');
-    const surfaceUv=mesh.geometry.getAttribute('uv');
-    if(!surfaceUv)throw Error('Licensed garment missing native UV layout');
-    mesh.geometry.setAttribute('moattSurfaceUv',surfaceUv);
-    const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-    ownMaterials.current=original.map(material=>{
-     if(!(material instanceof THREE.MeshStandardMaterial))throw Error('Incompatible garment material');
+  const load=(file:string)=>loader.loadAsync(prefix+file);
+  Promise.all([
+   display==='human'?load('base_body.glb'):Promise.resolve(null),
+   load('clothing_'+doc.garment+'.glb'),
+   display==='human'?load('clothing_jeans.glb'):Promise.resolve(null),
+   display==='human'?load('clothing_shoes.glb'):Promise.resolve(null)
+  ]).then(([body,clothes,jeans,shoes])=>{
+   if(!active)return;
+   const scene=new THREE.Group();
+   if(body&&jeans&&shoes)scene.add(body.scene,clothes.scene,jeans.scene,shoes.scene);
+   else scene.add(clothes.scene);
+   const bounds=new THREE.Box3().setFromObject(body?body.scene:clothes.scene);
+   const height=bounds.max.y-bounds.min.y;
+   if(!Number.isFinite(height)||height<=.01)throw Error('Invalid fitted garment bounds');
+   const scalar=(display==='ghost'?2.35:3.25)/height;
+   scene.scale.setScalar(scalar);
+   scene.position.set(
+    -(bounds.min.x+bounds.max.x)*.5*scalar,
+    display==='ghost'?1.58-(bounds.min.y+bounds.max.y)*.5*scalar:-bounds.min.y*scalar-.26,
+    -(bounds.min.z+bounds.max.z)*.5*scalar
+   );
+   const top=clothes.scene.getObjectByName('Cloth_'+doc.garment);
+   if(!(top instanceof THREE.Mesh))throw Error('Missing fitted garment geometry');
+   const originals=Array.isArray(top.material)?top.material:[top.material];
+   const fitted=originals.map(material=>{
+    if(!(material instanceof THREE.MeshStandardMaterial))throw Error('Invalid top material');
+    const next=material.clone();
+    next.map=null; // Source dyed texture must not override user's chosen fabric color.
+    next.color.set(doc.baseColor);
+    next.roughness=.91;
+    materials.current.push(next);
+    return next;
+   });
+   garmentMaterials.current=fitted;
+   top.material=Array.isArray(top.material)?fitted:fitted[0];
+
+   let valid=0;
+   for(const side of ['front','back'] as const){
+    const patch=makeFittedChestPatch(top.geometry,side);
+    overlays.current.push(patch.geometry);
+    // If not enough of the chest is sampled, refuse an inaccurate partial logo.
+    if(patch.coverage<.65)throw Error('Incomplete fitted garment chest projection: '+side);
+    valid+=patch.coverage;
+    const surface=new THREE.MeshBasicMaterial({
+     map:textures[side],transparent:true,alphaTest:.015,depthWrite:false,
+     polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide,toneMapped:false
+    });
+    materials.current.push(surface);
+    const decal=new THREE.Mesh(patch.geometry,surface);
+    decal.name='moatt-'+side+'-surface-print';
+    decal.renderOrder=4;
+    decal.frustumCulled=false;
+    clothes.scene.add(decal);
+   }
+   gl.domElement.dataset.referenceCoverage=(valid/2).toFixed(3);
+
+   // Only conceal skin where fabric covers the actual body; the full-body model
+   // still has known anatomical issues and is an optional comparison, not a default.
+   body?.scene.traverse(child=>{
+    if(!(child instanceof THREE.Mesh)||!child.name.toLowerCase().includes('body'))return;
+    const old=Array.isArray(child.material)?child.material:[child.material];
+    const hidden=old.map(material=>{
+     if(!(material instanceof THREE.MeshStandardMaterial))return material;
      const clone=material.clone();
-     clone.map=null; // The source albedo is pre-dyed blue; remove it so the owner's garment color is authoritative.
-     clone.color.set(doc.baseColor);
      clone.onBeforeCompile=(shader)=>{
-      shader.uniforms.moattFrontInk=uniforms.front;
-      shader.uniforms.moattBackInk=uniforms.back;
-      shader.vertexShader=shader.vertexShader.replace('#include <common>',
-       '#include <common>\nattribute vec2 moattSurfaceUv;\nvarying vec2 vMoattGarmentUv;\nvarying vec3 vMoattClothPosition;');
-      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-       '#include <begin_vertex>\nvMoattClothPosition=position;\nvMoattGarmentUv=moattSurfaceUv;');
-      shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
-       '#include <common>\nvarying vec3 vMoattClothPosition;\nvarying vec2 vMoattGarmentUv;\nuniform sampler2D moattFrontInk;\nuniform sampler2D moattBackInk;');
+      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMoattBodyPosition=position;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
-       '#include <map_fragment>\n'+fittedArtworkShader(doc.garment));
+       '#include <map_fragment>\nif ((vMoattBodyPosition.y>0.93 && vMoattBodyPosition.y<1.50 && abs(vMoattBodyPosition.x)<0.37) || (vMoattBodyPosition.y>1.24 && vMoattBodyPosition.y<1.52 && abs(vMoattBodyPosition.x)<0.63)) discard;');
      };
-     clone.customProgramCacheKey=()=> 'moatt-cc0-native-uv-print-'+doc.garment+'-v2';
+     clone.customProgramCacheKey=()=> 'moatt-covered-body-surface-v1';
+     materials.current.push(clone);
      return clone;
     });
-    garmentMaterials.current=[...ownMaterials.current];
-    mesh.material=Array.isArray(mesh.material)?garmentMaterials.current:garmentMaterials.current[0];
-    // Hide torso and upper-arm skin under the upper garment. The original CC0 meshes
-    // contain individual body/garment layers; their raw neutral rest pose slightly intersects.
-    body?.scene.traverse(child=>{
-     if(!(child instanceof THREE.Mesh)||!child.name.toLowerCase().includes('body'))return;
-     const original=Array.isArray(child.material)?child.material:[child.material];
-     const hidden=original.map(mat=>{
-      if(!(mat instanceof THREE.MeshStandardMaterial))return mat;
-      const clone=mat.clone();
-      clone.onBeforeCompile=(shader)=>{
-       shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
-       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMoattBodyPosition=position;');
-       shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vMoattBodyPosition;');
-       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
-        '#include <map_fragment>\nif ((vMoattBodyPosition.y>0.93 && vMoattBodyPosition.y<1.50 && abs(vMoattBodyPosition.x)<0.37) || (vMoattBodyPosition.y>1.24 && vMoattBodyPosition.y<1.52 && abs(vMoattBodyPosition.x)<0.63)) discard;');
-      };
-      clone.customProgramCacheKey=()=> 'moatt-covered-body-surface-v1';
-      ownMaterials.current.push(clone);
-      return clone;
-     });
-     child.material=Array.isArray(child.material)?hidden:hidden[0];
-    });
-    scene.traverse(child=>{if(child instanceof THREE.Mesh){child.castShadow=false;child.frustumCulled=false;}});
-    setModel(scene);setGarment(mesh);invalidate();
-   })
-   .catch(()=>{if(active){setFailed(true);invalidate();}});
-  return()=>{active=false;ownMaterials.current.forEach(m=>m.dispose());ownMaterials.current=[];garmentMaterials.current=[];};
- // Shader uses external uniform objects, updated without rebuilding programs after edits.
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[doc.garment,display,invalidate,uniforms]);
+    child.material=Array.isArray(child.material)?hidden:hidden[0];
+   });
+   scene.traverse(child=>{if(child instanceof THREE.Mesh){child.frustumCulled=false;child.castShadow=false;}});
+   setModel(scene);invalidate();
+  }).catch(()=>{
+   if(active){setFailed(true);gl.domElement.dataset.referenceStatus='unavailable';invalidate();}
+  });
+  return()=>{
+   active=false;
+   materials.current.forEach(item=>item.dispose());materials.current=[];
+   overlays.current.forEach(geo=>geo.dispose());overlays.current=[];
+   garmentMaterials.current=[];
+  };
+ },[doc.garment,display,gl,invalidate,textures]);
+
  useEffect(()=>{
-  if(!model||!garment)return;
+  if(!model)return;
   let active=true;
   gl.domElement.dataset.referenceArtwork='loading';
   Promise.all([renderArtwork(doc,'front',true),renderArtwork(doc,'back',true)]).then(([front,back])=>{
    if(!active)return;
-   for(const [texture,source] of [[uniforms.front.value,front],[uniforms.back.value,back]] as const){
-    const canvas=texture.image as HTMLCanvasElement;
-    const ctx=canvas.getContext('2d');
-    if(!ctx)throw Error('Canvas unavailable for print reference');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(source,0,0);
+   for(const [side,source] of [['front',front],['back',back]] as const){
+    const texture=textures[side],canvas=texture.image as HTMLCanvasElement,ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Reference artwork canvas unavailable');
+    ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(source,0,0);
     texture.needsUpdate=true;
    }
-   garmentMaterials.current.forEach(m=>m.color.set(doc.baseColor));
-   gl.domElement.dataset.referenceArtwork='ready';
-   invalidate();
+   garmentMaterials.current.forEach(material=>material.color.set(doc.baseColor));
+   gl.domElement.dataset.referenceArtwork='ready';invalidate();
   }).catch(()=>{if(active){gl.domElement.dataset.referenceArtwork='failed';invalidate();}});
   return()=>{active=false};
- },[doc.layers.front,doc.layers.back,doc.baseColor,doc.material,model,garment,gl,invalidate,uniforms]);
+ },[model,doc.layers.front,doc.layers.back,doc.baseColor,doc.material,gl,invalidate,textures]);
+
  useEffect(()=>{
   gl.domElement.dataset.referenceStatus=failed?'unavailable':model?'loaded':'loading';
   invalidate();
- },[model,failed,gl,invalidate]);
- if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Human reference unavailable. Switch to Studio mannequin.':display==='ghost'?'Preparing garment close-up…':'Loading fitted CC0 human reference…'}</div></Html>;
+ },[gl,failed,model,invalidate]);
+ if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Fitted garment unavailable; use Studio mannequin.':display==='ghost'?'Preparing garment close-up…':'Loading human reference…'}</div></Html>;
  return <primitive object={model}/>;
 }
