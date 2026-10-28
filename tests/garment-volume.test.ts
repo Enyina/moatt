@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import * as THREE from 'three';
 import {createGarmentMesh,disposeGarmentMesh,garmentDimensions,torsoProfile} from '../lib/garment-mesh';
-import {makeSmoothLimb,mannequinArm,mannequinHead,mannequinLeg,mannequinTorso} from '../lib/mannequin-mesh';
+import {makeSmoothLimb,mannequinArm,mannequinExposedArm,mannequinHead,mannequinLeg,mannequinTorso} from '../lib/mannequin-mesh';
 const tshirt={garment:'tshirt' as const,fit:'regular' as const,sleeve:'short' as const,hem:'standard' as const,neck:'crew' as const};
 function xyz(geo:THREE.BufferGeometry){
  const p=geo.getAttribute('position') as THREE.BufferAttribute;
@@ -80,6 +80,13 @@ describe('one-piece mannequin',()=>{
   const x=xyz(geometry[0]).x,y=xyz(geometry[0]).y;
   expect(Math.min(...x)).toBeLessThan(-.8);expect(Math.max(...y)).toBeGreaterThan(2);
   geometry.forEach(m=>m.dispose());
+ });
+ it('does not expose shoulders and upper arms through clothing',()=>{
+  const short=mannequinExposedArm(1,'short'),long=mannequinExposedArm(1,'long');
+  expect(short.boundingBox!.max.y).toBeLessThan(1.95);
+  expect(long.boundingBox!.max.y).toBeLessThan(1.36);
+  expect(short.boundingBox!.min.y).toBeLessThan(1.10);
+  short.dispose();long.dispose();
  });
  it('rejects invalid limbs',()=>{
   expect(()=>makeSmoothLimb([])).toThrow();
