@@ -83,7 +83,9 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
     valid+=patch.coverage;
     const surface=new THREE.MeshBasicMaterial({
      map:textures[side],transparent:true,alphaTest:.015,depthWrite:false,
-     polygonOffset:true,polygonOffsetFactor:-2,side:THREE.DoubleSide,toneMapped:false
+     // The GLB's skinned cloth surface can cover a static decal in the viewer.
+     // Keep the ink legible but only from its correctly oriented fabric side.
+     depthTest:false,side:THREE.FrontSide,toneMapped:false
     });
     materials.current.push(surface);
     const decal=new THREE.Mesh(patch.geometry,surface);
