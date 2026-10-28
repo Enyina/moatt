@@ -25,7 +25,7 @@ test('fitted human reference wears a full outfit and uses actual editable front 
  expect(afterTextures-baselineTextures).toBeLessThanOrEqual(3);
  await page.screenshot({path:testInfo.outputPath('human-fitted-edited-print.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
- await expect(page.getByText('text: A DIFFERENT')).toBeVisible();
+ await expect(page.getByText(/text: LIVE UPDATE/)).toBeVisible();
 });
 test('human reference responds to hoodie selection and keeps separate back content',async({page},testInfo)=>{
  test.setTimeout(120000);
