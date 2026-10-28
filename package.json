@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/sync-mannequin.mjs && next dev",
-    "build": "node scripts/sync-mannequin.mjs && next build",
+    "dev": "node scripts/sync-mannequin.mjs && node scripts/sync-realistic-assets.mjs && next dev",
+    "build": "node scripts/sync-mannequin.mjs && node scripts/sync-realistic-assets.mjs && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "next lint",
     "e2e": "playwright test",
-    "assets:verify": "REQUIRE_MANNEQUIN_ASSET=1 node scripts/sync-mannequin.mjs"
+    "assets:verify": "REQUIRE_MANNEQUIN_ASSET=1 node scripts/sync-mannequin.mjs && REQUIRE_REALISTIC_ASSETS=1 node scripts/sync-realistic-assets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.117.3",
