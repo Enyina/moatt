@@ -1,4 +1,14 @@
 import type {Side,StudioDocument,Layer} from './studio-document';
+import {makeFabricTile} from './fabric-material';
+type Material=StudioDocument['material'];
+const tiles=new Map<Material,HTMLCanvasElement>();
+function fabricCanvas(material:Material):HTMLCanvasElement{
+ const cached=tiles.get(material);if(cached)return cached;
+ const tile=document.createElement('canvas');tile.width=tile.height=128;
+ const ctx=tile.getContext('2d');if(!ctx)throw Error('Canvas unavailable');
+ const image=ctx.createImageData(128,128);image.data.set(makeFabricTile(material));ctx.putImageData(image,0,0);
+ tiles.set(material,tile);return tile;
+}
 export const SIZE=1024;
 export function drawLayer(ctx:CanvasRenderingContext2D,l:Layer){
  if(l.hidden)return;
@@ -9,7 +19,15 @@ export function drawLayer(ctx:CanvasRenderingContext2D,l:Layer){
 }
 export async function renderArtwork(doc:StudioDocument,side:Side,transparent=false):Promise<HTMLCanvasElement>{
  const canvas=document.createElement('canvas');canvas.width=SIZE;canvas.height=SIZE;const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');
- if(!transparent){ctx.fillStyle=doc.baseColor;ctx.fillRect(0,0,SIZE,SIZE);}
+ if(!transparent){
+  ctx.fillStyle=doc.baseColor;ctx.fillRect(0,0,SIZE,SIZE);
+  const pattern=ctx.createPattern(fabricCanvas(doc.material),'repeat');
+  if(pattern){
+   ctx.save();ctx.globalCompositeOperation='multiply';
+   ctx.globalAlpha=doc.material==='denim'?.31:doc.material==='cotton'?.20:.12;
+   ctx.fillStyle=pattern;ctx.fillRect(0,0,SIZE,SIZE);ctx.restore();
+  }
+ }
  for(const l of doc.layers[side]){if(l.hidden)continue;if(l.kind!=='image'){drawLayer(ctx,l);continue}
  const image=new Image();image.src=l.value;try{await image.decode()}catch{continue}ctx.save();ctx.translate(l.x+l.width/2,l.y+l.height/2);ctx.rotate(l.rotation*Math.PI/180);ctx.drawImage(image,-l.width/2,-l.height/2,l.width,l.height);ctx.restore();
  }

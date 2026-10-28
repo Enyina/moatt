@@ -6,3 +6,7 @@
 - Downloaded at build/development setup via `scripts/sync-mannequin.mjs`, with Git blob identity verification. No runtime third-party CDN dependency.
 - This is a low-poly stylized 3D reference mesh, NOT verified body measurements, apparel sizing, or manufacturing CAD. It may not fit the project's placeholder garments.
 - If acquisition is unavailable, the procedural mannequin remains available.
+
+## Current display mannequin (October 27, 2026)
+
+Moatt now defaults to a **procedurally authored, smooth, faceless display mannequin**. It is constructed from ordinary Three.js geometries inside the repository, with no additional third-party asset or downloaded character data. The earlier, verified CC0 Quaternius/UMRAM mannequin remains available through the **Classic mannequin** view choice, with the same pinned source and license stated above. Neither figure is a body-scan, measurement standard or apparel fit model.

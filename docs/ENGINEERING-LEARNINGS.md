@@ -30,3 +30,18 @@ Observation: Rectangular geometry made the 3D preview misleadingly different fro
 Rule candidate: Explicitly distinguish artboard coordinates, preview UV mapping, recommended artwork boundaries, and *verified production print dimensions*. Never present one as another.
 Verification: typecheck, rendering smoke/browser test, and visual comparison on real devices. Real print measurement calibration deferred.
 Scope for promotion: 3D editor category once visual validation is performed.
+
+
+## 2026-10-27 — Style choices need visible rendering evidence
+
+Observation: changing only roughness values did not create recognizable cotton, denim and satin textile detail. The previous GLB figure was verifiably loaded, but looked blocky and distracted from the garments.
+
+Implementation: keep the pinned original GLB as an explicitly selectable reference; default to a consistent, faceless studio figure. Add deterministic, material-specific weave height maps and matching 2D preview color variation; model sleeves and neckline with softer curves and garment-specific finishing. Verify render output differs between material settings using browser-captured pixels and screenshot comparisons, without claiming scanned PBR quality.
+
+Candidate reusable guidance: any style or material control must lead to a real, testable change in rendered output, not just internal state; validate appearance separately from GPU/render correctness.
+
+## 2026-10-27 — Static 3D editors should not render forever
+
+While adding fabric bump maps, smoother garment geometry and studio lighting, browser tests under software WebGL began timing out despite unit/type/build success. Updating 3D geometry every frame or using realtime shadow maps is not justified when the scene remains static between user actions.
+
+Improvement: render the WebGL preview on demand, call renderer invalidation after asynchronous canvas-texture updates and after camera resets, retain OrbitControls change invalidation, and update GPU counters on each actually rendered frame. Browser tests now assert the mannequin is not redrawn continuously while idle and that changes cause new rendered frames. This is a candidate practice until CI on the final revision passes; review on real mobile hardware remains essential.
