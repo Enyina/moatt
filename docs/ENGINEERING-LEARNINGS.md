@@ -77,3 +77,12 @@ The first source GLBs loaded and passed tests, but screenshots showed a human mo
 ## 2026-10-28 — Fix fragmented prints using original garment UV islands
 
 A completed 140-browser-case run had no functional failures, yet screenshot review rejected the hoodie: lettering was fragmented across the chest (e.g. "ST RY 2026") and the garment still had unfinished shoulders. A positional planar shader mapped 1024px artboard pixels from local X/Y; inspecting the *actual* published CC0 hoodie GLB identified stable separate front (approx U=.49-.69) and back (U=.085-.28) UV islands. Switched the fitted-reference print to a unique sampled native UV vertex attribute, normalized against selected chest intervals. Keep an explicit torso/side mask and manufacturer-calibration warning. Added pure mapping tests grounded in numerical samples from the pinned source GLB and browser pixel checks. This is NOT yet evidence of attractive print quality; accept only after reviewing newly captured screenshots from the exact implementation.
+
+
+## 2026-10-28 — Visual QA: don't accept one or two visible print fragments
+
+Evidence: Moatt's licensed-garment branch passed 57 unit tests and 144 cross-browser tests, yet actual garment screenshots showed only one or two letters at the edges of a blank chest. The root cause was not the stored artboard; it was its render surface being depth-occluded by the skinned garment. Native UV attempts also wrapped branding across unrelated islands and the hem.
+
+Correction: Build independent, triangulated front/back decals by ray-sampling garment geometry at rest. Cull opposite-facing decal surfaces explicitly, make the artwork independently visible above skinned cloth, and reuse existing CanvasTextures during edits. Keep the print region an illustrated design reference, not factory-calibrated placement. Add geometry normals and coverage contracts plus real browser screenshot *before/after* pixel-difference tests with minimum spread across the chest—not just evidence that any pixels changed.
+
+Status: screenshot acceptance is still required for the final commit. If complete lettering is not visible, do not merge; passing integration tests is insufficient.
