@@ -1,5 +1,6 @@
 import {modify,uid} from './studio-document';
 import type {Side,StudioDocument,Layer} from './studio-document';
+import {legibleInk} from './artwork-contrast';
 
 export type IdeaDraft = {
  document: StudioDocument;
@@ -70,7 +71,7 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
   for(const slogan of slogans){
    if(!slogan.value)continue;
    const layer:Layer={id:uid(),kind:'text',x:190,y:350,width:644,height:190,rotation:0,
-    value:slogan.value.slice(0,80),color:d.baseColor.toLowerCase()==='#23262a'?'#f5f1e9':'#23262a',fontSize:126};
+    value:slogan.value.slice(0,80),color:legibleInk(d.baseColor),fontSize:126};
    d.layers[slogan.side].push(layer);
    recognized.push(slogan.side+' artwork text');
   }
