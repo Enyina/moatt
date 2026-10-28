@@ -3,7 +3,7 @@ import type {Side,Garment} from './studio-document';
 export type FittedRegion={left:number;right:number;bottom:number;top:number};
 export const FITTED_PRINT_REGIONS:Record<Garment,Record<Side,FittedRegion>>={
  hoodie:{front:{left:.49,right:.69,bottom:.115,top:.325},back:{left:.085,right:.28,bottom:.115,top:.325}},
- tshirt:{front:{left:.49,right:.69,bottom:.115,top:.325},back:{left:.085,right:.28,bottom:.115,top:.325}}
+ tshirt:{front:{left:.49,right:.69,bottom:.30,top:.70},back:{left:.085,right:.28,bottom:.29,top:.70}}
 };
 export function sourceUvToArtwork(garment:Garment,side:Side,u:number,v:number):[number,number]|null{
  const r=FITTED_PRINT_REGIONS[garment][side];
