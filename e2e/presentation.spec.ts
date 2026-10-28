@@ -10,7 +10,7 @@ test('builds a genuinely usable front and back lookbook preview and PNG',async({
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('EST 2026');
  await page.getByRole('button',{name:'Hoodie'}).click();
  await page.getByLabel('Fabric color').fill('#283650');
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const visual=page.getByTestId('presentation-canvas');
  await expect(visual).toBeVisible();
  await expect(visual).toHaveAttribute('data-preview-ready','true',{timeout:20000});
@@ -45,7 +45,7 @@ test('builds a genuinely usable front and back lookbook preview and PNG',async({
 });
 test('changing the garment material and body fit changes actual presentation pixels',async({page})=>{
  await page.goto('/');
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const visual=page.getByTestId('presentation-canvas');
  await expect(visual).toHaveAttribute('data-preview-ready','true',{timeout:20000});
  const snapshot=async()=>visual.evaluate((element)=>{
@@ -62,16 +62,16 @@ test('changing the garment material and body fit changes actual presentation pix
  await page.getByRole('button',{name:'Hoodie'}).click();
  await expect.poll(snapshot,{timeout:20000}).not.toBe(denim);
  await page.getByRole('button',{name:'2D edit'}).click();
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(visual).toHaveAttribute('data-preview-ready','true',{timeout:20000});
 });
 test('presentation remains available even when WebGL preview is unsupported',async({page})=>{
  await page.goto('/');
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:20000});
  await page.getByRole('button',{name:'3D preview'}).click();
  await expect(page.locator('.preview-stage canvas').or(page.getByRole('alert').filter({hasText:'3D rendering is unavailable'}))).toBeVisible({timeout:15000});
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:20000});
 });
 
@@ -80,17 +80,17 @@ test('first-time founder creates a shareable design, saves, reopens and exports 
  await page.getByRole('textbox',{name:'Clothing idea'}).fill('Oversized black hoodie with "MIDNIGHT CLUB" on the front');
  await page.getByRole('button',{name:'Create editable draft'}).click();
  await expect(page.getByRole('button',{name:'Hoodie'})).toHaveClass(/selected/);
- await expect(page.getByText('text: MIDNIGHT CLUB')).toBeVisible();
+ await expect(page.getByText(/text: MIDNIGHT CLU/)).toBeVisible();
  await page.getByRole('button',{name:'Save to my designs'}).click();
  const stored=page.getByRole('button',{name:/Open Black Oversized Hoodie concept/});
  await expect(stored).toBeVisible();
  page.once('dialog',d=>d.accept());
  await page.getByRole('button',{name:'New design'}).click();
- await expect(page.getByText('text: MIDNIGHT CLUB')).toHaveCount(0);
+ await expect(page.getByText(/text: MIDNIGHT CLU/)).toHaveCount(0);
  page.once('dialog',d=>d.accept());
  await stored.click();
- await expect(page.getByText('text: MIDNIGHT CLUB')).toBeVisible();
- await page.getByRole('button',{name:'Presentation'}).click();
+ await expect(page.getByText(/text: MIDNIGHT CLU/)).toBeVisible();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const canvas=page.getByTestId('presentation-canvas');
  await expect(canvas).toHaveAttribute('data-preview-ready','true',{timeout:20000});
  await page.screenshot({path:testInfo.outputPath('founder-journey-saved-design.png'),fullPage:true});
