@@ -6,6 +6,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import {renderArtwork} from '../lib/render-design';
 import {makeFittedChestPatch} from '../lib/fitted-decal';
+import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
 import type {StudioDocument} from '../lib/studio-document';
 
 /**
@@ -27,6 +28,18 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
   return {front:make(),back:make()};
  },[]);
  useEffect(()=>()=>{textures.front.dispose();textures.back.dispose()},[textures]);
+ const fabricTexture=useMemo(()=>{
+  if(typeof document==='undefined')return null;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+  const ctx=canvas.getContext('2d');if(!ctx)return null;
+  const image=ctx.createImageData(128,128);image.data.set(makeFabricTile(doc.material));ctx.putImageData(image,0,0);
+  const bump=new THREE.CanvasTexture(canvas);
+  bump.wrapS=THREE.RepeatWrapping;bump.wrapT=THREE.RepeatWrapping;
+  bump.repeat.set(FABRIC_PROFILES[doc.material].tileRepeat,FABRIC_PROFILES[doc.material].tileRepeat);
+  bump.colorSpace=THREE.NoColorSpace;bump.needsUpdate=true;
+  return bump;
+ },[doc.material]);
+ useEffect(()=>()=>fabricTexture?.dispose(),[fabricTexture]);
  const materials=useRef<THREE.Material[]>([]);
  const overlays=useRef<THREE.BufferGeometry[]>([]);
  const garmentMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
@@ -64,10 +77,13 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
    const originals=Array.isArray(top.material)?top.material:[top.material];
    const fitted=originals.map(material=>{
     if(!(material instanceof THREE.MeshStandardMaterial))throw Error('Invalid top material');
-    const next=material.clone();
-    next.map=null; // Source dyed texture must not override user's chosen fabric color.
-    next.color.set(doc.baseColor);
-    next.roughness=.91;
+    const profile=FABRIC_PROFILES[doc.material];
+    const next=new THREE.MeshPhysicalMaterial({
+     color:doc.baseColor,roughness:profile.roughness,metalness:profile.metalness,
+     sheen:profile.sheen,sheenRoughness:profile.sheenRoughness,sheenColor:'#ffffff',
+     anisotropy:profile.anisotropy,bumpMap:fabricTexture,bumpScale:profile.bumpScale,
+     side:material.side
+    });
     materials.current.push(next);
     return next;
    });
@@ -130,6 +146,18 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
   };
  },[doc.garment,display,gl,invalidate,textures]);
 
+ useEffect(()=>{
+  if(!model)return;
+  const profile=FABRIC_PROFILES[doc.material];
+  for(const material of garmentMaterials.current){
+   const m=material as THREE.MeshPhysicalMaterial;
+   m.bumpMap=fabricTexture;m.bumpScale=profile.bumpScale;
+   m.roughness=profile.roughness;m.metalness=profile.metalness;
+   m.sheen=profile.sheen;m.sheenRoughness=profile.sheenRoughness;
+   m.anisotropy=profile.anisotropy;m.needsUpdate=true;
+  }
+  gl.domElement.dataset.referenceFabric=doc.material;invalidate();
+ },[model,doc.material,fabricTexture,gl,invalidate]);
  useEffect(()=>{
   if(!model)return;
   let active=true;
