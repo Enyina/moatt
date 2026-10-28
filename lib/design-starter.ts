@@ -33,15 +33,22 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
  const recognized:string[]=[];
  const needsReview:string[]=[];
  const next=modify(current,d=>{
-  if(/\b(hoodie|hooded sweatshirt)\b/i.test(idea)){d.garment='hoodie';recognized.push('hoodie');}
-  else if(/\b(t-?shirt|tee|shirt)\b/i.test(idea)){d.garment='tshirt';recognized.push('T-shirt');}
+  if(/\b(hoodie|hooded sweatshirt)\b/i.test(idea)){
+   if(d.garment!=='hoodie'){d.sleeve='long';d.pocket='kangaroo';}
+   d.garment='hoodie';recognized.push('hoodie');
+  }
+  else if(/\b(t-?shirt|tee|shirt)\b/i.test(idea)){
+   if(d.garment!=='tshirt'){d.sleeve='short';d.pocket='none';}
+   d.garment='tshirt';recognized.push('T-shirt');
+  }
   if(/\boversized\b/i.test(idea)){d.fit='oversized';recognized.push('oversized fit');}
   else if(/\bregular fit\b/i.test(idea)){d.fit='regular';recognized.push('regular fit');}
   if(/\blong sleeves?\b/i.test(idea)){d.sleeve='long';recognized.push('long sleeves');}
   else if(/\bshort sleeves?\b/i.test(idea)){d.sleeve='short';recognized.push('short sleeves');}
   if(/\bcropped\b/i.test(idea)){d.hem='cropped';recognized.push('cropped hem');}
+  if(/\b(no pocket|without pockets?)\b/i.test(idea)){d.pocket='none';recognized.push('no pocket');}
   if(/\b(kangaroo|pouch) pocket\b/i.test(idea)&&d.garment==='hoodie'){d.pocket='kangaroo';recognized.push('kangaroo pocket');}
-  else if(/\b(chest|front) pocket\b/i.test(idea)){d.pocket='chest';recognized.push('chest pocket');}
+  else if(/\b(chest|front) pocket\b/i.test(idea)&&!/\b(no pocket|without pockets?)\b/i.test(idea)){d.pocket='chest';recognized.push('chest pocket');}
   if(/\bwide neck(line)?\b/i.test(idea)){d.neck='wide';recognized.push('wide neckline');}
   if(/\b(cotton|denim|satin)\b/i.test(idea)){const material=idea.match(/\b(cotton|denim|satin)\b/i)![1].toLowerCase() as StudioDocument['material'];d.material=material;recognized.push(material+' appearance');}
   const color=palette.find(([test])=>test.test(idea));
@@ -62,8 +69,8 @@ export function draftFromIdea(input:string,current:StudioDocument):IdeaDraft {
   }
   for(const slogan of slogans){
    if(!slogan.value)continue;
-   const layer:Layer={id:uid(),kind:'text',x:210,y:390,width:600,height:170,rotation:0,
-    value:slogan.value.slice(0,80),color:d.baseColor.toLowerCase()==='#23262a'?'#f5f1e9':'#23262a',fontSize:82};
+   const layer:Layer={id:uid(),kind:'text',x:190,y:350,width:644,height:190,rotation:0,
+    value:slogan.value.slice(0,80),color:d.baseColor.toLowerCase()==='#23262a'?'#f5f1e9':'#23262a',fontSize:126};
    d.layers[slogan.side].push(layer);
    recognized.push(slogan.side+' artwork text');
   }
