@@ -13,6 +13,11 @@ test('fitted human reference wears a full outfit and uses actual editable front 
  await expect(view).toHaveAttribute('data-reference-status','loaded',{timeout:80000});
  await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
  const first=await view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ // Warm up the licensed model's shader/material textures before measuring sustained-edit growth.
+ // The first render can legitimately upload embedded body/jeans/shoe maps asynchronously.
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('WARMUP PRINT');
+ await expect.poll(async()=>view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png')),{timeout:25000}).not.toBe(first);
+ await page.waitForTimeout(450);
  await expect.poll(()=>view.getAttribute('data-gpu-textures')).not.toBeNull();
  const baselineTextures=Number(await view.getAttribute('data-gpu-textures'));
  await page.screenshot({path:testInfo.outputPath('human-fitted-full-outfit.png'),fullPage:true});
@@ -22,6 +27,7 @@ test('fitted human reference wears a full outfit and uses actual editable front 
  for(let i=0;i<6;i++)await page.getByRole('textbox',{name:'Selected layer text'}).fill('LIVE UPDATE '+i);
  await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
  const afterTextures=Number(await view.getAttribute('data-gpu-textures'));
+ console.log('Fitted-reference steady-state GPU textures',JSON.stringify({baselineTextures,afterTextures}));
  expect(afterTextures-baselineTextures).toBeLessThanOrEqual(3);
  await page.screenshot({path:testInfo.outputPath('human-fitted-edited-print.png'),fullPage:true});
  await page.getByRole('button',{name:'2D edit'}).click();
