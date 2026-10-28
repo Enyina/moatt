@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
-import {curvedArtworkSurface} from '../lib/garment-surface';
+import {createGarmentMesh,disposeGarmentMesh} from '../lib/garment-mesh';
 import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
 import StudioMannequin from './StudioMannequin';
 
@@ -50,47 +50,10 @@ function useFabricBump(material:StudioDocument['material']){
  useEffect(()=>()=>bump?.dispose(),[bump]);
  return bump;
 }
-function garmentGeometry(hoodie:boolean,oversized:boolean,sleeve:'short'|'long',hemStyle:'standard'|'cropped',neck:'crew'|'wide'){
- const w=oversized?1.13:1,hem=hemStyle==='cropped'?-.22:(hoodie?-.55:-.48),n=(neck==='wide'?.43:.31)*w;
- const long=sleeve==='long',cuffY=long?-.50:(hoodie?.37:.51);
- const shape=new THREE.Shape();
- // A continuous curved silhouette, in contrast with the former pointed, flat slab.
- shape.moveTo(-n,.96);
- shape.quadraticCurveTo(-.49*w,.98,-.74*w,.91);
- shape.quadraticCurveTo(-.86*w,.88,-.96*w,.81);
- shape.quadraticCurveTo(-1.14*w,long?.59:.71,-1.32*w,cuffY);
- shape.quadraticCurveTo(-1.39*w,cuffY-.09,-1.21*w,cuffY-.13);
- shape.quadraticCurveTo(-1.05*w,cuffY-.14,-.90*w,.38);
- shape.quadraticCurveTo(-.87*w,-.12,-.84*w,hem+.13);
- shape.quadraticCurveTo(-.85*w,hem,-.72*w,hem);
- shape.quadraticCurveTo(0,hem-.045,.72*w,hem);
- shape.quadraticCurveTo(.85*w,hem,.84*w,hem+.13);
- shape.quadraticCurveTo(.87*w,-.12,.90*w,.38);
- shape.quadraticCurveTo(1.05*w,cuffY-.14,1.21*w,cuffY-.13);
- shape.quadraticCurveTo(1.39*w,cuffY-.09,1.32*w,cuffY);
- shape.quadraticCurveTo(1.14*w,long?.59:.71,.96*w,.81);
- shape.quadraticCurveTo(.86*w,.88,.74*w,.91);
- shape.quadraticCurveTo(.49*w,.98,n,.96);
- shape.quadraticCurveTo(n*.66,.77,0,.76);
- shape.quadraticCurveTo(-n*.66,.77,-n,.96);
- shape.closePath();
- const flat=new THREE.ShapeGeometry(shape,22);
- const pos=flat.getAttribute('position'),uv=flat.getAttribute('uv');
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),y=pos.getY(i);
-  uv.setXY(i,(x+1.45*w)/(2.9*w),(y-(hem-.045))/(1.08-hem));
- }
- uv.needsUpdate=true;
- const panel=curvedArtworkSurface(flat,w,hem,false,9),backPanel=curvedArtworkSurface(flat,w,hem,true,9);
- flat.dispose();
- const shell=new THREE.ExtrudeGeometry(shape,{depth:.54,steps:1,bevelEnabled:true,bevelSegments:4,bevelSize:.065,bevelThickness:.07,curveSegments:24});
- shell.translate(0,0,-.27);shell.computeVertexNormals();
- return {panel,backPanel,shell};
-}
 function Garment({doc}:{doc:StudioDocument}){
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back'),bump=useFabricBump(doc.material);
- const geo=useMemo(()=>garmentGeometry(doc.garment==='hoodie',doc.fit==='oversized',doc.sleeve,doc.hem,doc.neck),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
- useEffect(()=>()=>{geo.panel.dispose();geo.backPanel.dispose();geo.shell.dispose()},[geo]);
+ const geo=useMemo(()=>createGarmentMesh({garment:doc.garment,fit:doc.fit,sleeve:doc.sleeve,hem:doc.hem,neck:doc.neck}),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
+ useEffect(()=>()=>disposeGarmentMesh(geo),[geo]);
  const profile=FABRIC_PROFILES[doc.material];
  const appearance={roughness:profile.roughness,metalness:profile.metalness,sheen:profile.sheen,
   sheenColor:new THREE.Color('#ffffff'),sheenRoughness:profile.sheenRoughness,
@@ -107,36 +70,26 @@ function Garment({doc}:{doc:StudioDocument}){
  [bump,doc.material,doc.baseColor]);
  const seamMat=useMemo(()=>new THREE.MeshStandardMaterial({color:doc.baseColor,roughness:.95}),[doc.baseColor]);
  useEffect(()=>()=>{frontMat.dispose();backMat.dispose();clothMat.dispose();seamMat.dispose()},[frontMat,backMat,clothMat,seamMat]);
- const long=doc.sleeve==='long',hem=doc.hem==='cropped'?-.22:(doc.garment==='hoodie'?-.55:-.48);
- const cuffY=long?-.51:doc.garment==='hoodie'?.36:.50;
- return <group position={[0,1.54,0]} scale={[.65,.91,1]}>
-  <mesh geometry={geo.shell} material={clothMat} castShadow receiveShadow/>
-  <mesh geometry={geo.panel} position={[0,0,.37]} material={frontMat} castShadow receiveShadow/>
-  <mesh geometry={geo.backPanel} rotation={[0,Math.PI,0]} position={[0,0,-.37]} material={backMat} castShadow receiveShadow/>
-  {/* Soft finishing bands and seams instead of the exposed mannequin-colored sleeve cylinders. */}
-  <mesh position={[0,hem+.075,.33]} material={clothMat} castShadow>
-   <boxGeometry args={[1.62*(doc.fit==='oversized'?1.13:1),.12,.09]}/>
-  </mesh>
-  {([-1,1] as const).map(sign=><group key={sign}>
-   <mesh position={[sign*1.28*(doc.fit==='oversized'?1.13:1),cuffY-.075,.05]} rotation={[0,0,sign*(long?.18:.32)]} material={clothMat} castShadow>
-    <cylinderGeometry args={[long?.17:.22,long?.16:.20,.19,28]}/>
-   </mesh>
-  </group>)}
-  {doc.pocket==='chest'&&<mesh position={[.37,.39,.53]} material={clothMat} castShadow>
-   <boxGeometry args={[.31,.30,.04]}/>
+ return <group position={[0,1.54,0]} scale={[.68,.94,1]}>
+  {/* Rounded front/back torso surfaces, sharing side seams. */}
+  <mesh geometry={geo.front} material={frontMat} receiveShadow/>
+  <mesh geometry={geo.back} material={backMat} receiveShadow/>
+  {geo.sleeves.map((g,i)=><mesh key={'sleeve'+i} geometry={g} material={clothMat} receiveShadow/>)}
+  <mesh geometry={geo.neckBand} material={seamMat}/>
+  <mesh geometry={geo.hemBand} material={clothMat}/>
+  {geo.cuffBands.map((g,i)=><mesh key={'cuff'+i} geometry={g} material={seamMat}/>)}
+  {doc.pocket==='chest'&&<mesh position={[.36,.37,.425]} material={clothMat}>
+   <boxGeometry args={[.31,.28,.035]}/>
   </mesh>}
   {doc.garment==='hoodie'&&<>
-   <mesh position={[0,1.02,-.25]} material={clothMat} castShadow>
-    <sphereGeometry args={[.47,40,24,0,Math.PI*2,0,Math.PI*.66]}/>
+   <mesh position={[0,1.025,-.18]} material={clothMat}>
+    <sphereGeometry args={[.47,28,20,0,Math.PI*2,0,Math.PI*.63]}/>
    </mesh>
-   <mesh position={[0,.96,.34]} material={seamMat}>
-    <torusGeometry args={[.32,.038,10,40,Math.PI]}/>
-   </mesh>
-   {([-1,1] as const).map(sign=><mesh key={sign} position={[sign*.19,.49,.56]} material={seamMat}>
-    <cylinderGeometry args={[.012,.012,.39,12]}/>
+   {([-1,1] as const).map(sign=><mesh key={'drawstring'+sign} position={[sign*.18,.52,.47]} material={seamMat}>
+    <cylinderGeometry args={[.012,.012,.43,8]}/>
    </mesh>)}
-   {doc.pocket==='kangaroo'&&<mesh position={[0,-.27,.56]} material={clothMat} castShadow>
-    <boxGeometry args={[.92,.36,.07]}/>
+   {doc.pocket==='kangaroo'&&<mesh position={[0,-.24,.405]} material={clothMat}>
+    <boxGeometry args={[.86,.33,.04]}/>
    </mesh>}
   </>}
  </group>;
