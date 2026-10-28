@@ -8,12 +8,12 @@ import {renderArtwork} from '../lib/render-design';
 import type {StudioDocument} from '../lib/studio-document';
 
 type ArtUniform={value:THREE.Texture};
-const printFragment="vec2 moattUv=vec2((vMoattClothPosition.x + 0.265)/0.53, (vMoattClothPosition.y - 0.93)/0.48);\nif(moattUv.x>0.0 && moattUv.x<1.0 && moattUv.y>0.0 && moattUv.y<1.0 &&\n   abs(vMoattClothPosition.z)>0.012){\n vec4 moattInk= vMoattClothPosition.z>0.0\n   ?texture2D(moattFrontInk,moattUv)\n   :texture2D(moattBackInk,vec2(1.0-moattUv.x,moattUv.y));\n diffuseColor.rgb=mix(diffuseColor.rgb,moattInk.rgb,moattInk.a);\n}";
+const printFragment="vec2 moattUv=vec2((vMoattClothPosition.x + 0.22)/0.44, (vMoattClothPosition.y - 0.98)/0.42);\nif(moattUv.x>0.0 && moattUv.x<1.0 && moattUv.y>0.0 && moattUv.y<1.0 &&\n   abs(vMoattClothPosition.z)>0.012){\n vec4 moattInk= vMoattClothPosition.z>0.0\n   ?texture2D(moattFrontInk,moattUv)\n   :texture2D(moattBackInk,vec2(1.0-moattUv.x,moattUv.y));\n diffuseColor.rgb=mix(diffuseColor.rgb,moattInk.rgb,moattInk.a);\n}";
 /**
  * Original CC0 body-fitted garment + projective print reference.
  * Print region is approximate; no factory-calibrated fit or UV dimensions are claimed.
  */
-export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
+export default function LicensedAvatarReference({doc,display='human'}:{doc:StudioDocument;display?:'human'|'ghost'}){
  const [model,setModel]=useState<THREE.Group|null>(null);
  const [garment,setGarment]=useState<THREE.Mesh|null>(null);
  const [failed,setFailed]=useState(false);
@@ -34,17 +34,18 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   setModel(null);setGarment(null);setFailed(false);
   const prefix=(process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/realistic/';
   const loader=new GLTFLoader();
-  Promise.all([loader.loadAsync(prefix+'base_body.glb'),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb'),loader.loadAsync(prefix+'clothing_jeans.glb'),loader.loadAsync(prefix+'clothing_shoes.glb')])
+  Promise.all([display==='human'?loader.loadAsync(prefix+'base_body.glb'):Promise.resolve(null),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb'),display==='human'?loader.loadAsync(prefix+'clothing_jeans.glb'):Promise.resolve(null),display==='human'?loader.loadAsync(prefix+'clothing_shoes.glb'):Promise.resolve(null)])
    .then(([body,clothes,jeans,shoes])=>{
     if(!active)return;
     const scene=new THREE.Group();
-    scene.add(body.scene,clothes.scene,jeans.scene,shoes.scene);
-    const bbox=new THREE.Box3().setFromObject(body.scene);
+    if(body&&jeans&&shoes)scene.add(body.scene,clothes.scene,jeans.scene,shoes.scene);
+    else scene.add(clothes.scene);
+    const bbox=new THREE.Box3().setFromObject(body?body.scene:clothes.scene);
     const height=bbox.max.y-bbox.min.y;
     if(!Number.isFinite(height)||height<=.01)throw Error('Invalid body model bounds');
-    const scalar=3.25/height;
+    const scalar=(display==='ghost'?2.35:3.25)/height;
     scene.scale.setScalar(scalar);
-    scene.position.set(-(bbox.min.x+bbox.max.x)*.5*scalar,-bbox.min.y*scalar-.26,-(bbox.min.z+bbox.max.z)*.5*scalar);
+    scene.position.set(-(bbox.min.x+bbox.max.x)*.5*scalar,display==='ghost'?1.58-(bbox.min.y+bbox.max.y)*.5*scalar:-bbox.min.y*scalar-.26,-(bbox.min.z+bbox.max.z)*.5*scalar);
     const mesh=clothes.scene.getObjectByName('Cloth_'+doc.garment) as THREE.Mesh|undefined;
     if(!mesh||!(mesh instanceof THREE.Mesh))throw Error('Missing licensed fitted garment geometry');
     const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
@@ -72,7 +73,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
     mesh.material=Array.isArray(mesh.material)?garmentMaterials.current:garmentMaterials.current[0];
     // Hide torso and upper-arm skin under the upper garment. The original CC0 meshes
     // contain individual body/garment layers; their raw neutral rest pose slightly intersects.
-    body.scene.traverse(child=>{
+    body?.scene.traverse(child=>{
      if(!(child instanceof THREE.Mesh)||!child.name.toLowerCase().includes('body'))return;
      const original=Array.isArray(child.material)?child.material:[child.material];
      const hidden=original.map(mat=>{
@@ -98,7 +99,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   return()=>{active=false;ownMaterials.current.forEach(m=>m.dispose());ownMaterials.current=[];garmentMaterials.current=[];};
  // Shader uses external uniform objects, updated without rebuilding programs after edits.
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[doc.garment,invalidate,uniforms]);
+ },[doc.garment,display,invalidate,uniforms]);
  useEffect(()=>{
   if(!model||!garment)return;
   let active=true;
@@ -123,6 +124,6 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   gl.domElement.dataset.referenceStatus=failed?'unavailable':model?'loaded':'loading';
   invalidate();
  },[model,failed,gl,invalidate]);
- if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Human reference unavailable. Switch to Studio mannequin.':'Loading fitted CC0 human reference…'}</div></Html>;
+ if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Human reference unavailable. Switch to Studio mannequin.':display==='ghost'?'Preparing garment close-up…':'Loading fitted CC0 human reference…'}</div></Html>;
  return <primitive object={model}/>;
 }
