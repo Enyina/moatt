@@ -44,8 +44,15 @@ export function makeFittedChestPatch(
  const indices:number[]=[];
  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
   const a=j*(cols+1)+i,b=a+1,c=a+(cols+1),d=c+1;
-  if(valid[a]&&valid[b]&&valid[c])indices.push(a,c,b);
-  if(valid[b]&&valid[d]&&valid[c])indices.push(b,c,d);
+  // Front winding faces +Z; reverse-side winding faces -Z. A one-sided decal
+  // must never bleed through a shirt when orbiting to the opposite viewpoint.
+  if(side==='front'){
+   if(valid[a]&&valid[b]&&valid[c])indices.push(a,c,b);
+   if(valid[b]&&valid[d]&&valid[c])indices.push(b,c,d);
+  }else{
+   if(valid[a]&&valid[b]&&valid[c])indices.push(a,b,c);
+   if(valid[b]&&valid[d]&&valid[c])indices.push(b,d,c);
+  }
  }
  const geo=new THREE.BufferGeometry();
  geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
