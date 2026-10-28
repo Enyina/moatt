@@ -50,11 +50,11 @@ export function mannequinLeg(sign:-1|1):THREE.BufferGeometry{
  return makeSmoothLimb([
   {x:sign*.245,y:1.13,z:0,radius:.225,depth:.225},
   {x:sign*.255,y:.94,z:0,radius:.215,depth:.205},
-  {x:sign*.270,y:.70,z:.015,radius:.185,depth:.17},
-  {x:sign*.28,y:.55,z:.025,radius:.142,depth:.151},
-  {x:sign*.285,y:.36,z:.05,radius:.154,depth:.145},
-  {x:sign*.285,y:.17,z:.08,radius:.108,depth:.115},
-  {x:sign*.28,y:.10,z:.10,radius:.104,depth:.107},
+  {x:sign*.270,y:.69,z:.015,radius:.185,depth:.17},
+  {x:sign*.28,y:.47,z:.025,radius:.142,depth:.151},
+  {x:sign*.285,y:.20,z:.05,radius:.154,depth:.145},
+  {x:sign*.285,y:-.13,z:.08,radius:.108,depth:.115},
+  {x:sign*.28,y:-.22,z:.10,radius:.104,depth:.107},
  ],20,32);
 }
 
