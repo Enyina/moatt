@@ -28,6 +28,8 @@ describe('fitted surface decals',()=>{
   expect(p.getZ(0)).toBeCloseTo(-.186,3);
   expect(v.getX(0)).toBe(1);expect(v.getX(4)).toBe(0);
   expect(a.geometry.getAttribute('uv').getX(0)).toBe(0);
+  expect(a.geometry.getAttribute('normal').getZ(0)).toBeGreaterThan(.8);
+  expect(b.geometry.getAttribute('normal').getZ(0)).toBeLessThan(-.8);
   a.geometry.dispose();b.geometry.dispose();source.dispose();
  });
  it('refuses incorrect dimensions, avoids painting through missing fabric triangles',()=>{
