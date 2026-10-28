@@ -19,10 +19,14 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  const [failed,setFailed]=useState(false);
  const {gl,invalidate}=useThree();
  const uniforms=useMemo(()=>{
-  const empty=new THREE.DataTexture(new Uint8Array([0,0,0,0]),1,1);
-  empty.needsUpdate=true;
-  return {front:{value:empty} as ArtUniform,back:{value:empty} as ArtUniform};
+  const make=()=>{
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;
+   const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+   tex.needsUpdate=true;return tex;
+  };
+  return {front:{value:make()} as ArtUniform,back:{value:make()} as ArtUniform};
  },[]);
+ useEffect(()=>()=>{uniforms.front.value.dispose();uniforms.back.value.dispose()},[uniforms]);
  const ownMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
  useEffect(()=>{
   let active=true;
@@ -99,11 +103,14 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   gl.domElement.dataset.referenceArtwork='loading';
   Promise.all([renderArtwork(doc,'front',true),renderArtwork(doc,'back',true)]).then(([front,back])=>{
    if(!active)return;
-   const frontTexture=new THREE.CanvasTexture(front),backTexture=new THREE.CanvasTexture(back);
-   for(const texture of [frontTexture,backTexture]){texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;}
-   const oldFront=uniforms.front.value,oldBack=uniforms.back.value;
-   uniforms.front.value=frontTexture;uniforms.back.value=backTexture;
-   oldFront.dispose();if(oldBack!==oldFront)oldBack.dispose();
+   for(const [texture,source] of [[uniforms.front.value,front],[uniforms.back.value,back]] as const){
+    const canvas=texture.image as HTMLCanvasElement;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Canvas unavailable for print reference');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(source,0,0);
+    texture.needsUpdate=true;
+   }
    ownMaterials.current.forEach(m=>m.color.set(doc.baseColor));
    gl.domElement.dataset.referenceArtwork='ready';
    invalidate();
