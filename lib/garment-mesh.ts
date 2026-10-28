@@ -89,7 +89,7 @@ function sleeve(shape:GarmentShape,sign:-1|1,radial=18,longitudinal=18):THREE.Bu
   const t=row/longitudinal;
   const center=from.clone().lerp(to,t);
   center.y-=.043*Math.sin(Math.PI*t);
-  const r=(.355*(1-t)+(.24+(long?.0:.02))*t)*ease;
+  const r=(.355*(1-t)+(.24+(long?0:.02))*t)*ease;
   for(let col=0;col<=radial;col++){
    const angle=2*Math.PI*col/radial;
    const pt=center.clone().addScaledVector(up,Math.cos(angle)*r).addScaledVector(across,Math.sin(angle)*r*.84);
