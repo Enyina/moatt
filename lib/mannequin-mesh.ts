@@ -81,3 +81,21 @@ export function mannequinHead():THREE.BufferGeometry{
   {x:0,y:2.60,z:.04,radius:.055,depth:.065},
  ],32,28);
 }
+
+/** Only skin outside the sleeve should remain visible; otherwise matte shoulder geometry clips through clothing. */
+export function mannequinExposedArm(sign:-1|1,sleeve:'short'|'long'):THREE.BufferGeometry{
+ if(sleeve==='long'){
+  return makeSmoothLimb([
+   {x:sign*1.03,y:1.23,z:.07,radius:.091,depth:.092},
+   {x:sign*1.055,y:1.16,z:.1,radius:.092,depth:.075},
+   {x:sign*1.06,y:1.04,z:.15,radius:.063,depth:.043}
+  ],16,12);
+ }
+ return makeSmoothLimb([
+  {x:sign*.89,y:1.84,z:.02,radius:.129,depth:.137},
+  {x:sign*.95,y:1.60,z:.045,radius:.126,depth:.121},
+  {x:sign*1.04,y:1.32,z:.08,radius:.086,depth:.095},
+  {x:sign*1.06,y:1.16,z:.1,radius:.106,depth:.06},
+  {x:sign*1.06,y:1.04,z:.15,radius:.063,depth:.045}
+ ],18,24);
+}
