@@ -57,3 +57,27 @@ export function mannequinLeg(sign:-1|1):THREE.BufferGeometry{
   {x:sign*.28,y:.10,z:.10,radius:.104,depth:.107},
  ],20,32);
 }
+
+export function mannequinTorso():THREE.BufferGeometry{
+ return makeSmoothLimb([
+  {x:0,y:2.48,z:0,radius:.147,depth:.145},
+  {x:0,y:2.31,z:0,radius:.45,depth:.255},
+  {x:0,y:2.17,z:-.01,radius:.56,depth:.28},
+  {x:0,y:1.86,z:-.02,radius:.535,depth:.278},
+  {x:0,y:1.54,z:0,radius:.45,depth:.235},
+  {x:0,y:1.29,z:0,radius:.41,depth:.24},
+  {x:0,y:1.06,z:.01,radius:.48,depth:.27},
+  {x:0,y:.97,z:.01,radius:.39,depth:.235},
+ ],32,40);
+}
+export function mannequinHead():THREE.BufferGeometry{
+ return makeSmoothLimb([
+  {x:0,y:3.16,z:0,radius:.045,depth:.065},
+  {x:0,y:3.11,z:0,radius:.145,depth:.155},
+  {x:0,y:2.98,z:0,radius:.218,depth:.218},
+  {x:0,y:2.83,z:.014,radius:.222,depth:.218},
+  {x:0,y:2.73,z:.025,radius:.196,depth:.187},
+  {x:0,y:2.63,z:.04,radius:.133,depth:.14},
+  {x:0,y:2.60,z:.04,radius:.055,depth:.065},
+ ],32,28);
+}
