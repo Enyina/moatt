@@ -96,3 +96,8 @@ Choosing a hoodie now starts with long sleeves and a front pouch, rather than a 
 **Better on phones**
 
 You can now enlarge the presentation to fill the screen, close it again, and use the top download button to save the entire design sheet. This works without changing the project or losing your original artwork.
+
+
+## Fitted garment artwork quality review — 28 October
+
+Garment close-up is being improved to display your original text and images across the clothing chest without breaking them into fragments or hiding them behind the material. Front and back can remain different. This change is still in review; it is not confirmed live and remains a **visual design reference**, not accurate fit or manufacturing placement.
