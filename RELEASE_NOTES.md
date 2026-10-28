@@ -58,3 +58,16 @@ T-shirt and hoodie outlines now have softer shoulders and edges. We've added gen
 Cotton has a fine, soft weave; denim has stronger diagonal texture; satin has a smoother surface with brighter highlights. The artwork editor and 3D preview share the same visual fabric choice, while exported print artwork remains transparent.
 
 These changes improve the *appearance* of your designs, but they do not provide true cloth simulation, exact sizes or factory-approved production files. They are not published to the live website yet.
+
+
+## October 28, 2026 — More natural clothing previews
+
+**Clothing now has a rounded body**
+
+The T-shirt and hoodie previews use rounded front and back surfaces rather than a flat cutout. The sleeves extend around the mannequin's arms, and the neckline and hems have their own shapes. Your front and back designs remain editable separately.
+
+**The display mannequin looks less segmented**
+
+The studio mannequin now has continuous arms, legs, torso and head. The older licensed mannequin remains available as a comparison.
+
+These changes are being reviewed and are not confirmed live. The clothes are still an illustrated preview, not a simulation of real fabric movement, verified body measurements or factory-ready sewing patterns.
