@@ -20,9 +20,6 @@ function blend(c:RGB,f:number):string{
  return 'rgb('+[mix(c.r),mix(c.g),mix(c.b)].join(',')+')';
 }
 function label(value:string,max=66){return value.replace(/[\x00-\x1F\x7F]/g,' ').trim().slice(0,max);}
-function line(ctx:CanvasRenderingContext2D,a:[number,number],b:[number,number],color:string,width:number){
- ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
-}
 function garmentOutline(doc:StudioDocument):Path2D{
  const path=new Path2D(),isHoodie=doc.garment==='hoodie',oversize=doc.fit==='oversized',long=doc.sleeve==='long';
  const center=350,hem=doc.hem==='cropped'?635:isHoodie?744:711;
