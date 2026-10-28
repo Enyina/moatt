@@ -109,3 +109,7 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **ART-PROJECT-01:** Front and back design textures must be projected separately onto the fitted upper garment in the chosen reference orientation. A real text change must change rendered canvas pixels.
 - **ART-PROJECT-02:** The projection is explicitly illustrative and uncalibrated. It must not claim factory print placement or reflect unrelated sleeve/cropped/pocket tailoring parameters.
 - **FIT-01:** Under-garment body intersections must be masked; inspect shoulders, hem, hood and arm movement in visual evidence. Do not mistake a successful load test for visual quality.
+
+- **GHOST-01:** Provide an on-demand garment-only fitted cloth close-up as an alternative to the uncanny full-body source human. The mode loads only its CC0 top asset, so mobile users do not pay the larger body+jeans+shoes download cost for that view.
+- **GHOST-02:** Front/back project artwork onto the garment and changes to text visibly alter rendered pixels in the actual screenshot. Preserve the canonical editable 2D design; don't claim calibrated physical placement.
+- **VISUAL-FAILURE:** The first complete source outfit screenshot was rejected: forearms appeared disconnected, the face looked artificial and artwork warped around the chest. A reference view passing CI is not acceptance. Review the close-up screenshots before promotion.
