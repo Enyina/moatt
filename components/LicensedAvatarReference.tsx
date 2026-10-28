@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {useThree} from '@react-three/fiber';
+import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import type {StudioDocument} from '../lib/studio-document';
@@ -40,6 +41,6 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   gl.domElement.dataset.referenceStatus=failed?'unavailable':model?'loaded':'loading';
   invalidate();
  },[model,failed,gl,invalidate]);
- if(!model)return null;
+ if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Human reference unavailable. Switch to Studio mannequin.':'Loading verified human reference…'}</div></Html>;
  return <primitive object={model}/>;
 }
