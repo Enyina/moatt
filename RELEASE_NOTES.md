@@ -71,3 +71,8 @@ The T-shirt and hoodie previews use rounded front and back surfaces rather than 
 The studio mannequin now has continuous arms, legs, torso and head. The older licensed mannequin remains available as a comparison.
 
 These changes are being reviewed and are not confirmed live. The clothes are still an illustrated preview, not a simulation of real fabric movement, verified body measurements or factory-ready sewing patterns.
+
+
+**The sleeves no longer show mannequin shoulders through the fabric**
+
+The mannequin now shows its forearms below short sleeves and only the hands near long sleeves. This prevents the mannequin from sticking out through the upper part of the garment in the preview.
