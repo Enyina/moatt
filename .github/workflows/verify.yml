@@ -2,6 +2,11 @@ name: Moatt CI
 on:
   push:
   pull_request:
+# Push and PR events for the same branch use one current verification run.
+# Superseded visual builds must not saturate the runner pool or masquerade as release evidence.
+concurrency:
+  group: moatt-ci-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
