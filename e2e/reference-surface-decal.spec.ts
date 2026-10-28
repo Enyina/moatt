@@ -16,7 +16,7 @@ test('real fitted cloth shows readable chest artwork where the garment is, not o
  expect(Number(await canvas.getAttribute('data-reference-coverage'))).toBeGreaterThan(.65);
 
  const imageData=async()=>canvas.evaluate(element=>{
-  const c=element as HTMLCanvasElement,ctx=c.getContext('webgl2')||c.getContext('webgl');
+  const c=element as HTMLCanvasElement;
   // The browser-owned PNG is a stable readback from the actual visible 3D canvas.
   return c.toDataURL('image/png');
  });
@@ -26,7 +26,7 @@ test('real fitted cloth shows readable chest artwork where the garment is, not o
  await expect.poll(imageData,{timeout:25000}).not.toBe(baseline);
  await expect(canvas).toHaveAttribute('data-reference-artwork','ready',{timeout:25000});
  const actual=await canvas.evaluate(c=>{
-  const source=c as HTMLCanvasElement,shot=new Image();
+  const source=c as HTMLCanvasElement;
   const off=document.createElement('canvas');off.width=source.width;off.height=source.height;
   const ctx=off.getContext('2d')!;ctx.drawImage(source,0,0);
   const w=off.width,h=off.height;
