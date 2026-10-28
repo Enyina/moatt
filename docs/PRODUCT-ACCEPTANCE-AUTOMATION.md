@@ -113,3 +113,7 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **GHOST-01:** Provide an on-demand garment-only fitted cloth close-up as an alternative to the uncanny full-body source human. The mode loads only its CC0 top asset, so mobile users do not pay the larger body+jeans+shoes download cost for that view.
 - **GHOST-02:** Front/back project artwork onto the garment and changes to text visibly alter rendered pixels in the actual screenshot. Preserve the canonical editable 2D design; don't claim calibrated physical placement.
 - **VISUAL-FAILURE:** The first complete source outfit screenshot was rejected: forearms appeared disconnected, the face looked artificial and artwork warped around the chest. A reference view passing CI is not acceptance. Review the close-up screenshots before promotion.
+
+- **NATIVE-UV-01:** Inspect the pinned actual GLB's UV island coordinates, not arbitrary space-based projection. Hoodie torso front V≈.115–.325; T-shirt front V≈.30–.70. They are not interchangeable and must have separate mapping tables.
+- **NATIVE-UV-02:** Unit tests include coordinates sampled from the published fitted hoodie/T-shirt models on both sides, verify normalized local print area and reject unrelated UV islands.
+- **VISUAL-REJECT:** 140 passing browser tests did not justify acceptance of fragmented "ST RY 2026" lettering in garment-only screenshot. Native-UV mapping must be verified against new actual pixel and screenshot evidence; simply loading a source GLB remains insufficient.
