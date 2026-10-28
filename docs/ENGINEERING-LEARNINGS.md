@@ -61,3 +61,11 @@ Review status: only mark quality green when fresh CI and actual screenshot inspe
 ### Visual defect found in browser screenshots
 
 The first complete volume preview passed automated tests but displayed triangular gray shoulders, because upper-arm mannequin geometry was visible through the new sleeve mesh. Rather than declaring this acceptable, subsequent revisions reduced excessive sleeve volume, joined the mannequin neck, adjusted hood placement and shortened the exposed arm geometry based on sleeve length. This must be checked from actual front/back screenshots, not only triangle counts or GPU memory. The body is still an illustrative display form, not a measured fit model.
+
+## 2026-10-28 — Useful presentation must not be hostage to limited 3D models
+
+Evidence: prior screenshot reviews found the mannequin too stylized to be a persuasive fashion design outcome. The existing app had a usable layer editor but exported flat 1024-square art or a mannequin screenshot that inherited those visual defects.
+
+A separate, deterministic **2400 x 1500 two-sided presentation** now renders offline in a standard 2D canvas. It uses the existing versioned front/back artwork and silhouette choices, adds garment outlines, shading, material grain and explicit concept-only labeling. It does not mutate the project. Browser regression decodes the actual PNG and checks both halves, actual image dimensions and pixel changes when garments and materials change. The presentation requires no WebGL and retains the original editor.
+
+Limitations: original authored illustration; not a licensed garment photo, physically correct textile simulation, paper pattern, or a guarantee of print placement. Quality verdict requires examining the actual exported image; green tests alone are insufficient.
