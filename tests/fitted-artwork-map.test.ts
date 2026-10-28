@@ -11,6 +11,13 @@ describe('licensed garment printing uses continuous native UV islands',()=>{
   expect(sourceUvToArtwork('hoodie','front',.13,.22)).toBeNull();
   expect(sourceUvToArtwork('hoodie','back',.60,.22)).toBeNull();
  });
+ it('uses T-shirt-specific source GLB UV coordinates rather than hoodie V range',()=>{
+  const front=[[.6286451817,.639015317],[.594683886,.633599937],[.626374185,.438646197],[.5942709446,.435938478]];
+  const back=[[.145754844,.620061576],[.107664518,.50338465],[.100541934,.4032]];
+  for(const [u,v] of front)expect(sourceUvToArtwork('tshirt','front',u,v)).not.toBeNull();
+  for(const [u,v] of back)expect(sourceUvToArtwork('tshirt','back',u,v)).not.toBeNull();
+  expect(sourceUvToArtwork('hoodie','front',.60,.63)).toBeNull();
+ });
  it('rejects coordinates outside the relevant print panel rather than painting seams',()=>{
   for(const side of ['front','back'] as const){
    const r=FITTED_PRINT_REGIONS.hoodie[side];
