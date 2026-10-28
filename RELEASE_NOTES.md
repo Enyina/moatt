@@ -88,3 +88,7 @@ There is now a **Presentation** view beside the drawing and three-dimensional vi
 The presentation works through the normal browser canvas. You can still edit and reopen the original project separately. Nothing about this export changes or deletes your design.
 
 The presentation is a concept image to help you show an idea. It does not certify real fabric folds, fit, or print measurements. These changes are in review and are not confirmed live on the published website.
+
+**Better starting clothing choices**
+
+Choosing a hoodie now starts with long sleeves and a front pouch, rather than a short-sleeve shirt with a hood. Choosing a T-shirt starts with short sleeves. You can still change these details afterward, and requesting a short-sleeve hoodie or no pocket explicitly is respected. Text from a written idea is slightly larger and easier to see on the design sheet.
