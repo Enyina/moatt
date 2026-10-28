@@ -99,3 +99,21 @@ test('first-time founder creates a shareable design, saves, reopens and exports 
  const exported=await d;
  expect(exported.suggestedFilename()).toMatch(/Black-Oversized-Hoodie-concept-presentation\.png/);
 });
+
+test('focused presentation works on mobile and can be closed without changing the design',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
+ const board=page.getByTestId('presentation-canvas');
+ await expect(board).toHaveAttribute('data-preview-ready','true',{timeout:20000});
+ await page.getByRole('button',{name:'Expand board'}).click();
+ const stage=page.locator('.presentation-stage');
+ await expect(stage).toHaveClass(/is-focused/);
+ await expect(board).toBeVisible();
+ await expect(page.getByRole('button',{name:'Close full-screen board'})).toBeVisible();
+ await page.getByRole('button',{name:'Close full-screen board'}).click();
+ await expect(stage).not.toHaveClass(/is-focused/);
+ await expect(page.getByRole('button',{name:'Download presentation'})).toBeVisible();
+ const d=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Download presentation'}).click();
+ expect((await d).suggestedFilename()).toContain('-presentation.png');
+});
