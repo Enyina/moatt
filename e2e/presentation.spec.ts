@@ -74,3 +74,28 @@ test('presentation remains available even when WebGL preview is unsupported',asy
  await page.getByRole('button',{name:'Presentation'}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:20000});
 });
+
+test('first-time founder creates a shareable design, saves, reopens and exports without assistance',async({page},testInfo)=>{
+ await page.goto('/');
+ await page.getByRole('textbox',{name:'Clothing idea'}).fill('Oversized black hoodie with "MIDNIGHT CLUB" on the front');
+ await page.getByRole('button',{name:'Create editable draft'}).click();
+ await expect(page.getByRole('button',{name:'Hoodie'})).toHaveClass(/selected/);
+ await expect(page.getByText('text: MIDNIGHT CLUB')).toBeVisible();
+ await page.getByRole('button',{name:'Save to my designs'}).click();
+ const stored=page.getByRole('button',{name:/Open Black Oversized Hoodie concept/});
+ await expect(stored).toBeVisible();
+ page.once('dialog',d=>d.accept());
+ await page.getByRole('button',{name:'New design'}).click();
+ await expect(page.getByText('text: MIDNIGHT CLUB')).toHaveCount(0);
+ page.once('dialog',d=>d.accept());
+ await stored.click();
+ await expect(page.getByText('text: MIDNIGHT CLUB')).toBeVisible();
+ await page.getByRole('button',{name:'Presentation'}).click();
+ const canvas=page.getByTestId('presentation-canvas');
+ await expect(canvas).toHaveAttribute('data-preview-ready','true',{timeout:20000});
+ await page.screenshot({path:testInfo.outputPath('founder-journey-saved-design.png'),fullPage:true});
+ const d=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Export presentation PNG'}).click();
+ const exported=await d;
+ expect(exported.suggestedFilename()).toMatch(/Black-Oversized-Hoodie-concept-presentation\.png/);
+});
