@@ -1,0 +1,42 @@
+import {test,expect} from '@playwright/test';
+test('new artwork is visible against dark and light clothing by default',async({page})=>{
+ await page.goto('/');
+ await page.getByLabel('Fabric color').fill('#23262a');
+ await page.getByRole('button',{name:'Add text'}).click();
+ const ink=page.getByLabel('Ink', {exact:true});
+ await expect(ink).toHaveValue('#faf8f2');
+ await expect(page.getByText('text: YOUR DESIGN')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Fix text visibility'})).toHaveCount(0);
+ await page.getByLabel('Fabric color').fill('#f5f1e9');
+ await expect(page.getByRole('button',{name:'Fix text visibility'})).toBeVisible();
+ await page.getByRole('button',{name:'Fix text visibility'}).click();
+ await expect(ink).toHaveValue('#191a1c');
+ await expect(page.getByRole('button',{name:'Fix text visibility'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Undo'}).click();
+ await expect(page.getByRole('button',{name:'Fix text visibility'})).toBeVisible();
+});
+test('corrected garment artwork stays visible in exported design files',async({page})=>{
+ await page.goto('/');
+ await page.getByLabel('Fabric color').fill('#283650');
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('VISIBLE');
+ const streamPromise=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Export PNG',exact:true}).click();
+ const download=await streamPromise;
+ const stream=await download.createReadStream();
+ const chunks:Buffer[]=[];
+ for await(const b of stream)chunks.push(Buffer.from(b));
+ const png=Buffer.concat(chunks);
+ const data=await page.evaluate(async(value)=>{
+  const img=new Image();img.src='data:image/png;base64,'+value;await img.decode();
+  const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+  const ctx=c.getContext('2d')!;ctx.drawImage(img,0,0);
+  const pixels=ctx.getImageData(260,370,500,140).data;
+  let count=0;
+  for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>200&&pixels[i]>190&&pixels[i+1]>190&&pixels[i+2]>190)count++;
+  return {width:c.width,height:c.height,brightInkPixels:count};
+ },png.toString('base64'));
+ expect(data.width).toBe(1024);
+ expect(data.height).toBe(1024);
+ expect(data.brightInkPixels).toBeGreaterThan(30);
+});
