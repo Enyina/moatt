@@ -92,3 +92,7 @@ The presentation is a concept image to help you show an idea. It does not certif
 **Better starting clothing choices**
 
 Choosing a hoodie now starts with long sleeves and a front pouch, rather than a short-sleeve shirt with a hood. Choosing a T-shirt starts with short sleeves. You can still change these details afterward, and requesting a short-sleeve hoodie or no pocket explicitly is respected. Text from a written idea is slightly larger and easier to see on the design sheet.
+
+**Better on phones**
+
+You can now enlarge the presentation to fill the screen, close it again, and use the top download button to save the entire design sheet. This works without changing the project or losing your original artwork.
