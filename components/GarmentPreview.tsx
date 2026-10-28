@@ -51,7 +51,12 @@ function useFabricBump(material:StudioDocument['material']){
  return bump;
 }
 function Garment({doc}:{doc:StudioDocument}){
+ const {gl}=useThree();
  const front=useSideTexture(doc,'front'),back=useSideTexture(doc,'back'),bump=useFabricBump(doc.material);
+ useEffect(()=>{
+  gl.domElement.dataset.garmentTopology='volume-torso-sleeves-v1';
+  gl.domElement.dataset.garmentKind=doc.garment;
+ },[gl,doc.garment]);
  const geo=useMemo(()=>createGarmentMesh({garment:doc.garment,fit:doc.fit,sleeve:doc.sleeve,hem:doc.hem,neck:doc.neck}),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>disposeGarmentMesh(geo),[geo]);
  const profile=FABRIC_PROFILES[doc.material];
