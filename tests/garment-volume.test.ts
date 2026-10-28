@@ -59,6 +59,16 @@ describe('volumetric garment modeling',()=>{
   expect(loose[5].rx).toBeGreaterThan(slim[5].rx);
   expect(garmentDimensions({...tshirt,hem:'cropped'}).hem).toBeGreaterThan(garmentDimensions(tshirt).hem);
  });
+ it('hides the sleeve root inside the torso rather than exposing a pointed shoulder ring',()=>{
+  const meshes=createGarmentMesh(tshirt);
+  for(const sleeve of meshes.sleeves){
+   const points=sleeve.getAttribute('position');
+   const rootYs=Array.from({length:19},(_,i)=>points.getY(i));
+   expect(Math.max(...rootYs)).toBeLessThan(.85);
+   expect(Math.max(...rootYs)-Math.min(...rootYs)).toBeLessThan(.38);
+  }
+  disposeGarmentMesh(meshes);
+ });
  it('creates longer sleeves with lower, further cuffs and no printable-artwork mutation',()=>{
   const short=createGarmentMesh(tshirt),long=createGarmentMesh({...tshirt,sleeve:'long'});
   const a=short.sleeves[0].boundingBox!,b=long.sleeves[0].boundingBox!;
