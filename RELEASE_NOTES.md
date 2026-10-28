@@ -76,3 +76,15 @@ These changes are being reviewed and are not confirmed live. The clothes are sti
 **The sleeves no longer show mannequin shoulders through the fabric**
 
 The mannequin now shows its forearms below short sleeves and only the hands near long sleeves. This prevents the mannequin from sticking out through the upper part of the garment in the preview.
+
+## October 28, 2026 — A presentation you can actually share
+
+**Front and back on one clean design board**
+
+There is now a **Presentation** view beside the drawing and three-dimensional views. It shows both sides of your selected shirt or hoodie on an editorial-style design sheet with your actual artwork, selected color, and fabric appearance. You can save it as a high-resolution PNG and share it without opening the three-dimensional mannequin.
+
+**Useful even when 3D isn't supported**
+
+The presentation works through the normal browser canvas. You can still edit and reopen the original project separately. Nothing about this export changes or deletes your design.
+
+The presentation is a concept image to help you show an idea. It does not certify real fabric folds, fit, or print measurements. These changes are in review and are not confirmed live on the published website.
