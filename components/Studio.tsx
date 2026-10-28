@@ -7,6 +7,7 @@ import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
 import {draftFromIdea,IDEA_EXAMPLES} from '../lib/design-starter';
 import {createSupplierReviewHtml} from '../lib/supplier-review';
+import {renderPresentation,PRESENTATION_HEIGHT,PRESENTATION_WIDTH} from '../lib/presentation-render';
 import {loadLibrary,saveToLibrary,openFromLibrary,deleteFromLibrary} from '../lib/design-library';
 import type {LibraryEntry} from '../lib/design-library';
 const Preview=dynamic(()=>import('./GarmentPreview'),{ssr:false,loading:()=> <div className="empty3d">Loading preview…</div>});
@@ -16,8 +17,8 @@ export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
  const [modelStyle,setModelStyle]=useState<'studio'|'classic'>('studio');
  const [savedDesigns,setSavedDesigns]=useState<LibraryEntry[]>([]);
- const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'>('2d'),[toast,setToast]=useState(''),[brushColor,setBrushColor]=useState('#202329'),[brushWidth,setBrushWidth]=useState(14);
- const doc=history.present;const printIssues=analyzePrintPlacement(doc);const canvasRef=useRef<HTMLCanvasElement>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null);
+ const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'|'presentation'>('2d'),[toast,setToast]=useState(''),[brushColor,setBrushColor]=useState('#202329'),[brushWidth,setBrushWidth]=useState(14);
+ const doc=history.present;const printIssues=analyzePrintPlacement(doc);const canvasRef=useRef<HTMLCanvasElement>(null),presentationRef=useRef<HTMLCanvasElement>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null);
  const drag=useRef<{id:string;startX:number;startY:number;originX:number;originY:number;points?:number[]}|null>(null);
  const notify=(text:string)=>{setToast(text);setTimeout(()=>setToast(''),3500)};
  useEffect(()=>{try{
@@ -78,6 +79,30 @@ export default function Studio(){
    notify('Supplier review sheet saved. Measurements still need confirmation.');
   }catch(e){notify('Could not export review sheet: '+String(e));}
  };
+ useEffect(()=>{
+  if(tab!=='presentation')return;
+  const target=presentationRef.current;
+  if(!target)return;
+  let live=true;
+  renderPresentation(doc).then(result=>{
+   if(!live)return;
+   const ctx=target.getContext('2d');
+   if(!ctx)throw Error('Presentation canvas unavailable');
+   ctx.clearRect(0,0,target.width,target.height);
+   ctx.drawImage(result,0,0);
+   target.dataset.previewReady='true';
+  }).catch(()=>{if(live)notify('Presentation preview unavailable. Try the export button.');});
+  return()=>{live=false};
+ // The document reference changes on every edit; stale renders are ignored.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[doc,tab]);
+ const exportPresentation=async()=>{
+  try{
+   const image=await renderPresentation(doc);
+   await savePng(image,'moatt-'+(doc.name||'design').replace(/[^a-z0-9-]/gi,'-').slice(0,80)+'-presentation.png');
+   notify('Front and back presentation saved as a high-resolution PNG.');
+  }catch(e){notify('Could not export presentation: '+String(e));}
+ };
  const exportProject=()=>downloadBlob(new Blob([JSON.stringify(doc,null,2)],{type:'application/json'}),'moatt-'+doc.name.replace(/[^a-z0-9-]/gi,'-')+'.json');
  const exportMockup=async()=>{if(tab!=='3d'){setTab('3d');notify('3D preview opened. Select Export mockup again when ready.');return;}const canvas=document.querySelector('.preview-stage canvas') as HTMLCanvasElement|null;if(!canvas){notify('3D preview is unavailable');return;}try{await savePng(canvas,'moatt-'+side+'-mockup.png');notify('Mockup exported')}catch(e){notify('Mockup export failed: '+String(e))}};
  const saveSide=async(s:Side)=>{try{await savePng(await renderArtwork(doc,s,true),'moatt-'+s+'.png');notify(s+' PNG exported')}catch(e){notify(String(e))}};
@@ -99,12 +124,14 @@ export default function Studio(){
  <div className="section"><h3>Artwork tools</h3><div className="row">{(['select','draw','erase'] as Tool[]).map(t=><button key={t} className={'button '+(tool===t?'selected':'')} onClick={()=>setTool(t)}>{t}</button>)}</div><div className="row"><button className="button" onClick={()=>layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:'#202329',fontSize:85,value:'YOUR DESIGN'})}>Add text</button><button className="button" onClick={()=>fileRef.current?.click()}>Upload image</button></div><input type="file" hidden ref={fileRef} accept="image/png,image/jpeg,image/webp" onChange={e=>void upload(e)}/></div>
  <div className="section"><h3>Brush</h3><label>Ink color <input aria-label="Brush color" type="color" value={brushColor} onChange={e=>setBrushColor(e.target.value)}/></label><label>Size <input aria-label="Brush size" className="field" type="range" min="2" max="70" value={brushWidth} onChange={e=>setBrushWidth(Number(e.target.value))}/></label></div><p className="hint">2D: drag to move layers, or select Draw to paint. 3D: orbit and zoom independently. Preview geometry is illustrative, not a fitted sewing pattern.</p>
  </aside>
- <section className="canvas"><div className="mobile-quick"><button className="button" onClick={()=>{setTab('2d');layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:'#202329',fontSize:85,value:'NEW DESIGN'})}}>New text</button><button className="button" onClick={()=>{setTab('2d');setTool('draw')}}>Paint design</button></div><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button>{tab==='3d'&&<>
+ <section className="canvas"><div className="mobile-quick"><button className="button" onClick={()=>{setTab('2d');layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:'#202329',fontSize:85,value:'NEW DESIGN'})}}>New text</button><button className="button" onClick={()=>{setTab('2d');setTool('draw')}}>Paint design</button></div><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button><button className={'button '+(tab==='presentation'?'selected':'')} onClick={()=>setTab('presentation')}>Presentation</button>{tab==='3d'&&<>
  <button className={'button '+(modelStyle==='studio'?'selected':'')} onClick={()=>setModelStyle('studio')}>Studio mannequin</button>
  <button className={'button '+(modelStyle==='classic'?'selected':'')} onClick={()=>setModelStyle('classic')}>Classic mannequin</button>
  </>}</div>
  <div className="studio-stage" style={{display:tab==='2d'?'flex':'none'}}><div className="artboard"><canvas ref={canvasRef} width={1024} height={1024} aria-label={side+' artwork canvas'} style={{touchAction:'none',cursor:tool==='draw'?'crosshair':tool==='erase'?'not-allowed':'move'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null;void paint()}}/><div aria-hidden="true" className="safe-guide" style={{left:SAFE_REGION.left/1024*100+'%',top:SAFE_REGION.top/1024*100+'%',width:(SAFE_REGION.right-SAFE_REGION.left)/1024*100+'%',height:(SAFE_REGION.bottom-SAFE_REGION.top)/1024*100+'%'}}/>{active&&tool==='select'&&<div className="selection-outline" data-layer-id={active.id} style={{left:active.x/1024*100+'%',top:active.y/1024*100+'%',width:active.width/1024*100+'%',height:active.height/1024*100+'%',transform:'rotate('+active.rotation+'deg)'}}/>}</div></div>
- <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}>{tab==='3d'&&<Preview doc={doc} side={side} modelStyle={modelStyle}/>}</div><div className="notice">{tab==='3d'?'Drag to orbit · scroll to zoom · visual garment approximation':'Artwork layout · front and back saved separately'}</div></section>
+ <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}>{tab==='3d'&&<Preview doc={doc} side={side} modelStyle={modelStyle}/>}</div>
+ <div className="presentation-stage" style={{display:tab==='presentation'?'flex':'none'}}>{tab==='presentation'&&<canvas data-testid="presentation-canvas" ref={presentationRef} width={PRESENTATION_WIDTH} height={PRESENTATION_HEIGHT} role="img" aria-label="Front and back garment presentation"/>}</div>
+ <div className="notice">{tab==='3d'?'Drag to orbit · scroll to zoom · visual garment approximation':tab==='presentation'?'Two-sided design presentation · visual concept, not a production pattern':'Artwork layout · front and back saved separately'}</div></section>
  <aside className="panel right"><div className="section"><h3>Project</h3><input aria-label="Design title" className="field" value={doc.name} maxLength={120} onChange={e=>commit(d=>{d.name=e.target.value})}/><p className="hint">{saveError||(!hydrated?'Loading saved design…':'Autosaved in this browser')}</p><button className="button" onClick={()=>projectRef.current?.click()}>Import project</button><input hidden type="file" accept=".json,application/json" ref={projectRef} onChange={e=>void importProject(e)}/></div>
  <div className="section"><h3>My designs</h3>
  <div className="row"><button className="button primary" onClick={storeDesign}>Save to my designs</button><button className="button" onClick={newDesign}>New design</button><button className="button" onClick={()=>{const clone=modify(doc,d=>{d.id=uid();d.name=(d.name+' — colorway').slice(0,120)});setHistory(h=>({past:[...h.past.slice(-39),h.present],present:clone,future:[]}));setSelected(null);notify('Colorway copy created. Update the color and save it to My designs.')}}>Duplicate colorway</button></div>
@@ -126,7 +153,7 @@ export default function Studio(){
  {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
  <label>X<input className="field" type="number" value={Math.round(active.x)} onChange={e=>update(active.id,{x:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Y<input className="field" type="number" value={Math.round(active.y)} onChange={e=>update(active.id,{y:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Width<input className="field" type="number" value={Math.round(active.width)} onChange={e=>update(active.id,{width:clamp(Number(e.target.value),10,1024)})}/></label><label>Height<input className="field" type="number" value={Math.round(active.height)} onChange={e=>update(active.id,{height:clamp(Number(e.target.value),10,1024)})}/></label><label>Rotation<input className="field" type="range" min={-180} max={180} value={active.rotation} onChange={e=>update(active.id,{rotation:Number(e.target.value)})}/></label>
  <div className="row"><button className="button" onClick={()=>update(active.id,{hidden:!active.hidden})}>{active.hidden?'Show':'Hide'}</button><button className="button" onClick={()=>commit(d=>{const l=d.layers[side].find(x=>x.id===active.id);if(l)l.locked=!l.locked})}>{active.locked?'Unlock':'Lock'}</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>=0&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]]})}>Bring forward</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>0)[a[i],a[i-1]]=[a[i-1],a[i]]})}>Send backward</button><button className="button" onClick={()=>layerAdd({...active,id:uid(),x:active.x+30,y:active.y+30})}>Duplicate</button></div></div>}
- <div className="section"><h3>Artwork checks</h3>{printIssues.length?printIssues.map((issue,i)=><p key={issue.layerId+'-'+i} className="hint" role="status">{issue.severity==='error'?'Outside canvas':'Placement note'} ({issue.side}): {issue.message}</p>):<p className="hint">Artwork falls within the suggested placement area.</p>}<p className="hint">Dashed area is a design guide only. Confirm real print dimensions with your production partner.</p></div><div className="section"><h3>Export</h3><button className="button" onClick={()=>void Promise.all([saveSide('front'),saveSide('back')])}>Export both artwork sides</button><button className="button" onClick={()=>void exportMockup()}>Export 3D mockup</button><button className="button" onClick={()=>void exportSupplierReview()}>Export supplier review sheet</button><p className="hint">Artwork PNGs use transparent backgrounds; preview textures include fabric color. These are not calibrated factory prints or production patterns. The supplier review sheet is a visual brief, not a technical pattern.</p></div>
+ <div className="section"><h3>Artwork checks</h3>{printIssues.length?printIssues.map((issue,i)=><p key={issue.layerId+'-'+i} className="hint" role="status">{issue.severity==='error'?'Outside canvas':'Placement note'} ({issue.side}): {issue.message}</p>):<p className="hint">Artwork falls within the suggested placement area.</p>}<p className="hint">Dashed area is a design guide only. Confirm real print dimensions with your production partner.</p></div><div className="section"><h3>Export</h3><button className="button" onClick={()=>void Promise.all([saveSide('front'),saveSide('back')])}>Export both artwork sides</button><button className="button primary" onClick={()=>void exportPresentation()}>Export presentation PNG</button><button className="button" onClick={()=>void exportMockup()}>Export 3D mockup</button><button className="button" onClick={()=>void exportSupplierReview()}>Export supplier review sheet</button><p className="hint">Artwork PNGs use transparent backgrounds; preview textures include fabric color. These are not calibrated factory prints or production patterns. The supplier review sheet is a visual brief, not a technical pattern.</p></div>
  </aside>{toast&&<div className="toast" role="status">{toast}</div>}
  </main>;
 }
