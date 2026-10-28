@@ -56,3 +56,8 @@ Implementation: create a continuous, rounded torso from height-dependent ellipti
 Known gaps: these are original approximations rather than scanned bodies or cloth-simulation CAD. Source inspiration: MakeHuman makes its asset models CC0 while its application source is AGPL/GPL; Poly Haven publishes CC0 fabric assets. We did not import that software, its code, or scanned texture assets in this change. See https://www.makehumancommunity.org/about/license.html and https://polyhaven.com/license.
 
 Review status: only mark quality green when fresh CI and actual screenshot inspection on this exact revision agree.
+
+
+### Visual defect found in browser screenshots
+
+The first complete volume preview passed automated tests but displayed triangular gray shoulders, because upper-arm mannequin geometry was visible through the new sleeve mesh. Rather than declaring this acceptable, subsequent revisions reduced excessive sleeve volume, joined the mannequin neck, adjusted hood placement and shortened the exposed arm geometry based on sleeve length. This must be checked from actual front/back screenshots, not only triangle counts or GPU memory. The body is still an illustrative display form, not a measured fit model.
