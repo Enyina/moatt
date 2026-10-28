@@ -101,3 +101,11 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **ASSET-04:** Browser must display explicit loading or fallback and allow returning to the editable procedural studio mannequin; no loss of saved artwork.
 - **ASSET-05:** A reference asset rendering is **not evidence of applied print artwork**, exact fit, pose/size change, cloth simulation or verified manufacturing dimensions.
 - **VISUAL-OPEN:** Screenshot inspection must confirm the original body/garment assets actually align, have appropriate camera scale, and do not expose skin through the garment. Automated load success alone is not sufficient to mark quality accepted.
+
+### Full outfit and design projection acceptance
+
+- **OUTFIT-01:** The realistic reference must load matching body, top, jeans and shoes from one pinned source and pass actual browser capture; a bare-legged model cannot satisfy the visual acceptance criterion.
+- **OUTFIT-02:** Original blue-dyed top texture must not override the user's selected garment color; the source top albedo is replaced with the requested preview color.
+- **ART-PROJECT-01:** Front and back design textures must be projected separately onto the fitted upper garment in the chosen reference orientation. A real text change must change rendered canvas pixels.
+- **ART-PROJECT-02:** The projection is explicitly illustrative and uncalibrated. It must not claim factory print placement or reflect unrelated sleeve/cropped/pocket tailoring parameters.
+- **FIT-01:** Under-garment body intersections must be masked; inspect shoulders, hem, hood and arm movement in visual evidence. Do not mistake a successful load test for visual quality.
