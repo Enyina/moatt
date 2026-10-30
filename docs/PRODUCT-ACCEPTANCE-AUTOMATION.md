@@ -92,3 +92,12 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **PRES-03:** A user switching between regular/oversized, hoodie/T-shirt and textile choices sees different rendered pixels; images are not generated from inert controls.
 - **PRES-04:** Preview/export are independent of the 3D renderer; moving between 2D/3D/presentation does not discard artwork or switch the saved side.
 - **PRES-05:** Screen-reader labeling and responsive preview should remain usable; visual aesthetic assessment and practical third-party acceptance remain distinct from passing CI.
+
+## Licensed human-reference acceptance — 2026-10-28
+
+- **ASSET-01:** `npm run assets:verify` downloads and verifies three pinned GLBs from upstream published CC0-generated assets. Reject git-blob SHA, file-length or GLB-header mismatches; fail the required CI asset stage.
+- **ASSET-02:** Assets are bundled with the static Next site and can be loaded offline after deployment without third-party browser calls.
+- **ASSET-03:** New Human fit reference uses original body and fitted T-shirt or hoodie GLB without GPL source-code copying.
+- **ASSET-04:** Browser must display explicit loading or fallback and allow returning to the editable procedural studio mannequin; no loss of saved artwork.
+- **ASSET-05:** A reference asset rendering is **not evidence of applied print artwork**, exact fit, pose/size change, cloth simulation or verified manufacturing dimensions.
+- **VISUAL-OPEN:** Screenshot inspection must confirm the original body/garment assets actually align, have appropriate camera scale, and do not expose skin through the garment. Automated load success alone is not sufficient to mark quality accepted.
