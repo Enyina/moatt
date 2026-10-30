@@ -151,7 +151,7 @@ export default function Studio(){
  <div className="row">
  <button className="button" onClick={()=>addQuickLayout('chest-mark')}>Small chest mark</button>
  <button className="button" onClick={()=>addQuickLayout('center-statement')}>Centered statement</button>
- <button className="button" onClick={()=>addQuickLayout('brand-set')}>Front + back branding</button>
+ <button className="button" onClick={()=>addQuickLayout('brand-set')}>Two-sided branding</button>
  </div>
  <p className="hint">Placement guides are illustrative, not supplier-verified print dimensions.</p></div>
  <div className="section"><h3>Garment</h3><div className="row">{(['tshirt','hoodie'] as const).map(g=><button key={g} className={'button '+(doc.garment===g?'selected':'')} onClick={()=>commit(d=>{if(d.garment===g)return;d.garment=g;d.sleeve=g==='hoodie'?'long':'short';d.pocket=g==='hoodie'?'kangaroo':'none'})}>{g==='tshirt'?'T-shirt':'Hoodie'}</button>)}</div></div>
