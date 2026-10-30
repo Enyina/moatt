@@ -31,6 +31,12 @@ These changes are not confirmed deployed.
 - Independent transparent PNG exports for both sides; 3D preview screenshot from the viewport
 - An offline rule-based concept-to-editable-draft helper, plus brand/supplier notes and a printable supplier discussion sheet (not a technical manufacturing pack)
 
+## Inspect designs before sharing
+
+Open **Presentation** and switch between **Both views**, **Front detail**, or **Back detail**. In a detail view, the garment keeps the original artwork placement while the adjacent preview magnifies the same side's artwork for close inspection. Use **Zoom +**, **Zoom −**, and **Fit board** on phones or laptops; the presentation area remains scrollable at higher zoom levels. Exporting while a detail view is selected downloads a matching side-specific review PNG. Return to **Both views** to export the original two-sided board.
+
+The close-up is **not the actual print size** and is not a manufacturer-calibrated printable area. Do not make production decisions from the magnifier alone.
+
 ## Important limitations
 
 The text idea helper recognizes a limited set of words, **not arbitrary sketches, AI fashion concepts or photographic garment reconstruction**. The supplier sheet is an unverified discussion brief. Garments are **procedural stylized mockups**, not simulated fitted clothing or production-ready sewing patterns. 2D exports represent a flat artboard, not physically calibrated garment UVs. 3D screenshots depend on working browser WebGL. Browser-local saves are specific to one device/browser and may be erased by the browser; export JSON backups. Uploaded images are embedded in project JSON and may hit browser storage limits. No accounts, sharing, cloud backups or professional production patterns.
