@@ -22,7 +22,7 @@ test('generate independent front/back brand layout and copy the chosen element a
  await page.goto('/');
  await page.getByRole('button',{name:'Add text'}).click();
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('EXISTING ART');
- await page.getByRole('button',{name:'Front + back branding'}).click();
+ await page.getByRole('button',{name:'Two-sided branding'}).click();
  await expect(page.getByText('text: YOUR MESSAGE')).toBeVisible();
  await page.getByRole('button',{name:'Front',exact:true}).click();
  await expect(page.getByText('text: EXISTING ART')).toBeVisible();
@@ -35,7 +35,7 @@ test('generate independent front/back brand layout and copy the chosen element a
  await page.getByRole('button',{name:'Front',exact:true}).click();
  await expect(page.getByText('text: YOUR BRAND')).toBeVisible();
  await expect(page.getByText('text: BACK UNIQUE')).toHaveCount(0);
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:20000});
 });
 
