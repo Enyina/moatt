@@ -119,4 +119,4 @@ Choose a bold display look, an editorial serif, a clean typeface or a utility-st
 
 Try ready-made streetwear, editorial and utility typography treatments. Changes are editable, can be undone and stay with the project when you reopen it. The same text design is used in the artwork and presentation exports.
 
-These are local font choices rather than purchased typefaces. Very long wording in a tiny box may still need a larger box. These changes are in review and have not been confirmed live.
+These are local font choices rather than purchased typefaces. If the words cannot fit into a very small box, Moatt now warns you to enlarge it or shorten the message before exporting. These changes are in review and have not been confirmed live.
