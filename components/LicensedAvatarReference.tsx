@@ -28,17 +28,33 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
   return {front:make(),back:make()};
  },[]);
  useEffect(()=>()=>{textures.front.dispose();textures.back.dispose()},[textures]);
+ // Keep exactly one GPU bump texture across fabric changes. Replacing it on each
+ // selection adds transient GPU allocations and obscures actual leak diagnostics.
  const fabricTexture=useMemo(()=>{
   if(typeof document==='undefined')return null;
   const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
   const ctx=canvas.getContext('2d');if(!ctx)return null;
-  const image=ctx.createImageData(128,128);image.data.set(makeFabricTile(doc.material));ctx.putImageData(image,0,0);
+  const image=ctx.createImageData(128,128);
+  image.data.set(makeFabricTile('cotton'));ctx.putImageData(image,0,0);
   const bump=new THREE.CanvasTexture(canvas);
   bump.wrapS=THREE.RepeatWrapping;bump.wrapT=THREE.RepeatWrapping;
-  bump.repeat.set(FABRIC_PROFILES[doc.material].tileRepeat,FABRIC_PROFILES[doc.material].tileRepeat);
-  bump.colorSpace=THREE.NoColorSpace;bump.needsUpdate=true;
+  bump.colorSpace=THREE.NoColorSpace;
+  bump.repeat.set(FABRIC_PROFILES.cotton.tileRepeat,FABRIC_PROFILES.cotton.tileRepeat);
+  bump.needsUpdate=true;
   return bump;
- },[doc.material]);
+ },[]);
+ useEffect(()=>{
+  if(!fabricTexture)return;
+  const canvas=fabricTexture.image as HTMLCanvasElement;
+  const ctx=canvas.getContext('2d');if(!ctx)return;
+  const image=ctx.createImageData(canvas.width,canvas.height);
+  image.data.set(makeFabricTile(doc.material));
+  ctx.putImageData(image,0,0);
+  const repeat=FABRIC_PROFILES[doc.material].tileRepeat;
+  fabricTexture.repeat.set(repeat,repeat);
+  fabricTexture.needsUpdate=true;
+  invalidate();
+ },[doc.material,fabricTexture,invalidate]);
  useEffect(()=>()=>fabricTexture?.dispose(),[fabricTexture]);
  const materials=useRef<THREE.Material[]>([]);
  const overlays=useRef<THREE.BufferGeometry[]>([]);
