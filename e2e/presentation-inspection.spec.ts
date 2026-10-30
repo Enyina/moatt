@@ -11,12 +11,12 @@ test('front and back details show larger original artwork without changing eithe
  await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const preview=page.getByTestId('presentation-canvas');
  await expect(preview).toHaveAttribute('data-preview-ready','true',{timeout:20000});
- await page.getByRole('button',{name:'Front detail'}).click();
+ await page.getByRole('button',{name:'Front detail',exact:true}).click();
  await expect(preview).toHaveAttribute('data-preview-mode','front',{timeout:20000});
  await expect(preview).toHaveAttribute('data-preview-ready','true',{timeout:20000});
  await page.locator('.presentation-stage').screenshot({path:testInfo.outputPath('front-artwork-detail.png')});
  const frontData=await preview.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png'));
- await page.getByRole('button',{name:'Back detail'}).click();
+ await page.getByRole('button',{name:'Back detail',exact:true}).click();
  await expect(preview).toHaveAttribute('data-preview-mode','back',{timeout:20000});
  const backData=await preview.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png'));
  expect(backData).not.toBe(frontData);
@@ -37,7 +37,7 @@ test('mobile zoom exposes the same document at a larger display size and allows 
  await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const canvas=page.getByTestId('presentation-canvas');
  await expect(canvas).toHaveAttribute('data-preview-ready','true',{timeout:20000});
- await page.getByRole('button',{name:'Front detail'}).click();
+ await page.getByRole('button',{name:'Front detail',exact:true}).click();
  await expect(canvas).toHaveAttribute('data-preview-mode','front',{timeout:20000});
  const before=await canvas.boundingBox();
  await page.getByRole('button',{name:'Zoom in presentation'}).click();
@@ -68,7 +68,7 @@ test('detail export matches current inspected side at full resolution and keeps 
  await page.getByRole('button',{name:'Centered statement'}).click();
  await page.getByRole('button',{name:'Presentation',exact:true}).click();
  const canvas=page.getByTestId('presentation-canvas');
- await page.getByRole('button',{name:'Front detail'}).click();
+ await page.getByRole('button',{name:'Front detail',exact:true}).click();
  await expect(canvas).toHaveAttribute('data-preview-mode','front',{timeout:20000});
  const expected=await canvas.evaluate(c=>{
   const el=c as HTMLCanvasElement;
