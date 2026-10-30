@@ -44,3 +44,21 @@
  .notice{order:4;padding:10px 12px}
  .artboard{width:min(100%,410px,51vh)}
 }
+
+/* Dedicated review controls: neither toolbar nor zoom controls cover garments.
+   Canvas zoom changes only on-screen scale, never project coordinates or exports. */
+.presentation-stage{flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:hidden;gap:10px}
+.presentation-controls{display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
+.presentation-controls .button{min-height:40px;white-space:nowrap}
+.presentation-scroll{flex:1;min-height:0;width:100%;overflow:auto;overscroll-behavior:contain;border-radius:3px;scrollbar-width:thin}
+.presentation-scroll canvas{display:block;max-width:none;max-height:none;height:auto;aspect-ratio:8/5;object-fit:contain;margin:0 auto}
+.presentation-stage.is-focused{justify-content:flex-start;align-items:stretch;overflow:hidden;gap:10px}
+.presentation-stage.is-focused .presentation-scroll canvas{max-width:none;max-height:none;width:auto;height:auto}
+.presentation-stage.is-focused .presentation-scroll canvas{width:100%;max-width:none}
+@media(max-width:900px){
+ .presentation-stage{padding:12px 8px;min-height:400px;height:440px}
+ .presentation-controls .button{font-size:12px;padding:9px}
+ .presentation-scroll{min-height:190px}
+ .presentation-stage.is-focused{padding:12px 8px;min-height:0;height:auto}
+ .presentation-stage.is-focused .presentation-scroll canvas{max-width:none;max-height:none}
+}
