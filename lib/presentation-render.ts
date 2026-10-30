@@ -1,6 +1,7 @@
 import type {Side,StudioDocument} from './studio-document';
 import {renderArtwork} from './render-design';
 import {makeFabricTile} from './fabric-material';
+import {findArtworkFocus} from './presentation-focus';
 
 export const PRESENTATION_WIDTH=2400;
 export const PRESENTATION_HEIGHT=1500;
@@ -188,6 +189,55 @@ export async function renderPresentation(doc:StudioDocument):Promise<HTMLCanvasE
  ctx.fillText(doc.baseColor.toUpperCase()+'   /   '+doc.material.toUpperCase()+' APPEARANCE',389,1400);
  ctx.textAlign='right';ctx.fillStyle='#72747a';ctx.font='22px system-ui,sans-serif';
  ctx.fillText('VISUAL CONCEPT · NOT A MANUFACTURING PATTERN',2310,1400);
+ ctx.textAlign='left';
+ return canvas;
+}
+
+/**
+ * An honest review board: garment placement at the original derived scale
+ * (left), and a magnified crop of the exact same artwork file (right).
+ * This is NOT a factory artwork-size or print-safe guarantee.
+ */
+export async function renderPresentationDetail(doc:StudioDocument,side:Side):Promise<HTMLCanvasElement>{
+ const art=await renderArtwork(doc,side,true);
+ const canvas=document.createElement('canvas');
+ canvas.width=PRESENTATION_WIDTH;canvas.height=PRESENTATION_HEIGHT;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Detail canvas unavailable');
+ ctx.fillStyle='#e9e6e0';ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.fillStyle='#222329';ctx.font='bold 66px system-ui,sans-serif';ctx.fillText('MOATT',90,124);
+ ctx.font='24px system-ui,sans-serif';ctx.fillStyle='#55575e';ctx.fillText('DESIGN REVIEW  /  '+side.toUpperCase(),90,169);
+ ctx.textAlign='right';ctx.fillStyle='#1c1c20';ctx.font='600 37px system-ui,sans-serif';
+ ctx.fillText(label(doc.name,52)||'Untitled design',2310,121);
+ ctx.font='24px system-ui,sans-serif';ctx.fillStyle='#73737a';
+ ctx.fillText(doc.garment.toUpperCase()+'  /  '+doc.fit.toUpperCase()+'  /  '+doc.baseColor.toUpperCase(),2310,165);
+ ctx.textAlign='left';
+ drawMockup(ctx,doc,side,art,{x:90,y:280,width:1050,height:1045});
+ const px=1260,py=280,pw=1050,ph=1045;
+ ctx.fillStyle='#f9f8f4';ctx.fillRect(px,py,pw,ph);
+ ctx.fillStyle='#67696e';ctx.font='500 26px system-ui,sans-serif';
+ ctx.fillText('02 / MAGNIFIED ARTWORK  ·  '+side.toUpperCase(),px+40,py+62);
+ const tileX=px+98,tileY=py+128,tileSize=854;
+ ctx.fillStyle=doc.baseColor;ctx.fillRect(tileX,tileY,tileSize,tileSize);
+ const focus=findArtworkFocus(doc,side);
+ if(focus){
+  ctx.save();
+  ctx.beginPath();ctx.rect(tileX,tileY,tileSize,tileSize);ctx.clip();
+  ctx.drawImage(art,focus.x,focus.y,focus.size,focus.size,tileX,tileY,tileSize,tileSize);
+  ctx.restore();
+ }else{
+  ctx.fillStyle='#55565e';ctx.font='500 31px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText('No artwork on this side',tileX+tileSize/2,tileY+tileSize/2);
+  ctx.textAlign='left';
+ }
+ ctx.strokeStyle='rgba(28,29,33,.17)';ctx.strokeRect(tileX+.5,tileY+.5,tileSize-1,tileSize-1);
+ ctx.strokeStyle='rgba(28,29,33,.12)';ctx.strokeRect(px+.5,py+.5,pw-1,ph-1);
+ ctx.fillStyle='#34353b';ctx.font='600 27px system-ui,sans-serif';
+ ctx.fillText('GARMENT PLACEMENT',90,1401);
+ ctx.fillText('ARTWORK INSPECTION ONLY',1260,1401);
+ ctx.fillStyle='#68696e';ctx.font='21px system-ui,sans-serif';
+ ctx.fillText('Image detail is magnified for review, not actual print scale',90,1440);
+ ctx.textAlign='right';
+ ctx.fillText('MOCKUP · PRINT DIMENSIONS NOT CALIBRATED',2310,1440);
  ctx.textAlign='left';
  return canvas;
 }
