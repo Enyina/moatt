@@ -8,7 +8,7 @@ test('real torso volume and continuous sleeve mesh are installed and visible',as
  await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
  if(await unavailable.isVisible())return;
  await expect(canvas).toHaveAttribute('data-garment-topology','volume-torso-sleeves-v1');
- await expect(canvas).toHaveAttribute('data-mannequin-status','studio-ready');
+ await expect(canvas).toHaveAttribute('data-mannequin-status','garment-only');
  await expect.poll(()=>canvas.getAttribute('data-gpu-geometries')).not.toBeNull();
  await page.screenshot({path:testInfo.outputPath('volume-tshirt-front.png'),fullPage:true});
  await page.getByRole('button',{name:'Hoodie'}).click();
