@@ -38,3 +38,13 @@ Public docs are behavioral research, not a license to copy source, commercial ar
 5. Honest supplier-supplied print region dimensions and effective artwork DPI checks, which must default to **unknown** until verified.
 
 **Exit criterion for this wave:** non-destructive editable templates, a full layout workflow, accurate side separation, save/export regression, mobile browser tests, no fabricated production measurements, and a verified CI run tied to its exact commit.
+
+## Wave 3 — artwork inspection and truthful detail (issue #18)
+
+**Observation:** screenshot artifacts from the merged layout work and PR #17's typography tests show that the customer can read wording on the 1024px artboard, but the same lettering becomes too small on a two-garment presentation viewed on a phone.
+
+**Public behavior reverse-engineered:** Printful Design Maker offers distinct garment and print-area views; Kittl mockups allow focused design edits while keeping the linked artwork; Pacdora offers polished mockup detail views. Original Moatt adaptation: an overview plus separate garment/front/back inspections with a rotation-aware crop of saved art, and explicit non-print-scale labeling. No third-party source code, fonts or assets were copied.
+
+**Honest contract:** the magnifier displays a cropped artwork image on a color background for easier visual checking; it does not mean the design is physically enlarged on the garment. The mockup still uses the original position. Controls scale the viewport only, and the exported view always matches its canvas rendering.
+
+**Verification:** preview mode and side independence, zoom on 390px screens, no toolbar overlap, empty-side fallback, rotated crop bounds, exported PNG pixel comparison, exact-head cross-browser screenshots. Hold merge until exact-head CI succeeds and actual screenshots are reviewed.
