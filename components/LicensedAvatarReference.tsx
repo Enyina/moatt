@@ -6,7 +6,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import {renderArtwork} from '../lib/render-design';
 import {makeFittedChestPatch} from '../lib/fitted-decal';
-import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
+import {makeFabricTile,makeFabricAlbedoTile,FABRIC_PROFILES} from '../lib/fabric-material';
 import type {StudioDocument} from '../lib/studio-document';
 
 /**
@@ -28,34 +28,43 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
   return {front:make(),back:make()};
  },[]);
  useEffect(()=>()=>{textures.front.dispose();textures.back.dispose()},[textures]);
- // Keep exactly one GPU bump texture across fabric changes. Replacing it on each
- // selection adds transient GPU allocations and obscures actual leak diagnostics.
- const fabricTexture=useMemo(()=>{
+ // Keep one bump and one color map across fabric changes. Both are updated
+ // in place, including repeat UVs, so editing never accumulates GPU textures.
+ const fabricMaps=useMemo(()=>{
   if(typeof document==='undefined')return null;
-  const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
-  const ctx=canvas.getContext('2d');if(!ctx)return null;
-  const image=ctx.createImageData(128,128);
-  image.data.set(makeFabricTile('cotton'));ctx.putImageData(image,0,0);
-  const bump=new THREE.CanvasTexture(canvas);
-  bump.wrapS=THREE.RepeatWrapping;bump.wrapT=THREE.RepeatWrapping;
-  bump.colorSpace=THREE.NoColorSpace;
-  bump.repeat.set(FABRIC_PROFILES.cotton.tileRepeat,FABRIC_PROFILES.cotton.tileRepeat);
-  bump.needsUpdate=true;
-  return bump;
+  const makeMap=(kind:'bump'|'albedo')=>{
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+   const ctx=canvas.getContext('2d');if(!ctx)return null;
+   const image=ctx.createImageData(128,128);
+   image.data.set(kind==='bump'?makeFabricTile('cotton'):makeFabricAlbedoTile('cotton'));
+   ctx.putImageData(image,0,0);
+   const map=new THREE.CanvasTexture(canvas);
+   map.wrapS=THREE.RepeatWrapping;map.wrapT=THREE.RepeatWrapping;
+   map.colorSpace=kind==='bump'?THREE.NoColorSpace:THREE.SRGBColorSpace;
+   map.repeat.set(FABRIC_PROFILES.cotton.tileRepeat,FABRIC_PROFILES.cotton.tileRepeat);
+   map.needsUpdate=true;
+   return map;
+  };
+  const bump=makeMap('bump'),albedo=makeMap('albedo');
+  if(!bump||!albedo){bump?.dispose();albedo?.dispose();return null;}
+  return {bump,albedo};
  },[]);
+ const fabricTexture=fabricMaps?.bump??null;
+ const colorTexture=fabricMaps?.albedo??null;
  useEffect(()=>{
-  if(!fabricTexture)return;
-  const canvas=fabricTexture.image as HTMLCanvasElement;
-  const ctx=canvas.getContext('2d');if(!ctx)return;
-  const image=ctx.createImageData(canvas.width,canvas.height);
-  image.data.set(makeFabricTile(doc.material));
-  ctx.putImageData(image,0,0);
-  const repeat=FABRIC_PROFILES[doc.material].tileRepeat;
-  fabricTexture.repeat.set(repeat,repeat);
-  fabricTexture.needsUpdate=true;
+  if(!fabricMaps)return;
+  for(const [kind,map] of [['bump',fabricMaps.bump],['albedo',fabricMaps.albedo]] as const){
+   const canvas=map.image as HTMLCanvasElement,ctx=canvas.getContext('2d');
+   if(!ctx)continue;
+   const image=ctx.createImageData(canvas.width,canvas.height);
+   image.data.set(kind==='bump'?makeFabricTile(doc.material):makeFabricAlbedoTile(doc.material));
+   ctx.putImageData(image,0,0);
+   const repeat=FABRIC_PROFILES[doc.material].tileRepeat;
+   map.repeat.set(repeat,repeat);map.needsUpdate=true;
+  }
   invalidate();
- },[doc.material,fabricTexture,invalidate]);
- useEffect(()=>()=>fabricTexture?.dispose(),[fabricTexture]);
+ },[doc.material,fabricMaps,invalidate]);
+ useEffect(()=>()=>{fabricMaps?.bump.dispose();fabricMaps?.albedo.dispose();},[fabricMaps]);
  const materials=useRef<THREE.Material[]>([]);
  const overlays=useRef<THREE.BufferGeometry[]>([]);
  const garmentMaterials=useRef<THREE.MeshStandardMaterial[]>([]);
@@ -97,7 +106,7 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
     const next=new THREE.MeshPhysicalMaterial({
      color:doc.baseColor,roughness:profile.roughness,metalness:profile.metalness,
      sheen:profile.sheen,sheenRoughness:profile.sheenRoughness,sheenColor:'#ffffff',
-     anisotropy:profile.anisotropy,bumpMap:fabricTexture,bumpScale:profile.bumpScale,
+     anisotropy:profile.anisotropy,map:colorTexture,bumpMap:fabricTexture,bumpScale:profile.bumpScale,
      side:material.side
     });
     materials.current.push(next);
@@ -167,13 +176,13 @@ export default function LicensedAvatarReference({doc,display='ghost'}:{doc:Studi
   const profile=FABRIC_PROFILES[doc.material];
   for(const material of garmentMaterials.current){
    const m=material as THREE.MeshPhysicalMaterial;
-   m.bumpMap=fabricTexture;m.bumpScale=profile.bumpScale;
+   m.map=colorTexture;m.bumpMap=fabricTexture;m.bumpScale=profile.bumpScale;
    m.roughness=profile.roughness;m.metalness=profile.metalness;
    m.sheen=profile.sheen;m.sheenRoughness=profile.sheenRoughness;
    m.anisotropy=profile.anisotropy;m.needsUpdate=true;
   }
   gl.domElement.dataset.referenceFabric=doc.material;invalidate();
- },[model,doc.material,fabricTexture,gl,invalidate]);
+ },[model,doc.material,fabricTexture,colorTexture,gl,invalidate]);
  useEffect(()=>{
   if(!model)return;
   let active=true;
