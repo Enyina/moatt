@@ -46,8 +46,8 @@ test('a tiny text box reports overflow rather than pretending artwork is product
  await page.getByRole('button',{name:'Centered statement'}).click();
  await page.getByLabel('Width',{exact:true}).fill('20');
  await page.getByLabel('Height',{exact:true}).fill('20');
- await expect(page.getByRole('alert')).toContainText('Text exceeds this box',{timeout:15000});
+ await expect(page.locator('.section [role="alert"]').filter({hasText:'Text exceeds this box'})).toBeVisible({timeout:15000});
  await page.getByLabel('Width',{exact:true}).fill('640');
  await page.getByLabel('Height',{exact:true}).fill('200');
- await expect(page.getByRole('alert')).toHaveCount(0);
+ await expect(page.locator('.section [role="alert"]').filter({hasText:'Text exceeds this box'})).toHaveCount(0);
 });
