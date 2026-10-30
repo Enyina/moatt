@@ -23,7 +23,7 @@ export function textStyle(layer:Layer):TextStyle{
   leading:Number.isFinite(layer.lineHeight)?Math.min(2,Math.max(.8,layer.lineHeight!)):1.1
  };
 }
-type Measurer=Pick<CanvasRenderingContext2D,'font'|'measureText'>;
+type Measurer={font:string;measureText:(value:string)=>{width:number}};
 export type FittedText={lines:string[];size:number;overflow:boolean;style:TextStyle};
 const chars=(value:string)=>Array.from(value);
 function width(ctx:Measurer,s:string,spacing:number):number{
