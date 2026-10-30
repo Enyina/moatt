@@ -34,14 +34,14 @@ export function applyLayoutPreset(source:StudioDocument,preset:LayoutPreset):{
    selectedSide=side;selectedId=layer.id;
   };
   if(preset==='chest-mark'){
-   push('front',textLayer('YOUR BRAND',centerX-205,254,410,108,66,ink));
+   push('front',{...textLayer('YOUR BRAND',centerX-205,254,410,108,66,ink),fontFamily:'mono',letterSpacing:2});
   }else if(preset==='center-statement'){
-   push('front',textLayer('MAKE IT YOURS',centerX-310,365,620,166,104,ink));
+   push('front',{...textLayer('MAKE IT YOURS',centerX-310,365,620,166,104,ink),fontFamily:'display',letterSpacing:1});
   }else{
    if(doc.layers.front.length>=MAX_LAYERS||doc.layers.back.length>=MAX_LAYERS)
     throw Error('A garment side has too many layers');
-   push('front',textLayer('YOUR BRAND',centerX-208,263,416,104,65,ink));
-   push('back',textLayer('YOUR MESSAGE',centerX-310,375,620,180,96,ink));
+   push('front',{...textLayer('YOUR BRAND',centerX-208,263,416,104,65,ink),fontFamily:'serif',letterSpacing:1});
+   push('back',{...textLayer('YOUR MESSAGE',centerX-310,375,620,180,96,ink),fontFamily:'display',letterSpacing:1});
   }
  });
  return {document:next,selectedSide,selectedId};

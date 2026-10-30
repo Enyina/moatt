@@ -3,7 +3,9 @@ import dynamic from 'next/dynamic';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent,PointerEvent} from 'react';
 import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
+import type {FontFamily,FontWeight,TextAlignment} from '../lib/studio-document';
 import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
+import {fitText} from '../lib/typography';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
 import {applyLayoutPreset,copyLayerToOtherSide,placeLayer} from '../lib/design-layouts';
 import type {LayoutPreset,LayerPlacement} from '../lib/design-layouts';
@@ -36,6 +38,14 @@ export default function Studio(){
  const undo=()=>setHistory(h=>h.past.length?{past:h.past.slice(0,-1),present:h.past[h.past.length-1],future:[h.present,...h.future]}:h);
  const redo=()=>setHistory(h=>h.future.length?{past:[...h.past,h.present],present:h.future[0],future:h.future.slice(1)}:h);
  const current=doc.layers[side],active=current.find(l=>l.id===selected);
+ const [textFit,setTextFit]=useState<{size:number;overflow:boolean}|null>(null);
+ useEffect(()=>{
+  if(!active||active.kind!=='text'){setTextFit(null);return;}
+  const ctx=document.createElement('canvas').getContext('2d');
+  if(!ctx){setTextFit(null);return;}
+  const fit=fitText(ctx,active);
+  setTextFit({size:fit.size,overflow:fit.overflow});
+ },[active]);
  const layerAdd=(layer:Layer)=>{commit(d=>{d.layers[side].push(layer)});setSelected(layer.id);setTool('select')};
  const update=(id:string,patch:Partial<Layer>)=>commit(d=>{const l=d.layers[side].find(l=>l.id===id);if(l&&!l.locked)Object.assign(l,patch)});
  const addQuickLayout=(preset:LayoutPreset)=>{
@@ -201,6 +211,22 @@ export default function Studio(){
  <button className="button" onClick={copySelectedSide}>Copy to {side==='front'?'back':'front'}</button>
  </div></div>}
 {active.kind==='text'&&<><label>Text<textarea aria-label="Selected layer text" className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
+ {active.kind==='text'&&<div className="section"><h3>Text styling</h3>
+ <div className="row">
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'display',fontWeight:'bold',textAlign:'center',letterSpacing:1,lineHeight:1})}>Streetwear</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'serif',fontWeight:'regular',textAlign:'center',letterSpacing:1,lineHeight:1.15})}>Editorial</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'mono',fontWeight:'bold',textAlign:'center',letterSpacing:2,lineHeight:1.1})}>Utility label</button>
+ </div>
+ <label>Typeface<select className="field" aria-label="Text typeface" value={active.fontFamily||'sans'} onChange={e=>update(active.id,{fontFamily:e.target.value as FontFamily})}>
+ <option value="sans">Clean sans</option><option value="serif">Editorial serif</option><option value="display">Bold display</option><option value="mono">Utility mono</option>
+ </select></label>
+ <label>Weight<select className="field" aria-label="Text weight" value={active.fontWeight||'bold'} onChange={e=>update(active.id,{fontWeight:e.target.value as FontWeight})}><option value="bold">Bold</option><option value="regular">Regular</option></select></label>
+ <label>Alignment<select className="field" aria-label="Text alignment" value={active.textAlign||'center'} onChange={e=>update(active.id,{textAlign:e.target.value as TextAlignment})}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+ <label>Letter spacing<input className="field" aria-label="Text letter spacing" type="number" min={-3} max={20} step={1} value={active.letterSpacing??0} onChange={e=>update(active.id,{letterSpacing:clamp(Number(e.target.value)||0,-3,20)})}/></label>
+ <label>Line spacing<input className="field" aria-label="Text line spacing" type="number" min={0.8} max={2} step={0.05} value={active.lineHeight??1.1} onChange={e=>update(active.id,{lineHeight:clamp(Number(e.target.value)||1.1,.8,2)})}/></label>
+ {textFit?.overflow?<p role="alert" className="hint">Text exceeds this box even at the minimum font size. Increase the box or shorten the wording before exporting.</p>:textFit&&textFit.size<(active.fontSize??96)-1?<p role="status" className="hint">Text automatically fits at {Math.round(textFit.size)} px in this box. Enlarge the box to show larger lettering.</p>:null}
+ <p className="hint">Words automatically wrap and scale to fit the text box. Increase the box for longer slogans. The same text settings are used for both artwork exports and presentations.</p>
+ </div>}
  {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
  <label>X<input className="field" type="number" value={Math.round(active.x)} onChange={e=>update(active.id,{x:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Y<input className="field" type="number" value={Math.round(active.y)} onChange={e=>update(active.id,{y:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Width<input className="field" type="number" value={Math.round(active.width)} onChange={e=>update(active.id,{width:clamp(Number(e.target.value),10,1024)})}/></label><label>Height<input className="field" type="number" value={Math.round(active.height)} onChange={e=>update(active.id,{height:clamp(Number(e.target.value),10,1024)})}/></label><label>Rotation<input className="field" type="range" min={-180} max={180} value={active.rotation} onChange={e=>update(active.id,{rotation:Number(e.target.value)})}/></label>
  <div className="row"><button className="button" onClick={()=>update(active.id,{hidden:!active.hidden})}>{active.hidden?'Show':'Hide'}</button><button className="button" onClick={()=>commit(d=>{const l=d.layers[side].find(x=>x.id===active.id);if(l)l.locked=!l.locked})}>{active.locked?'Unlock':'Lock'}</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>=0&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]]})}>Bring forward</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>0)[a[i],a[i-1]]=[a[i-1],a[i]]})}>Send backward</button><button className="button" onClick={()=>layerAdd({...active,id:uid(),x:active.x+30,y:active.y+30})}>Duplicate</button></div></div>}
