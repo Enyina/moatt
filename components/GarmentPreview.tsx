@@ -150,15 +150,15 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
  return <PreviewBoundary><Canvas frameloop="demand" camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
  <color attach="background" args={['#292f39']}/>
- <ambientLight intensity={.85}/><hemisphereLight args={['#e6ebff','#30303c',1.2]}/>
- <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4"/>
- <directionalLight position={[-4,2,3]} intensity={.9} color="#d4e1ff"/>
- <directionalLight position={[1,5,-4]} intensity={1.6} color="#ffffff"/>
+ <ambientLight intensity={.43}/><hemisphereLight args={['#e6ebff','#30303c',.7]}/>
+ <directionalLight position={[3,6,7]} intensity={1.65} color="#fff2e4"/>
+ <directionalLight position={[-4,2,3]} intensity={.55} color="#d4e1ff"/>
+ <directionalLight position={[1,5,-4]} intensity={.85} color="#ffffff"/>
  <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side}/><RenderingDiagnostics/>
  <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
- <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.40,0]} receiveShadow>
+ {modelStyle!=='ghost'&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,-.40,0]} receiveShadow>
   <circleGeometry args={[4.7,64]}/>
   <meshStandardMaterial color="#343a44" roughness={.96}/>
- </mesh>
+ </mesh>}
  </Canvas></PreviewBoundary>;
 }
