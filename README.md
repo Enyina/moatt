@@ -16,6 +16,12 @@ npm run e2e
 
 Visit http://localhost:3000. CI runs typecheck, Vitest unit tests, the production build and Playwright browser checks.
 
+## Quick-start design layouts (under review)
+
+Start with a small chest mark, centered statement or a coordinated front/back branding composition. Select artwork to position it inside the **illustrative**, not supplier-calibrated, design guide; copy individual elements between front and back. Existing artwork stays in place until deliberately changed, and undo/save still apply.
+
+These changes are not confirmed deployed.
+
 ## Workflows present in source
 
 - Rounded T-shirt and hoodie mockup silhouettes, adjustable sleeves/hem/neckline/pockets, regular/oversized fit and mannequin presets; procedurally rendered cotton/denim/satin weaves, physical highlight profiles and fabric colors

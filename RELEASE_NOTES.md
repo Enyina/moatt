@@ -96,3 +96,15 @@ Choosing a hoodie now starts with long sleeves and a front pouch, rather than a 
 **Better on phones**
 
 You can now enlarge the presentation to fill the screen, close it again, and use the top download button to save the entire design sheet. This works without changing the project or losing your original artwork.
+
+## October 30, 2026 — Start designing without a blank canvas
+
+**Three ready-to-edit ways to begin**
+
+Choose a small chest mark, a bold statement, or a matching front-and-back brand layout. Moatt adds editable wording to your current design without deleting what you already made. You can change the words and use Undo if you prefer your previous version.
+
+**Position your artwork without guessing coordinates**
+
+Move selected artwork to the top, center or bottom of the suggested design area, or fit an oversized design inside it. You can also copy a design element to the other side of the garment and edit each copy separately.
+
+These guides are for arranging a visual idea. They are not verified printing sizes or positions from a manufacturer. On phones, quick-start choices are now accessible near the design canvas, and controls are kept out of the way of the artwork. This work is in review and is not confirmed available on a published site.
