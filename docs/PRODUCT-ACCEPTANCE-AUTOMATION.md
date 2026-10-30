@@ -112,3 +112,12 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **LAYOUT-06:** Full CI must pass the exact branch head and screenshots need review; this does not close the separate 3D garment geometry, print DPI, factory sizing, deployment and real mobile-device blockers.
 
 Official benchmark references and observed-versus-remixed decisions are in `docs/REVERSE-ENGINEERING-USABLE-FIRST-2026-10.md`.
+
+## Typography contract — October 30, 2026
+
+- **TYPE-01:** Four local font-family settings, regular/bold weight, text alignment, character tracking and line leading are editable on each text layer.
+- **TYPE-02:** Old v1/v2 project documents remain valid. New values are validated; remote font URLs and unbounded spacing values cannot enter the renderer.
+- **TYPE-03:** Text wraps across lines and shrinks within a box; extreme overflow must be reported by the fitting function rather than silently pretending to fit.
+- **TYPE-04:** A style edit changes actual artboard pixels and is preserved across reload, export and import. Editing a back label never overwrites the front label.
+- **TYPE-05:** The same typography renderer drives transparent artwork, 3D art textures and two-sided presentation exports. Evidence must be tied to the exact commit.
+- **TYPE-06:** No licensed third-party fonts, copied product UI or claims of calibrated print area. Full visual and real-device acceptance remain independent gates.
