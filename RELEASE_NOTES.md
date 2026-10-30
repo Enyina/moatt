@@ -108,3 +108,15 @@ Choose a small chest mark, a bold statement, or a matching front-and-back brand 
 Move selected artwork to the top, center or bottom of the suggested design area, or fit an oversized design inside it. You can also copy a design element to the other side of the garment and edit each copy separately.
 
 These guides are for arranging a visual idea. They are not verified printing sizes or positions from a manufacturer. On phones, quick-start choices are now accessible near the design canvas, and controls are kept out of the way of the artwork. This work is in review and is not confirmed available on a published site.
+
+## October 30, 2026 — Give clothing designs a stronger visual identity
+
+**Shape the words as well as the garment**
+
+Choose a bold display look, an editorial serif, a clean typeface or a utility-style label. Adjust letter spacing, line spacing, alignment and boldness. Long slogans automatically wrap and reduce in size when they fit the available space.
+
+**Use styles without rebuilding your design**
+
+Try ready-made streetwear, editorial and utility typography treatments. Changes are editable, can be undone and stay with the project when you reopen it. The same text design is used in the artwork and presentation exports.
+
+These are local font choices rather than purchased typefaces. Very long wording in a tiny box may still need a larger box. These changes are in review and have not been confirmed live.
