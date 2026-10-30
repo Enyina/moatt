@@ -112,3 +112,12 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **LAYOUT-06:** Full CI must pass the exact branch head and screenshots need review; this does not close the separate 3D garment geometry, print DPI, factory sizing, deployment and real mobile-device blockers.
 
 Official benchmark references and observed-versus-remixed decisions are in `docs/REVERSE-ENGINEERING-USABLE-FIRST-2026-10.md`.
+
+## Focused design inspection — October 30, 2026
+
+- **DETAIL-01:** Overview preserves the original two-sided high-resolution presentation. Front and back detail modes show one garment mockup AND the original side's magnified artwork simultaneously. Never replace the source artwork or mislabel the magnified crop as printing scale.
+- **DETAIL-02:** Crop of visible artwork includes rotated layers and multiple visible items, remains within the 1024 artwork coordinates and never mutates the project.
+- **DETAIL-03:** Zoom − / Zoom + / Fit board operate on CSS preview size only. Export keeps identical source pixels/dimensions regardless of on-screen zoom.
+- **DETAIL-04:** Keyboard and mobile zoom controls are accessible; preview controls cannot cover artwork, scrolling remains possible at 200% zoom.
+- **DETAIL-05:** Each review export uses its currently selected view, with an explicit `-front-detail` or `-back-detail` name. A PNG's representative pixel must equal the preview canvas pixel.
+- **DETAIL-06:** Existing first-use design, saved layers, presentation exports, WebGL fallback, text styles and undo/redo remain unchanged. Desktop/mobile cross-browser screenshots are mandatory.
