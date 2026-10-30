@@ -13,6 +13,15 @@ test('fabric choice changes the fitted garment material, not only a selector lab
  await expect(canvas).toHaveAttribute('data-reference-fabric','cotton',{timeout:20000});
  const snapshot=()=>canvas.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
  const cotton=await snapshot();
+ // Source GLB textures and our stable albedo/bump maps are uploaded lazily.
+ // Warm the entire material set before measuring sustained switching, rather
+ // than counting legitimate first-time uploads as a memory leak.
+ for(const material of ['denim','satin','cotton'] as const){
+  await page.getByRole('combobox',{name:'Fabric material'}).selectOption(material);
+  await expect(canvas).toHaveAttribute('data-reference-fabric',material,{timeout:20000});
+  await canvas.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ }
+ await expect(canvas).toHaveAttribute('data-reference-fabric','cotton');
  const initialCount=Number(await canvas.getAttribute('data-gpu-textures'));
  await page.screenshot({path:testInfo.outputPath('fitted-fabric-cotton.png'),fullPage:true});
  await page.getByRole('combobox',{name:'Fabric material'}).selectOption('denim');
