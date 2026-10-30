@@ -1,4 +1,4 @@
-import type {Layer,Side,StudioDocument} from './studio-document';
+import type {Side,StudioDocument} from './studio-document';
 
 /**
  * Choose a faithful, square crop of the ORIGINAL editable artwork. The crop is
