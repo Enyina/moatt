@@ -101,3 +101,32 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **ASSET-04:** Browser must display explicit loading or fallback and allow returning to the editable procedural studio mannequin; no loss of saved artwork.
 - **ASSET-05:** A reference asset rendering is **not evidence of applied print artwork**, exact fit, pose/size change, cloth simulation or verified manufacturing dimensions.
 - **VISUAL-OPEN:** Screenshot inspection must confirm the original body/garment assets actually align, have appropriate camera scale, and do not expose skin through the garment. Automated load success alone is not sufficient to mark quality accepted.
+
+### Full outfit and design projection acceptance
+
+- **OUTFIT-01:** The realistic reference must load matching body, top, jeans and shoes from one pinned source and pass actual browser capture; a bare-legged model cannot satisfy the visual acceptance criterion.
+- **OUTFIT-02:** Original blue-dyed top texture must not override the user's selected garment color; the source top albedo is replaced with the requested preview color.
+- **ART-PROJECT-01:** Front and back design textures must be projected separately onto the fitted upper garment in the chosen reference orientation. A real text change must change rendered canvas pixels.
+- **ART-PROJECT-02:** The projection is explicitly illustrative and uncalibrated. It must not claim factory print placement or reflect unrelated sleeve/cropped/pocket tailoring parameters.
+- **FIT-01:** Under-garment body intersections must be masked; inspect shoulders, hem, hood and arm movement in visual evidence. Do not mistake a successful load test for visual quality.
+
+- **GHOST-01:** Provide an on-demand garment-only fitted cloth close-up as an alternative to the uncanny full-body source human. The mode loads only its CC0 top asset, so mobile users do not pay the larger body+jeans+shoes download cost for that view.
+- **GHOST-02:** Front/back project artwork onto the garment and changes to text visibly alter rendered pixels in the actual screenshot. Preserve the canonical editable 2D design; don't claim calibrated physical placement.
+- **VISUAL-FAILURE:** The first complete source outfit screenshot was rejected: forearms appeared disconnected, the face looked artificial and artwork warped around the chest. A reference view passing CI is not acceptance. Review the close-up screenshots before promotion.
+
+- **NATIVE-UV-01:** Inspect the pinned actual GLB's UV island coordinates, not arbitrary space-based projection. Hoodie torso front V≈.115–.325; T-shirt front V≈.30–.70. They are not interchangeable and must have separate mapping tables.
+- **NATIVE-UV-02:** Unit tests include coordinates sampled from the published fitted hoodie/T-shirt models on both sides, verify normalized local print area and reject unrelated UV islands.
+- **VISUAL-REJECT:** 140 passing browser tests did not justify acceptance of fragmented "ST RY 2026" lettering in garment-only screenshot. Native-UV mapping must be verified against new actual pixel and screenshot evidence; simply loading a source GLB remains insufficient.
+
+
+### Garment surface decal QA (updated)
+
+- **DECAL-01:** Ray-sample original cloth geometry for chest artwork; reject failed ray coverage under 65%, invalid geometry, and backward-facing print normals.
+- **DECAL-02:** Front and back decals must be visible only from the correct camera side; covered by mesh depth is a visual regression. Preserve separate art and correct reverse-side orientation.
+- **DECAL-03:** Add text to the original 2D artboard and verify it changes a substantial number of actual WebGL canvas pixels spread across at least 3 chest-width bands. The prior 2-letter artifact must fail this gate.
+- **DECAL-04:** Resource counts must remain bounded across repeated text edits. Use persistent GPU CanvasTextures; don't allocate textures per keystroke.
+- **DECAL-05:** Mannequin and fabric still require aesthetic acceptance, consistent silhouettes and realistic draping before any claim that Moatt replaces professional clothing-design software.
+
+- **FABRIC-FITTED-01:** Switching cotton/denim/satin in the editor updates a distinct PBR material profile on the licensed fitted garment (roughness, sheen, weave bump, anisotropy) without changing the underlying printable artwork or source mesh.
+- **FABRIC-FITTED-02:** Browser screenshots must capture all three material profiles and assert actual rendered canvas pixels change; compare visual texture and avoid declaring success from the selector value alone.
+- **FABRIC-FITTED-03:** GPU texture/resource counts must remain bounded when switching material, and textures and materials must be disposed on scene teardown. Printed front and back art should remain legible.

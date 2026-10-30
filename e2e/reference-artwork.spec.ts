@@ -1,0 +1,77 @@
+import {test,expect} from '@playwright/test';
+test('fitted human reference wears a full outfit and uses actual editable front artwork',async({page},testInfo)=>{
+ test.setTimeout(120000);
+ await page.goto('/');
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('MOATT FRONT');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const view=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(view.or(fallback)).toBeVisible({timeout:20000});
+ if(await fallback.isVisible())return;
+ await page.getByRole('button',{name:'Human fit reference'}).click();
+ await expect(view).toHaveAttribute('data-reference-status','loaded',{timeout:80000});
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ const first=await view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ // Warm up the licensed model's shader/material textures before measuring sustained-edit growth.
+ // The first render can legitimately upload embedded body/jeans/shoe maps asynchronously.
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('WARMUP PRINT');
+ await expect.poll(async()=>view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png')),{timeout:25000}).not.toBe(first);
+ await page.waitForTimeout(450);
+ await expect.poll(()=>view.getAttribute('data-gpu-textures')).not.toBeNull();
+ const baselineTextures=Number(await view.getAttribute('data-gpu-textures'));
+ await page.screenshot({path:testInfo.outputPath('human-fitted-full-outfit.png'),fullPage:true});
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('A DIFFERENT DESIGN');
+ await expect.poll(async()=>view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png')),{timeout:25000}).not.toBe(first);
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ for(let i=0;i<6;i++)await page.getByRole('textbox',{name:'Selected layer text'}).fill('LIVE UPDATE '+i);
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ const afterTextures=Number(await view.getAttribute('data-gpu-textures'));
+ console.log('Fitted-reference steady-state GPU textures',JSON.stringify({baselineTextures,afterTextures}));
+ expect(afterTextures-baselineTextures).toBeLessThanOrEqual(3);
+ await page.screenshot({path:testInfo.outputPath('human-fitted-edited-print.png'),fullPage:true});
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await expect(page.getByText(/text: LIVE UPDATE/)).toBeVisible();
+});
+test('human reference responds to hoodie selection and keeps separate back content',async({page},testInfo)=>{
+ test.setTimeout(120000);
+ await page.goto('/');
+ await page.getByRole('button',{name:'Hoodie'}).click();
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK LABEL');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const view=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(view.or(fallback)).toBeVisible({timeout:20000});
+ if(await fallback.isVisible())return;
+ await page.getByRole('button',{name:'Human fit reference'}).click();
+ await expect(view).toHaveAttribute('data-reference-status','loaded',{timeout:80000});
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:20000});
+ await page.screenshot({path:testInfo.outputPath('human-fitted-hoodie-back.png'),fullPage:true});
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await expect(page.getByText('text: BACK LABEL')).toBeVisible();
+});
+
+test('garment-only close-up shows independent editable artwork without a distracting full-body avatar',async({page},testInfo)=>{
+ test.setTimeout(100000);
+ await page.goto('/');
+ await page.getByRole('button',{name:'Hoodie'}).click();
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('STREETWEAR 2026');
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const view=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(view.or(fallback)).toBeVisible({timeout:20000});
+ if(await fallback.isVisible())return;
+ await page.getByRole('button',{name:'Garment close-up'}).click();
+ await expect(view).toHaveAttribute('data-mannequin-status','garment-reference');
+ await expect(view).toHaveAttribute('data-reference-status','loaded',{timeout:50000});
+ await expect(view).toHaveAttribute('data-reference-artwork','ready',{timeout:15000});
+ const first=await view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'));
+ await page.screenshot({path:testInfo.outputPath('fitted-hoodie-garment-only.png'),fullPage:true});
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('NEW CONCEPT');
+ await expect.poll(async()=>view.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png')),{timeout:25000}).not.toBe(first);
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await expect(page.getByText('text: NEW CONCEPT')).toBeVisible();
+});

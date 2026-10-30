@@ -3,6 +3,7 @@ import {test,expect} from '@playwright/test';
 test('real torso volume and continuous sleeve mesh are installed and visible',async({page},testInfo)=>{
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});
@@ -26,6 +27,7 @@ test('front and back artwork stay separately visible on rounded surfaces',async(
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK VOLUME');
  await page.getByRole('button',{name:'Front',exact:true}).click();
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(unavailable)).toBeVisible({timeout:15000});

@@ -69,3 +69,26 @@ Evidence: prior screenshot reviews found the mannequin too stylized to be a pers
 A separate, deterministic **2400 x 1500 two-sided presentation** now renders offline in a standard 2D canvas. It uses the existing versioned front/back artwork and silhouette choices, adds garment outlines, shading, material grain and explicit concept-only labeling. It does not mutate the project. Browser regression decodes the actual PNG and checks both halves, actual image dimensions and pixel changes when garments and materials change. The presentation requires no WebGL and retains the original editor.
 
 Limitations: original authored illustration; not a licensed garment photo, physically correct textile simulation, paper pattern, or a guarantee of print placement. Quality verdict requires examining the actual exported image; green tests alone are insufficient.
+
+## 2026-10-28 — GLB load success is insufficient for clothing visual acceptance
+
+The first source GLBs loaded and passed tests, but screenshots showed a human model wearing a blue-dyed top, bare legs/feet and skin clipping through sleeves. This was not a usable clothing presentation. Extend the optional reference with source-verified jeans/shoes, give garment fabric the selected Moatt color, mask underlying body intersections and map independently editable 2D artwork onto the fitted top. Tests now must verify that changing actual text changes rendered 3D pixels; visual inspection remains mandatory. Original upstream generated GLBs are documented CC0; no upstream GPL code is imported. Do not generalize physics correctness or print calibration from this.
+
+## 2026-10-28 — Fix fragmented prints using original garment UV islands
+
+A completed 140-browser-case run had no functional failures, yet screenshot review rejected the hoodie: lettering was fragmented across the chest (e.g. "ST RY 2026") and the garment still had unfinished shoulders. A positional planar shader mapped 1024px artboard pixels from local X/Y; inspecting the *actual* published CC0 hoodie GLB identified stable separate front (approx U=.49-.69) and back (U=.085-.28) UV islands. Switched the fitted-reference print to a unique sampled native UV vertex attribute, normalized against selected chest intervals. Keep an explicit torso/side mask and manufacturer-calibration warning. Added pure mapping tests grounded in numerical samples from the pinned source GLB and browser pixel checks. This is NOT yet evidence of attractive print quality; accept only after reviewing newly captured screenshots from the exact implementation.
+
+
+## 2026-10-28 — Visual QA: don't accept one or two visible print fragments
+
+Evidence: Moatt's licensed-garment branch passed 57 unit tests and 144 cross-browser tests, yet actual garment screenshots showed only one or two letters at the edges of a blank chest. The root cause was not the stored artboard; it was its render surface being depth-occluded by the skinned garment. Native UV attempts also wrapped branding across unrelated islands and the hem.
+
+Correction: Build independent, triangulated front/back decals by ray-sampling garment geometry at rest. Cull opposite-facing decal surfaces explicitly, make the artwork independently visible above skinned cloth, and reuse existing CanvasTextures during edits. Keep the print region an illustrated design reference, not factory-calibrated placement. Add geometry normals and coverage contracts plus real browser screenshot *before/after* pixel-difference tests with minimum spread across the chest—not just evidence that any pixels changed.
+
+Status: screenshot acceptance is still required for the final commit. If complete lettering is not visible, do not merge; passing integration tests is insufficient.
+
+### Fabric rendering after correct print placement
+
+Full front/back typography is now legible in the visual screenshots at commit `fb6b538` (CI run 40725289566: 57 unit tests, 144 browser tests). The remaining fitted garment looked like uniform matte plastic. A source GLB with its original blue albedo removed has no believable cotton, denim or satin surface without additional material properties.
+
+Keep the source fitted cloth mesh, but use separate authored `MeshPhysicalMaterial` profiles for cotton, denim and satin (micro-bump height tile, correct repeat, roughness, fabric sheen and anisotropy) instead of changing only a combobox label. Change fabric profiles in place without reloading/replacing the underlying GLB, dispose old bump textures after a material switch and inspect comparative screenshots. These are procedural previews, **not** scanned physical fabric textures or simulation of draping.

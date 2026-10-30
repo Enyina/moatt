@@ -21,3 +21,24 @@
 .presentation-stage.is-focused canvas{width:auto;max-width:min(96vw,1480px);max-height:calc(100dvh - 105px);height:auto}
 .board-close{position:absolute;right:24px;top:19px;z-index:81}
 @media(max-width:900px){.presentation-stage.is-focused{padding:58px 8px 20px}.presentation-stage.is-focused canvas{width:100%;max-height:calc(100dvh - 90px)}.board-close{right:12px;top:10px}}
+
+/* Visual acceptance: preview actions must never sit on top of the garment,
+   including 390px touch screens with wrapped view controls. */
+.canvas{display:flex;flex-direction:column}
+.viewtools{position:relative;left:auto;top:auto;flex:0 0 auto;padding:12px 14px 10px;background:#222832;border-bottom:1px solid #414955;z-index:2}
+.studio-stage{flex:1;min-height:0;padding:16px}
+.preview-stage{flex:1;min-height:0}
+.presentation-stage{flex:1;min-height:0;padding:18px}
+.notice{position:relative;left:auto;bottom:auto;flex:0 0 auto;padding:9px 14px;color:#c9d0db;background:#222832;text-shadow:none;line-height:1.4}
+@media(max-width:900px){
+ .app{grid-template-rows:auto auto auto auto}
+ .canvas{grid-row:2;height:auto;min-height:0;overflow:visible}
+ .viewtools{padding:12px;gap:8px}
+ .viewtools .button{min-height:40px}
+ .studio-stage{min-height:450px;padding:18px 10px}
+ .preview-stage{height:clamp(440px,65svh,680px);min-height:440px;flex:none}
+ .presentation-stage{height:420px;min-height:360px;flex:none;padding:14px 8px}
+ .mobile-quick{display:flex;position:relative;left:auto;bottom:auto;order:3;flex:0 0 auto;align-items:center;padding:10px 12px;gap:8px;background:#222832}
+ .notice{order:4;padding:10px 12px}
+ .artboard{width:min(100%,410px,51vh)}
+}

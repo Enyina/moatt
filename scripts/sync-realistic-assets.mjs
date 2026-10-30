@@ -8,7 +8,9 @@ const baseUrl='https://raw.githubusercontent.com/kblood/CharacterCreator/'+upstr
 export const models=[
  {name:'base_body.glb',sha:'a5632913dddae4f7f50188e9f8eb273b78d7d1b0',min:1_000_000},
  {name:'clothing_tshirt.glb',sha:'ce7966dfd52c4bc6158e1e3b21969e6a63b066da',min:100_000},
- {name:'clothing_hoodie.glb',sha:'85999d3584078c11e9e4637ea53d88b150a775c3',min:100_000}
+ {name:'clothing_hoodie.glb',sha:'85999d3584078c11e9e4637ea53d88b150a775c3',min:100_000},
+ {name:'clothing_jeans.glb',sha:'10b38785efef7196bc9903c9d8cdf236d28dc584',min:100_000},
+ {name:'clothing_shoes.glb',sha:'aab06a01a235242c7e8aac4fda83278c6e0b42f4',min:100_000}
 ];
 const folder=join(process.cwd(),'public','models','realistic');
 function verifyBlob(bytes,expected,min){
