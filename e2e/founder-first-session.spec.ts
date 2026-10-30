@@ -6,7 +6,7 @@ test('founder creates a two-sided hoodie, saves a colorway and exports a shareab
  await page.goto('/');
  await page.getByLabel('Design title').fill('Night Shift Collection');
  await page.getByRole('button',{name:'Hoodie'}).click();
- await page.getByRole('button',{name:'Front + back branding'}).click();
+ await page.getByRole('button',{name:'Two-sided branding'}).click();
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('AFTER HOURS');
  await page.getByRole('button',{name:'Front',exact:true}).click();
  await page.getByRole('button',{name:'text: YOUR BRAND'}).click();
@@ -15,7 +15,7 @@ test('founder creates a two-sided hoodie, saves a colorway and exports a shareab
  await page.getByRole('button',{name:'Fix text visibility'}).click();
  await page.getByRole('button',{name:'Back',exact:true}).click();
  await expect(page.getByText('text: AFTER HOURS')).toBeVisible();
- await page.getByRole('button',{name:'Presentation'}).click();
+ await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:25000});
  const download=page.waitForEvent('download');
  await page.getByRole('button',{name:'Download presentation'}).click();
