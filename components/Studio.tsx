@@ -5,6 +5,8 @@ import type {ChangeEvent,PointerEvent} from 'react';
 import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
 import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
+import {applyLayoutPreset,copyLayerToOtherSide,placeLayer} from '../lib/design-layouts';
+import type {LayoutPreset,LayerPlacement} from '../lib/design-layouts';
 import {analyzeArtworkVisibility,legibleInk} from '../lib/artwork-contrast';
 import {draftFromIdea,IDEA_EXAMPLES} from '../lib/design-starter';
 import {createSupplierReviewHtml} from '../lib/supplier-review';
@@ -36,6 +38,28 @@ export default function Studio(){
  const current=doc.layers[side],active=current.find(l=>l.id===selected);
  const layerAdd=(layer:Layer)=>{commit(d=>{d.layers[side].push(layer)});setSelected(layer.id);setTool('select')};
  const update=(id:string,patch:Partial<Layer>)=>commit(d=>{const l=d.layers[side].find(l=>l.id===id);if(l&&!l.locked)Object.assign(l,patch)});
+ const addQuickLayout=(preset:LayoutPreset)=>{
+  try{
+   const result=applyLayoutPreset(doc,preset);
+   setHistory(h=>({past:[...h.past.slice(-39),h.present],present:result.document,future:[]}));
+   setSide(result.selectedSide);setSelected(result.selectedId);setTool('select');setTab('2d');
+   notify('Editable layout added. Undo restores your previous design.');
+  }catch(e){notify('Layout unavailable: '+String(e));}
+ };
+ const positionSelected=(placement:LayerPlacement)=>{
+  if(!active)return;
+  try{const placed=placeLayer(active,placement);update(active.id,placed);notify('Layer positioned inside the suggested guide.');}
+  catch(e){notify('Cannot position artwork: '+String(e));}
+ };
+ const copySelectedSide=()=>{
+  if(!active)return;
+  try{
+   const result=copyLayerToOtherSide(doc,side,active.id);
+   setHistory(h=>({past:[...h.past.slice(-39),h.present],present:result.document,future:[]}));
+   setSide(result.selectedSide);setSelected(result.selectedId);setTool('select');setTab('2d');
+   notify('Copied to the other side. Both versions are editable independently.');
+  }catch(e){notify('Cannot copy artwork: '+String(e));}
+ };
  const position=(e:PointerEvent<HTMLCanvasElement>)=>{const r=e.currentTarget.getBoundingClientRect();return {x:clamp((e.clientX-r.left)*1024/r.width,0,1024),y:clamp((e.clientY-r.top)*1024/r.height,0,1024)}};
  const paint=useCallback(async()=>{const canvas=canvasRef.current;if(!canvas)return;try{const image=await renderArtwork(doc,side);const ctx=canvas.getContext('2d');if(ctx){ctx.clearRect(0,0,1024,1024);ctx.drawImage(image,0,0)}}catch(e){setSaveError('Preview rendering failed: '+String(e))}},[doc,side]);
  useEffect(()=>{void paint()},[paint]);
@@ -122,6 +146,14 @@ export default function Studio(){
  <button className="button primary" onClick={applyIdea}>Create editable draft</button>
  <p className="hint">Works offline with simple garment and artwork rules, not generative AI. Keeps your existing artwork. Undo is available.</p>
  {ideaFeedback&&<p className="hint" role="status">{ideaFeedback}</p>}</div>
+ <div className="section"><h3>Quick layouts</h3>
+ <p className="hint">Add a starting design without losing your existing artwork. Every word remains editable.</p>
+ <div className="row">
+ <button className="button" onClick={()=>addQuickLayout('chest-mark')}>Small chest mark</button>
+ <button className="button" onClick={()=>addQuickLayout('center-statement')}>Centered statement</button>
+ <button className="button" onClick={()=>addQuickLayout('brand-set')}>Front + back branding</button>
+ </div>
+ <p className="hint">Placement guides are illustrative, not supplier-verified print dimensions.</p></div>
  <div className="section"><h3>Garment</h3><div className="row">{(['tshirt','hoodie'] as const).map(g=><button key={g} className={'button '+(doc.garment===g?'selected':'')} onClick={()=>commit(d=>{if(d.garment===g)return;d.garment=g;d.sleeve=g==='hoodie'?'long':'short';d.pocket=g==='hoodie'?'kangaroo':'none'})}>{g==='tshirt'?'T-shirt':'Hoodie'}</button>)}</div></div>
  <div className="section"><h3>Fit and body</h3><label>Fit<select className="field" value={doc.fit} onChange={e=>commit(d=>{d.fit=e.target.value as StudioDocument['fit']})}><option value="regular">Regular</option><option value="oversized">Oversized</option></select></label><label>Mannequin<select className="field" value={doc.body} onChange={e=>commit(d=>{d.body=e.target.value as StudioDocument['body']})}><option value="standard">Standard</option><option value="tall">Tall</option></select></label></div>
  <div className="section"><h3>Garment details</h3><label>Sleeves<select aria-label="Sleeve length" className="field" value={doc.sleeve} onChange={e=>commit(d=>{d.sleeve=e.target.value as StudioDocument['sleeve']})}><option value="short">Short</option><option value="long">Long</option></select></label><label>Hem<select aria-label="Hem length" className="field" value={doc.hem} onChange={e=>commit(d=>{d.hem=e.target.value as StudioDocument['hem']})}><option value="standard">Standard</option><option value="cropped">Cropped</option></select></label><label>Neckline<select aria-label="Neckline" className="field" value={doc.neck} onChange={e=>commit(d=>{d.neck=e.target.value as StudioDocument['neck']})}><option value="crew">Crew</option><option value="wide">Wide</option></select></label><label>Pocket style<select aria-label="Pocket style" className="field" value={doc.pocket} onChange={e=>commit(d=>{d.pocket=e.target.value as StudioDocument['pocket']})}><option value="none">None</option><option value="chest">Chest pocket</option>{doc.garment==='hoodie'&&<option value="kangaroo">Kangaroo pouch</option>}</select></label></div><div className="section"><h3>Fabric material</h3><label>Fabric<select aria-label="Fabric material" className="field" value={doc.material} onChange={e=>commit(d=>{d.material=e.target.value as StudioDocument['material']})}><option value="cotton">Cotton / matte</option><option value="denim">Denim / textured</option><option value="satin">Satin / sheen</option></select></label><p className="hint">Visual material preview, not fabric simulation.</p></div><div className="section"><h3>Fabric color</h3><input aria-label="Fabric color" type="color" value={doc.baseColor} onChange={e=>commit(d=>{d.baseColor=e.target.value})}/></div>
@@ -154,7 +186,17 @@ export default function Studio(){
  onChange={e=>commit(d=>{d.brief[key]=e.target.value.slice(0,2000)})}/></label>)}
  </div>
  <div className="section"><h3>{side} layers ({current.length})</h3>{[...current].reverse().map(l=><div key={l.id} className="layer-row"><button className={'choice '+(selected===l.id?'selected':'')} onClick={()=>{setSelected(l.id);setTool('select')}}>{l.kind}: {l.kind==='text'?l.value.slice(0,12):l.kind==='stroke'?'brush stroke':'image'}</button><button aria-label="Delete layer" className="button" onClick={()=>{commit(d=>{d.layers[side]=d.layers[side].filter(x=>x.id!==l.id)});setSelected(null)}}>×</button></div>)}{!current.length&&<p className="hint">Add text, upload an image, or draw on the canvas.</p>}</div>
- {active&&<div className="section"><h3>Selected layer</h3>{active.kind==='text'&&<><label>Text<textarea aria-label="Selected layer text" className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
+ {active&&<div className="section"><h3>Selected layer</h3>
+ {active.kind!=='stroke'&&<div className="section"><h3>Place artwork</h3>
+ <p className="hint">One-click alignment in the suggested design guide, not a factory-approved print area.</p>
+ <div className="row">
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>positionSelected('top')}>Top center</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>positionSelected('center')}>Center</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>positionSelected('bottom')}>Bottom center</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>positionSelected('fit')}>Fit safe guide</button>
+ <button className="button" onClick={copySelectedSide}>Copy to {side==='front'?'back':'front'}</button>
+ </div></div>}
+{active.kind==='text'&&<><label>Text<textarea aria-label="Selected layer text" className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
  {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
  <label>X<input className="field" type="number" value={Math.round(active.x)} onChange={e=>update(active.id,{x:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Y<input className="field" type="number" value={Math.round(active.y)} onChange={e=>update(active.id,{y:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Width<input className="field" type="number" value={Math.round(active.width)} onChange={e=>update(active.id,{width:clamp(Number(e.target.value),10,1024)})}/></label><label>Height<input className="field" type="number" value={Math.round(active.height)} onChange={e=>update(active.id,{height:clamp(Number(e.target.value),10,1024)})}/></label><label>Rotation<input className="field" type="range" min={-180} max={180} value={active.rotation} onChange={e=>update(active.id,{rotation:Number(e.target.value)})}/></label>
  <div className="row"><button className="button" onClick={()=>update(active.id,{hidden:!active.hidden})}>{active.hidden?'Show':'Hide'}</button><button className="button" onClick={()=>commit(d=>{const l=d.layers[side].find(x=>x.id===active.id);if(l)l.locked=!l.locked})}>{active.locked?'Unlock':'Lock'}</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>=0&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]]})}>Bring forward</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>0)[a[i],a[i-1]]=[a[i-1],a[i]]})}>Send backward</button><button className="button" onClick={()=>layerAdd({...active,id:uid(),x:active.x+30,y:active.y+30})}>Duplicate</button></div></div>}
