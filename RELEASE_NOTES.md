@@ -108,3 +108,15 @@ Choose a small chest mark, a bold statement, or a matching front-and-back brand 
 Move selected artwork to the top, center or bottom of the suggested design area, or fit an oversized design inside it. You can also copy a design element to the other side of the garment and edit each copy separately.
 
 These guides are for arranging a visual idea. They are not verified printing sizes or positions from a manufacturer. On phones, quick-start choices are now accessible near the design canvas, and controls are kept out of the way of the artwork. This work is in review and is not confirmed available on a published site.
+
+## October 30, 2026 — Inspect the design, not just the garment
+
+**An easier way to review the artwork**
+
+The Presentation tab now offers a two-sided overview, a front detail and a back detail. Detail mode places the original garment design beside a much larger close-up of the exact artwork from that side; changing a garment or a word updates both views. There are Zoom +, Zoom − and Fit board controls so phone and laptop users can inspect small marks without losing their work.
+
+**Export the view you are reviewing**
+
+Export an overview board or an individual front/back detail image. The close-up is clearly marked as magnified for visual review, not print size. The original artwork position, save data and actual garment preview remain unchanged.
+
+This is an independent preview enhancement under review and is not confirmed published. Manufacturer print dimensions and physical garment fit are still unverified.
