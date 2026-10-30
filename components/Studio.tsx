@@ -20,7 +20,7 @@ type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
- const [modelStyle,setModelStyle]=useState<'studio'|'classic'|'realistic'>('studio');
+ const [modelStyle,setModelStyle]=useState<'garment'|'studio'|'classic'|'realistic'>('garment');
  const [presentationFocused,setPresentationFocused]=useState(false);
  const [presentationMode,setPresentationMode]=useState<'overview'|'front'|'back'>('overview');
  const [presentationZoom,setPresentationZoom]=useState(1);
@@ -180,6 +180,7 @@ export default function Studio(){
  <button className="button" onClick={()=>addQuickLayout('center-statement')}>Slogan layout</button>
  <button className="button" onClick={()=>addQuickLayout('brand-set')}>Both sides</button>
  <button className="button" onClick={()=>{setTab('2d');layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:legibleInk(doc.baseColor),fontSize:85,value:'NEW DESIGN'})}}>New text</button><button className="button" onClick={()=>{setTab('2d');setTool('draw')}}>Paint design</button></div><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button><button className={'button '+(tab==='presentation'?'selected':'')} onClick={()=>setTab('presentation')}>Presentation</button>{tab==='presentation'&&<button className="button" onClick={()=>setPresentationFocused(true)}>Expand board</button>}{tab==='3d'&&<>
+ <button className={'button '+(modelStyle==='garment'?'selected':'')} onClick={()=>setModelStyle('garment')}>Garment only</button>
  <button className={'button '+(modelStyle==='studio'?'selected':'')} onClick={()=>setModelStyle('studio')}>Studio mannequin</button>
  <button className={'button '+(modelStyle==='classic'?'selected':'')} onClick={()=>setModelStyle('classic')}>Classic mannequin</button>
  <button className={'button '+(modelStyle==='realistic'?'selected':'')} onClick={()=>setModelStyle('realistic')}>Human fit reference</button>
@@ -200,7 +201,7 @@ export default function Studio(){
  </div>
  </>}
  </div>
- <div className="notice">{tab==='3d'?(modelStyle==='realistic'?'Human fit reference: CC0 body and garment mesh only; your artwork and selected tailoring are not projected onto this reference. Use Studio mannequin for editing.':'Drag to orbit · scroll to zoom · visual garment approximation'):tab==='presentation'?(presentationMode==='overview'?'Two-sided design presentation · visual concept, not a production pattern':'Review detail is magnified, not actual print size · visual concept only'):'Artwork layout · front and back saved separately'}</div></section>
+ <div className="notice">{tab==='3d'?(modelStyle==='realistic'?'Human fit reference: CC0 body and garment mesh only; your artwork and selected tailoring are not projected onto this reference. Use Studio mannequin for editing.':modelStyle==='garment'?'Garment-only view: artwork preview · orbit to inspect · stylized fit, not physical drape':'Drag to orbit · scroll to zoom · visual garment approximation'):tab==='presentation'?(presentationMode==='overview'?'Two-sided design presentation · visual concept, not a production pattern':'Review detail is magnified, not actual print size · visual concept only'):'Artwork layout · front and back saved separately'}</div></section>
  <aside className="panel right"><div className="section"><h3>Project</h3><input aria-label="Design title" className="field" value={doc.name} maxLength={120} onChange={e=>commit(d=>{d.name=e.target.value})}/><p className="hint">{saveError||(!hydrated?'Loading saved design…':'Autosaved in this browser')}</p><button className="button" onClick={()=>projectRef.current?.click()}>Import project</button><input hidden type="file" accept=".json,application/json" ref={projectRef} onChange={e=>void importProject(e)}/></div>
  <div className="section"><h3>My designs</h3>
  <div className="row"><button className="button primary" onClick={storeDesign}>Save to my designs</button><button className="button" onClick={newDesign}>New design</button><button className="button" onClick={()=>{const clone=modify(doc,d=>{d.id=uid();d.name=(d.name+' — colorway').slice(0,120)});setHistory(h=>({past:[...h.past.slice(-39),h.present],present:clone,future:[]}));setSelected(null);notify('Colorway copy created. Update the color and save it to My designs.')}}>Duplicate colorway</button></div>
