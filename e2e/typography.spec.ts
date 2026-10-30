@@ -40,3 +40,14 @@ test('typographic preset is undoable, a copied label becomes independently edita
  await page.getByRole('button',{name:'text: YOUR BRAND'}).click();
  await expect(page.getByRole('combobox',{name:'Text typeface'})).toHaveValue('mono');
 });
+
+test('a tiny text box reports overflow rather than pretending artwork is production-safe',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Centered statement'}).click();
+ await page.getByLabel('Width',{exact:true}).fill('20');
+ await page.getByLabel('Height',{exact:true}).fill('20');
+ await expect(page.getByRole('alert')).toContainText('Text exceeds this box',{timeout:15000});
+ await page.getByLabel('Width',{exact:true}).fill('640');
+ await page.getByLabel('Height',{exact:true}).fill('200');
+ await expect(page.getByRole('alert')).toHaveCount(0);
+});
