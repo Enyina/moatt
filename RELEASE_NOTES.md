@@ -120,3 +120,9 @@ Choose a bold display look, an editorial serif, a clean typeface or a utility-st
 Try ready-made streetwear, editorial and utility typography treatments. Changes are editable, can be undone and stay with the project when you reopen it. The same text design is used in the artwork and presentation exports.
 
 These are local font choices rather than purchased typefaces. If the words cannot fit into a very small box, Moatt now warns you to enlarge it or shorten the message before exporting. These changes are in review and have not been confirmed live.
+
+## October 30, 2026 — Prioritize the garment and readable artwork
+
+The 3D preview now opens on the clothing without an unfinished mannequin. You can still switch to the studio or classic mannequin, or inspect the separate human-fit reference. The garment-only camera comes closer to the clothing so small artwork is easier to review.
+
+In Presentation, inspect **Both views**, **Front detail**, or **Back detail**, and use Zoom +/− or Fit board to examine the actual saved design. A side-detail export includes a magnified close-up for discussion while the garment on the left keeps the original placement. The magnification is not actual factory print scale. This change is in review; nothing here asserts deployment or physically accurate clothing simulation.
