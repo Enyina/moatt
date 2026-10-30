@@ -1,7 +1,8 @@
 import {test,expect} from '@playwright/test';
-test('opens on polished studio mannequin and exposes distinct fabric styles',async({page})=>{
+test('studio mannequin remains selectable and exposes distinct fabric styles',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
@@ -18,6 +19,7 @@ test('opens on polished studio mannequin and exposes distinct fabric styles',asy
 test('can switch between smooth studio mannequin and legacy licensed model',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
@@ -31,6 +33,7 @@ test('can switch between smooth studio mannequin and legacy licensed model',asyn
 test('fabric changes visibly alter rendered pixels rather than only labels',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
@@ -53,6 +56,7 @@ test('fabric changes visibly alter rendered pixels rather than only labels',asyn
 test('repaints after edits but does not continuously waste frames while idle',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
