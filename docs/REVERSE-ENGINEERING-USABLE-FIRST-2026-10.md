@@ -38,3 +38,16 @@ Public docs are behavioral research, not a license to copy source, commercial ar
 5. Honest supplier-supplied print region dimensions and effective artwork DPI checks, which must default to **unknown** until verified.
 
 **Exit criterion for this wave:** non-destructive editable templates, a full layout workflow, accurate side separation, save/export regression, mobile browser tests, no fabricated production measurements, and a verified CI run tied to its exact commit.
+
+## Wave 2 — useful typography, not decorative-only effects
+
+Public observed behavior (official pages):
+- Canva: https://www.canva.com/help/format-text/ — font, weight, alignment, letter and line spacing are first-class text settings.
+- Kittl: https://help.kittl.com/editing-and-design/text-settings-editing/ — character/textbox settings and creative type family choices; text layout remains editable.
+- Printful: https://help.printful.com/hc/en-us/articles/50264033590673-How-do-I-use-layers-in-Printful-s-Design-Maker — independent layers and ability to change individual lettering without changing other artwork.
+
+**Moatt adaptation:** use four license-neutral system-font families instead of copying private typefaces, make edit controls on each existing text layer, save options on the versioned project, and ensure every export derives from the same renderer. Introduce an automatic multiline fit function instead of letting the original single-line text silently stretch horizontally. Add quick Streetwear/Editorial/Utility styles to guide newcomers.
+
+**Trade-offs:** installed platform fonts vary across devices, so exact glyph pixels are not guaranteed by a system-font fallback. True font embedding, individual character styling, outlined letterforms and supplier-proofed file vectorization are not included. Text still needs checking for extremely small boxes and unsupported glyphs.
+
+**Release checks:** typecheck/build/lint, unit tests for schema migration and overflow, and browser tests for pixel changes, saving/reload, front/back, undo and presentation. Must pass exact branch head.
