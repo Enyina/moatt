@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('type styling updates real pixels and survives reload on the chosen side',async({page})=>{
+test('type styling updates real pixels and survives reload on the chosen side',async({page},testInfo)=>{
  await page.goto('/');
  await page.getByRole('button',{name:'Centered statement'}).click();
  const art=page.locator('canvas[aria-label="front artwork canvas"]');
@@ -13,6 +13,7 @@ test('type styling updates real pixels and survives reload on the chosen side',a
  await page.getByRole('spinbutton',{name:'Text letter spacing'}).fill('5');
  await page.getByRole('spinbutton',{name:'Text line spacing'}).fill('1.4');
  await expect.poll(()=>art.evaluate(node=>(node as HTMLCanvasElement).toDataURL('image/png'))).not.toBe(first);
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('styled-apparel-artwork.png')});
  await page.reload();
  await page.getByRole('button',{name:'text: MAKE IT YOUR'}).click();
  await expect(page.getByRole('combobox',{name:'Text typeface'})).toHaveValue('serif');
@@ -22,6 +23,7 @@ test('type styling updates real pixels and survives reload on the chosen side',a
  await expect(page.getByText('text: MAKE IT YOUR')).toHaveCount(0);
  await page.getByRole('button',{name:'Presentation',exact:true}).click();
  await expect(page.getByTestId('presentation-canvas')).toHaveAttribute('data-preview-ready','true',{timeout:25000});
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('styled-apparel-presentation.png')});
 });
 test('typographic preset is undoable, a copied label becomes independently editable',async({page})=>{
  await page.goto('/');
