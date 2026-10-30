@@ -21,13 +21,13 @@ test('founder creates a two-sided hoodie, saves a colorway and exports a shareab
  await page.getByRole('button',{name:'Download presentation'}).click();
  expect((await download).suggestedFilename()).toContain('presentation.png');
  await page.getByRole('button',{name:'Save to my designs'}).click();
- await expect(page.getByRole('button',{name:/Open Night Shift Collection/})).toBeVisible();
+ await expect(page.getByRole('button',{name:/^Open Night Shift Collection$/})).toBeVisible();
  await page.getByRole('button',{name:'Duplicate colorway'}).click();
  await page.getByLabel('Fabric color').fill('#e2bc85');
  await page.getByRole('button',{name:'Save to my designs'}).click();
- await expect(page.getByRole('button',{name:/Open Night Shift Collection — colorway/})).toBeVisible();
+ await expect(page.getByRole('button',{name:/^Open Night Shift Collection — colorway$/})).toBeVisible();
  page.once('dialog',d=>d.accept());
- await page.getByRole('button',{name:/Open Night Shift Collection ·/}).click();
+ await page.getByRole('button',{name:/^Open Night Shift Collection$/}).click();
  await expect(page.getByLabel('Fabric color')).toHaveValue('#202124');
  await page.reload();
  await expect(page.getByLabel('Design title')).toHaveValue('Night Shift Collection');
