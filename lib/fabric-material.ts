@@ -35,3 +35,23 @@ export function makeFabricTile(material:FabricKind,size=128):Uint8ClampedArray{
  }
  return rgba;
 }
+
+/**
+ * Neutral woven-color modulation for the fitted reference's fabric base map.
+ * Keep it near white so the user's selected garment color, not a baked swatch,
+ * determines the result. The maps are illustrative and not scan-derived.
+ */
+export function makeFabricAlbedoTile(material:FabricKind,size=128):Uint8ClampedArray{
+ const rgba=new Uint8ClampedArray(size*size*4);
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const h=fabricHeight(material,x,y,size);
+  const centered=(h-175)/75;
+  // Cotton stays soft and diffuse, denim exposes a stronger diagonal twill,
+  // satin has a nearly uniform weave so directional PBR sheen does the work.
+  const shade=material==='denim'?232+centered*17:material==='satin'?249+centered*3:242+centered*8;
+  const v=Math.max(198,Math.min(255,Math.round(shade)));
+  const i=(y*size+x)*4;
+  rgba[i]=v;rgba[i+1]=v;rgba[i+2]=v;rgba[i+3]=255;
+ }
+ return rgba;
+}
