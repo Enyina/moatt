@@ -15,7 +15,7 @@ type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
- const [modelStyle,setModelStyle]=useState<'studio'|'classic'|'realistic'|'ghost'>('studio');
+ const [modelStyle,setModelStyle]=useState<'studio'|'classic'|'realistic'|'ghost'>('ghost');
  const [presentationFocused,setPresentationFocused]=useState(false);
  const [savedDesigns,setSavedDesigns]=useState<LibraryEntry[]>([]);
  const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'|'presentation'>('2d'),[toast,setToast]=useState(''),[brushColor,setBrushColor]=useState('#202329'),[brushWidth,setBrushWidth]=useState(14);
