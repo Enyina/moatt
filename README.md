@@ -55,4 +55,4 @@ Visual output is a conceptual clothing mockup, **not reliable apparel fitting, c
 
 The next proposed release reconciles the already-verified front/back **Presentation detail** preview with the merged typography editor, and selects **Garment only** by default when entering 3D preview. The original studio and legacy model views stay selectable. Zoom and full-screen inspection are visual operations only; they do not change the saved print position. This does not certify photorealistic apparel or physical fit.
 
-The website is **not confirmed publicly hosted**. For a live preview, an authorized maintainer must enable GitHub Pages (GitHub Actions source) or configure an alternative hosting service; a passing CI build is not the same as a deployed product.
+The currently merged `main` is publicly hosted at `https://enyina.github.io/moatt/` and passed homepage/asset smoke checks on October 30. This review branch is **not deployed** and requires merge, deployment, functional smoke and visual review before claiming its added capabilities are live.
