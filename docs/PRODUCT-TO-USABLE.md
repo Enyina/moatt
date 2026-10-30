@@ -131,3 +131,13 @@ The acceptance gate remains open for material improvements to visual quality, ph
 - Next.js static export and GitHub Pages workflow are configured. Static build succeeds, but Pages deployment is blocked by account-level permission: the repository lacks an enabled Pages site, and GitHub Actions token cannot create it (`Resource not accessible by integration`). Owner/admin must enable GitHub Pages with GitHub Actions as source, or connect an authorized hosting provider. The workflow now retains a static website ZIP even when Pages enablement fails.
 
 **Still blocking final acceptance request:** live hosted URL, independent real-device/visual validation, garment fidelity still below the professional reference tools, and uncalibrated physical fit / actual production patterns (deferred beyond the mockup-only v1). Treat the implemented studio as a design mockup product, not garment CAD.
+
+## Product readiness checkpoint — October 30, 2026
+
+The prior evidence table describes an older starter state and **must not** be used as the current score. New facts:
+- PR #15 usable layouts and PR #17 typography are merged into main; PR #17 head passed 168 browser checks (Chromium, mobile emulation, Firefox, WebKit).
+- PR #19 review/zoom had 168 passing browser tests at `7067a0c`, but cannot be directly merged into latest main due to intervening changes. The new integration branch ports its source to the newer typography-enabled main, preserving that work.
+- This branch changes the default 3D inspection to garment-only, leaving alternative mannequin views available. No claim of true fabric fit or real-user preference testing.
+- A live website is now reachable: [successful deployment and homepage/model smoke checks](https://github.com/Enyina/moatt/actions/runs/41077902623) verify the published main branch. The project remains blocked on visual garment acceptance and independent physical-device confirmation. Browser tests and CI do **not** establish professional material realism or production fit.
+
+**Acceptance priority:** (1) exact-head green CI and real screenshot review of integrated branch; (2) visually credible apparel silhouettes and material texture; (3) verify the exact integrated commit is deployed to the existing public site; (4) verify first-time-user journey on real phone/desktop; (5) user owner acceptance. No release claim before these.

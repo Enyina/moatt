@@ -1,0 +1,32 @@
+import {expect,test} from '@playwright/test';
+
+test('garment-only is the default 3D inspection with front/back art and optional mannequin',async({page},testInfo)=>{
+ test.setTimeout(100000);
+ await page.goto('/');
+ await page.getByRole('button',{name:'Small chest mark'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('FRONT ONLY');
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await page.getByRole('button',{name:'Add text'}).click();
+ await page.getByRole('textbox',{name:'Selected layer text'}).fill('BACK ONLY');
+ await page.getByRole('button',{name:'Front',exact:true}).click();
+ await page.getByRole('button',{name:'3D preview'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(canvas.or(fallback)).toBeVisible({timeout:20000});
+ if(await fallback.isVisible())return;
+ await expect(page.getByRole('button',{name:'Garment only'})).toHaveClass(/selected/);
+ await expect(canvas).toHaveAttribute('data-mannequin-status','garment-only',{timeout:20000});
+ await expect(canvas).toHaveAttribute('data-garment-topology','volume-torso-sleeves-v1');
+ const front=await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png'));
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('garment-only-front.png')});
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await expect.poll(()=>canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png')),{timeout:20000}).not.toBe(front);
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('garment-only-back.png')});
+ await page.getByRole('button',{name:'Hoodie'}).click();
+ await expect(canvas).toHaveAttribute('data-garment-kind','hoodie');
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('garment-only-hoodie.png')});
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
+ await expect(canvas).toHaveAttribute('data-mannequin-status','studio-ready',{timeout:20000});
+ await page.getByRole('button',{name:'Garment only'}).click();
+ await expect(canvas).toHaveAttribute('data-mannequin-status','garment-only',{timeout:20000});
+});

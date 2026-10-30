@@ -12,7 +12,7 @@ import type {LayoutPreset,LayerPlacement} from '../lib/design-layouts';
 import {analyzeArtworkVisibility,legibleInk} from '../lib/artwork-contrast';
 import {draftFromIdea,IDEA_EXAMPLES} from '../lib/design-starter';
 import {createSupplierReviewHtml} from '../lib/supplier-review';
-import {renderPresentation,PRESENTATION_HEIGHT,PRESENTATION_WIDTH} from '../lib/presentation-render';
+import {renderPresentation,renderPresentationDetail,PRESENTATION_HEIGHT,PRESENTATION_WIDTH} from '../lib/presentation-render';
 import {loadLibrary,saveToLibrary,openFromLibrary,deleteFromLibrary} from '../lib/design-library';
 import type {LibraryEntry} from '../lib/design-library';
 const Preview=dynamic(()=>import('./GarmentPreview'),{ssr:false,loading:()=> <div className="empty3d">Loading preview…</div>});
@@ -20,8 +20,10 @@ type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
- const [modelStyle,setModelStyle]=useState<'studio'|'classic'|'realistic'>('studio');
+ const [modelStyle,setModelStyle]=useState<'garment'|'studio'|'classic'|'realistic'>('garment');
  const [presentationFocused,setPresentationFocused]=useState(false);
+ const [presentationMode,setPresentationMode]=useState<'overview'|'front'|'back'>('overview');
+ const [presentationZoom,setPresentationZoom]=useState(1);
  const [savedDesigns,setSavedDesigns]=useState<LibraryEntry[]>([]);
  const [history,setHistory]=useState<History>(START),[hydrated,setHydrated]=useState(false),[saveError,setSaveError]=useState(''),[side,setSide]=useState<Side>('front'),[tool,setTool]=useState<Tool>('select'),[selected,setSelected]=useState<string|null>(null),[tab,setTab]=useState<'2d'|'3d'|'presentation'>('2d'),[toast,setToast]=useState(''),[brushColor,setBrushColor]=useState('#202329'),[brushWidth,setBrushWidth]=useState(14);
  const doc=history.present;const printIssues=analyzePrintPlacement(doc);const visibilityIssues=analyzeArtworkVisibility(doc);const canvasRef=useRef<HTMLCanvasElement>(null),presentationRef=useRef<HTMLCanvasElement>(null),fileRef=useRef<HTMLInputElement>(null),projectRef=useRef<HTMLInputElement>(null);
@@ -120,23 +122,26 @@ export default function Studio(){
   const target=presentationRef.current;
   if(!target)return;
   let live=true;
-  renderPresentation(doc).then(result=>{
+  delete target.dataset.previewReady;
+  (presentationMode==='overview'?renderPresentation(doc):renderPresentationDetail(doc,presentationMode)).then(result=>{
    if(!live)return;
    const ctx=target.getContext('2d');
    if(!ctx)throw Error('Presentation canvas unavailable');
    ctx.clearRect(0,0,target.width,target.height);
    ctx.drawImage(result,0,0);
+   target.dataset.previewMode=presentationMode;
    target.dataset.previewReady='true';
   }).catch(()=>{if(live)notify('Presentation preview unavailable. Try the export button.');});
   return()=>{live=false};
  // The document reference changes on every edit; stale renders are ignored.
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[doc,tab]);
+ },[doc,tab,presentationMode]);
  const exportPresentation=async()=>{
   try{
-   const image=await renderPresentation(doc);
-   await savePng(image,'moatt-'+(doc.name||'design').replace(/[^a-z0-9-]/gi,'-').slice(0,80)+'-presentation.png');
-   notify('Front and back presentation saved as a high-resolution PNG.');
+   const image=presentationMode==='overview'?await renderPresentation(doc):await renderPresentationDetail(doc,presentationMode);
+   const suffix=presentationMode==='overview'?'presentation':presentationMode+'-detail';
+   await savePng(image,'moatt-'+(doc.name||'design').replace(/[^a-z0-9-]/gi,'-').slice(0,80)+'-'+suffix+'.png');
+   notify(presentationMode==='overview'?'Front and back presentation saved as a high-resolution PNG.':'Detail review saved. Artwork is magnified for inspection only.');
   }catch(e){notify('Could not export presentation: '+String(e));}
  };
  useEffect(()=>{if(!presentationFocused)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape')setPresentationFocused(false)};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[presentationFocused]);
@@ -175,14 +180,28 @@ export default function Studio(){
  <button className="button" onClick={()=>addQuickLayout('center-statement')}>Slogan layout</button>
  <button className="button" onClick={()=>addQuickLayout('brand-set')}>Both sides</button>
  <button className="button" onClick={()=>{setTab('2d');layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:legibleInk(doc.baseColor),fontSize:85,value:'NEW DESIGN'})}}>New text</button><button className="button" onClick={()=>{setTab('2d');setTool('draw')}}>Paint design</button></div><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button><button className={'button '+(tab==='presentation'?'selected':'')} onClick={()=>setTab('presentation')}>Presentation</button>{tab==='presentation'&&<button className="button" onClick={()=>setPresentationFocused(true)}>Expand board</button>}{tab==='3d'&&<>
+ <button className={'button '+(modelStyle==='garment'?'selected':'')} onClick={()=>setModelStyle('garment')}>Garment only</button>
  <button className={'button '+(modelStyle==='studio'?'selected':'')} onClick={()=>setModelStyle('studio')}>Studio mannequin</button>
  <button className={'button '+(modelStyle==='classic'?'selected':'')} onClick={()=>setModelStyle('classic')}>Classic mannequin</button>
  <button className={'button '+(modelStyle==='realistic'?'selected':'')} onClick={()=>setModelStyle('realistic')}>Human fit reference</button>
  </>}</div>
  <div className="studio-stage" style={{display:tab==='2d'?'flex':'none'}}><div className="artboard"><canvas ref={canvasRef} width={1024} height={1024} aria-label={side+' artwork canvas'} style={{touchAction:'none',cursor:tool==='draw'?'crosshair':tool==='erase'?'not-allowed':'move'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null;void paint()}}/><div aria-hidden="true" className="safe-guide" style={{left:SAFE_REGION.left/1024*100+'%',top:SAFE_REGION.top/1024*100+'%',width:(SAFE_REGION.right-SAFE_REGION.left)/1024*100+'%',height:(SAFE_REGION.bottom-SAFE_REGION.top)/1024*100+'%'}}/>{active&&tool==='select'&&<div className="selection-outline" data-layer-id={active.id} style={{left:active.x/1024*100+'%',top:active.y/1024*100+'%',width:active.width/1024*100+'%',height:active.height/1024*100+'%',transform:'rotate('+active.rotation+'deg)'}}/>}</div></div>
  <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}>{tab==='3d'&&<Preview doc={doc} side={side} modelStyle={modelStyle}/>}</div>
- <div className={'presentation-stage '+(presentationFocused?'is-focused':'')} style={{display:tab==='presentation'?'flex':'none'}}>{presentationFocused&&<button className="button primary board-close" onClick={()=>setPresentationFocused(false)}>Close full-screen board</button>}{tab==='presentation'&&<canvas data-testid="presentation-canvas" ref={presentationRef} width={PRESENTATION_WIDTH} height={PRESENTATION_HEIGHT} role="img" aria-label="Front and back garment presentation"/>}</div>
- <div className="notice">{tab==='3d'?(modelStyle==='realistic'?'Human fit reference: CC0 body and garment mesh only; your artwork and selected tailoring are not projected onto this reference. Use Studio mannequin for editing.':'Drag to orbit · scroll to zoom · visual garment approximation'):tab==='presentation'?'Two-sided design presentation · visual concept, not a production pattern':'Artwork layout · front and back saved separately'}</div></section>
+ <div className={'presentation-stage '+(presentationFocused?'is-focused':'')} style={{display:tab==='presentation'?'flex':'none'}}>
+ {tab==='presentation'&&<>
+ <div className="presentation-controls" role="group" aria-label="Presentation view and zoom">
+ {([['overview','Both views'],['front','Front detail'],['back','Back detail']] as const).map(([mode,name])=><button key={mode} className={'button '+(presentationMode===mode?'selected':'')} aria-pressed={presentationMode===mode} onClick={()=>setPresentationMode(mode)}>{name}</button>)}
+ <button className="button" aria-label="Zoom out presentation" disabled={presentationZoom<=1} onClick={()=>setPresentationZoom(z=>Math.max(1,Math.round((z-.5)*10)/10))}>Zoom −</button>
+ <button className="button" aria-label="Zoom in presentation" disabled={presentationZoom>=2} onClick={()=>setPresentationZoom(z=>Math.min(2,Math.round((z+.5)*10)/10))}>Zoom +</button>
+ <button className="button" onClick={()=>setPresentationZoom(1)}>Fit board</button>
+ {presentationFocused&&<button className="button primary" onClick={()=>setPresentationFocused(false)}>Close full-screen board</button>}
+ </div>
+ <div className="presentation-scroll" data-testid="presentation-scroll" tabIndex={0} aria-label="Scrollable design presentation">
+ <canvas data-testid="presentation-canvas" ref={presentationRef} width={PRESENTATION_WIDTH} height={PRESENTATION_HEIGHT} role="img" style={{width:(presentationZoom*100)+'%'}} aria-label={presentationMode==='overview'?'Front and back garment presentation':presentationMode+' garment and magnified artwork detail'}/>
+ </div>
+ </>}
+ </div>
+ <div className="notice">{tab==='3d'?(modelStyle==='realistic'?'Human fit reference: CC0 body and garment mesh only; your artwork and selected tailoring are not projected onto this reference. Use Studio mannequin for editing.':modelStyle==='garment'?'Garment-only view: artwork preview · orbit to inspect · stylized fit, not physical drape':'Drag to orbit · scroll to zoom · visual garment approximation'):tab==='presentation'?(presentationMode==='overview'?'Two-sided design presentation · visual concept, not a production pattern':'Review detail is magnified, not actual print size · visual concept only'):'Artwork layout · front and back saved separately'}</div></section>
  <aside className="panel right"><div className="section"><h3>Project</h3><input aria-label="Design title" className="field" value={doc.name} maxLength={120} onChange={e=>commit(d=>{d.name=e.target.value})}/><p className="hint">{saveError||(!hydrated?'Loading saved design…':'Autosaved in this browser')}</p><button className="button" onClick={()=>projectRef.current?.click()}>Import project</button><input hidden type="file" accept=".json,application/json" ref={projectRef} onChange={e=>void importProject(e)}/></div>
  <div className="section"><h3>My designs</h3>
  <div className="row"><button className="button primary" onClick={storeDesign}>Save to my designs</button><button className="button" onClick={newDesign}>New design</button><button className="button" onClick={()=>{const clone=modify(doc,d=>{d.id=uid();d.name=(d.name+' — colorway').slice(0,120)});setHistory(h=>({past:[...h.past.slice(-39),h.present],present:clone,future:[]}));setSelected(null);notify('Colorway copy created. Update the color and save it to My designs.')}}>Duplicate colorway</button></div>

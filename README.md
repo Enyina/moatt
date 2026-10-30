@@ -25,7 +25,7 @@ These changes are not confirmed deployed.
 ## Workflows present in source
 
 - Rounded T-shirt and hoodie mockup silhouettes, adjustable sleeves/hem/neckline/pockets, regular/oversized fit and mannequin presets; procedurally rendered cotton/denim/satin weaves, physical highlight profiles and fabric colors
-- A 1024×1024 artboard, a smooth procedural studio mannequin (default), and a verified CC0 legacy mannequin GLB (optional), with distinct front/back artwork
+- A 1024×1024 artboard, a mannequin-free garment-only default (with optional procedural studio mannequin), and a verified CC0 legacy mannequin GLB (optional), with distinct front/back artwork
 - Layered text, image upload (PNG/JPEG/WebP), drawing strokes, selection, basic dragging, width/height/rotation, show/hide, lock, duplicate, delete, reorder forward
 - Undo/redo, browser-local autosave, a multi-design library and colorway duplication, JSON project export/import with schema migration from v1 and asset checks
 - Independent transparent PNG exports for both sides; 3D preview screenshot from the viewport
@@ -50,3 +50,9 @@ The optional classic mannequin is downloaded during dev/build by `scripts/sync-m
 The smooth default mannequin and fabric textures are generated locally in code; these are visual approximations, not scanned assets or cloth physics. The project builds as a static Next.js website. The GitHub Pages workflow also uploads a static-site artifact, but **hosting remains blocked** until Pages is enabled for this repository or another hosting provider is connected. Build success does not establish a live website.
 
 Visual output is a conceptual clothing mockup, **not reliable apparel fitting, calibrated print positioning or professional manufacturing CAD**.
+
+## Current integration work (review branch, not deployed)
+
+The next proposed release reconciles the already-verified front/back **Presentation detail** preview with the merged typography editor, and selects **Garment only** by default when entering 3D preview. The original studio and legacy model views stay selectable. Zoom and full-screen inspection are visual operations only; they do not change the saved print position. This does not certify photorealistic apparel or physical fit.
+
+The currently merged `main` is publicly hosted at `https://enyina.github.io/moatt/` and passed homepage/asset smoke checks on October 30. This review branch is **not deployed** and requires merge, deployment, functional smoke and visual review before claiming its added capabilities are live.
