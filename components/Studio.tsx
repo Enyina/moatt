@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent,PointerEvent} from 'react';
 import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
+import type {FontFamily,FontWeight,TextAlignment} from '../lib/studio-document';
 import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
 import {applyLayoutPreset,copyLayerToOtherSide,placeLayer} from '../lib/design-layouts';
@@ -201,6 +202,21 @@ export default function Studio(){
  <button className="button" onClick={copySelectedSide}>Copy to {side==='front'?'back':'front'}</button>
  </div></div>}
 {active.kind==='text'&&<><label>Text<textarea aria-label="Selected layer text" className="field" value={active.value} onChange={e=>update(active.id,{value:e.target.value.slice(0,300)})}/></label><label>Text size<input className="field" type="number" min={12} max={320} value={active.fontSize||90} onChange={e=>update(active.id,{fontSize:clamp(Number(e.target.value),12,320)})}/></label></>}
+ {active.kind==='text'&&<div className="section"><h3>Text styling</h3>
+ <div className="row">
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'display',fontWeight:'bold',textAlign:'center',letterSpacing:1,lineHeight:1})}>Streetwear</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'serif',fontWeight:'regular',textAlign:'center',letterSpacing:1,lineHeight:1.15})}>Editorial</button>
+ <button className="button" disabled={Boolean(active.locked)} onClick={()=>update(active.id,{fontFamily:'mono',fontWeight:'bold',textAlign:'center',letterSpacing:2,lineHeight:1.1})}>Utility label</button>
+ </div>
+ <label>Typeface<select className="field" aria-label="Text typeface" value={active.fontFamily||'sans'} onChange={e=>update(active.id,{fontFamily:e.target.value as FontFamily})}>
+ <option value="sans">Clean sans</option><option value="serif">Editorial serif</option><option value="display">Bold display</option><option value="mono">Utility mono</option>
+ </select></label>
+ <label>Weight<select className="field" aria-label="Text weight" value={active.fontWeight||'bold'} onChange={e=>update(active.id,{fontWeight:e.target.value as FontWeight})}><option value="bold">Bold</option><option value="regular">Regular</option></select></label>
+ <label>Alignment<select className="field" aria-label="Text alignment" value={active.textAlign||'center'} onChange={e=>update(active.id,{textAlign:e.target.value as TextAlignment})}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+ <label>Letter spacing<input className="field" aria-label="Text letter spacing" type="number" min={-3} max={20} step={1} value={active.letterSpacing??0} onChange={e=>update(active.id,{letterSpacing:clamp(Number(e.target.value)||0,-3,20)})}/></label>
+ <label>Line spacing<input className="field" aria-label="Text line spacing" type="number" min={0.8} max={2} step={0.05} value={active.lineHeight??1.1} onChange={e=>update(active.id,{lineHeight:clamp(Number(e.target.value)||1.1,.8,2)})}/></label>
+ <p className="hint">Words automatically wrap and scale to fit the text box. Increase the box for longer slogans. The same text settings are used for both artwork exports and presentations.</p>
+ </div>}
  {active.kind!=='image'&&<label>Ink <input type="color" value={active.color} onChange={e=>update(active.id,{color:e.target.value})}/></label>}
  <label>X<input className="field" type="number" value={Math.round(active.x)} onChange={e=>update(active.id,{x:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Y<input className="field" type="number" value={Math.round(active.y)} onChange={e=>update(active.id,{y:clamp(Number(e.target.value),-1024,2048)})}/></label><label>Width<input className="field" type="number" value={Math.round(active.width)} onChange={e=>update(active.id,{width:clamp(Number(e.target.value),10,1024)})}/></label><label>Height<input className="field" type="number" value={Math.round(active.height)} onChange={e=>update(active.id,{height:clamp(Number(e.target.value),10,1024)})}/></label><label>Rotation<input className="field" type="range" min={-180} max={180} value={active.rotation} onChange={e=>update(active.id,{rotation:Number(e.target.value)})}/></label>
  <div className="row"><button className="button" onClick={()=>update(active.id,{hidden:!active.hidden})}>{active.hidden?'Show':'Hide'}</button><button className="button" onClick={()=>commit(d=>{const l=d.layers[side].find(x=>x.id===active.id);if(l)l.locked=!l.locked})}>{active.locked?'Unlock':'Lock'}</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>=0&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]]})}>Bring forward</button><button className="button" onClick={()=>commit(d=>{const a=d.layers[side];const i=a.findIndex(l=>l.id===active.id);if(i>0)[a[i],a[i-1]]=[a[i-1],a[i]]})}>Send backward</button><button className="button" onClick={()=>layerAdd({...active,id:uid(),x:active.x+30,y:active.y+30})}>Duplicate</button></div></div>}
