@@ -101,3 +101,14 @@ Evidence from existing tests demonstrated that a 3D canvas can display a reverse
 - **ASSET-04:** Browser must display explicit loading or fallback and allow returning to the editable procedural studio mannequin; no loss of saved artwork.
 - **ASSET-05:** A reference asset rendering is **not evidence of applied print artwork**, exact fit, pose/size change, cloth simulation or verified manufacturing dimensions.
 - **VISUAL-OPEN:** Screenshot inspection must confirm the original body/garment assets actually align, have appropriate camera scale, and do not expose skin through the garment. Automated load success alone is not sufficient to mark quality accepted.
+
+## Usable-first layout acceptance — October 30, 2026
+
+- **LAYOUT-01:** A small chest mark, centered statement and front/back composition are editable, within the illustrative region and have readable ink relative to the selected garment.
+- **LAYOUT-02:** Adding a layout must preserve all existing layers and remain reversible through Undo. All sides remain independent.
+- **LAYOUT-03:** Top, center, bottom and proportional fit cannot silently claim an oversized element is inside the suggested guide. Locked layers are not moved.
+- **LAYOUT-04:** Copy to the opposite side creates an independent layer, unique ID and retains data; original is unchanged.
+- **LAYOUT-05:** New browser tests cover keyboard/touch-accessible buttons, undo, reload, front/back independence, save to browser and presentation preview on desktop and simulated mobile.
+- **LAYOUT-06:** Full CI must pass the exact branch head and screenshots need review; this does not close the separate 3D garment geometry, print DPI, factory sizing, deployment and real mobile-device blockers.
+
+Official benchmark references and observed-versus-remixed decisions are in `docs/REVERSE-ENGINEERING-USABLE-FIRST-2026-10.md`.
