@@ -12,9 +12,9 @@ test('start a usable chest layout, center it and undo without losing the text',a
  await page.getByRole('button',{name:'Undo'}).click();
  expect(Number(await top.inputValue())).toBe(254);
  await text.fill('MIDNIGHT CLUB');
- await expect(page.getByText('text: MIDNIGHT CL')).toBeVisible();
+ await expect(page.getByText('text: MIDNIGHT CLU')).toBeVisible();
  await page.reload();
- await page.getByRole('button',{name:'text: MIDNIGHT CL'}).click();
+ await page.getByRole('button',{name:'text: MIDNIGHT CLU'}).click();
  await expect(page.getByRole('textbox',{name:'Selected layer text'})).toHaveValue('MIDNIGHT CLUB');
 });
 
