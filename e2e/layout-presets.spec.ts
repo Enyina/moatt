@@ -53,3 +53,24 @@ test('fit uploaded art proportionally into print guide before sharing it',async(
  await page.getByRole('button',{name:'2D edit'}).click();
  await expect(page.locator('canvas[aria-label="front artwork canvas"]')).toBeVisible();
 });
+
+test('mobile can start from preview and controls never overlap the artwork',async({page},testInfo)=>{
+ if(testInfo.project.name!=='mobile')return;
+ await page.goto('/');
+ const quick=page.getByRole('button',{name:'Chest layout'});
+ await expect(quick).toBeVisible();
+ await quick.click();
+ await expect(page.getByText('text: YOUR BRAND')).toBeVisible();
+ const safe=await page.evaluate(()=>{
+  const tools=document.querySelector('.viewtools')!.getBoundingClientRect();
+  const stage=document.querySelector('.studio-stage')!.getBoundingClientRect();
+  const quick=document.querySelector('.mobile-quick')!.getBoundingClientRect();
+  const a=document.querySelector('.artboard')!.getBoundingClientRect();
+  return {toolsBottom:tools.bottom,stageTop:stage.top,stageBottom:stage.bottom,quickTop:quick.top,
+   artworkBottom:a.bottom,quickWidth:quick.width};
+ });
+ expect(safe.toolsBottom).toBeLessThanOrEqual(safe.stageTop+2);
+ expect(safe.artworkBottom).toBeLessThanOrEqual(safe.quickTop+2);
+ expect(safe.quickWidth).toBeGreaterThan(300);
+ await page.locator('.canvas').screenshot({path:testInfo.outputPath('mobile-quick-start-unobstructed.png')});
+});
