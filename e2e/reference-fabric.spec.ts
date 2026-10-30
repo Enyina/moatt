@@ -24,7 +24,13 @@ test('fabric choice changes the fitted garment material, not only a selector lab
  await expect(canvas).toHaveAttribute('data-reference-fabric','satin',{timeout:20000});
  await expect.poll(snapshot,{timeout:20000}).not.toBe(denim);
  await page.screenshot({path:testInfo.outputPath('fitted-fabric-satin.png'),fullPage:true});
+ // Exercise multiple full material cycles. The same GPU bump map must be reused.
+ for(const material of ['cotton','denim','satin','cotton','denim','satin'] as const){
+  await page.getByRole('combobox',{name:'Fabric material'}).selectOption(material);
+  await expect(canvas).toHaveAttribute('data-reference-fabric',material,{timeout:20000});
+ }
  const lastCount=Number(await canvas.getAttribute('data-gpu-textures'));
+ expect(Number.isFinite(initialCount)&&Number.isFinite(lastCount)).toBeTruthy();
  expect(lastCount-initialCount).toBeLessThanOrEqual(3);
  await page.getByRole('button',{name:'2D edit'}).click();
  await expect(page.getByRole('combobox',{name:'Fabric material'})).toHaveValue('satin');
