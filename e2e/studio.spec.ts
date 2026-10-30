@@ -53,6 +53,7 @@ test('captures editable garment and 3D design evidence',async({page},testInfo)=>
  await page.getByRole('button',{name:'Add text'}).click();
  await page.getByRole('textbox',{name:'Selected layer text'}).fill('MOATT');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const view=page.locator('.preview-stage canvas');
  const unavailable=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(view.or(unavailable)).toBeVisible({timeout:15000});
@@ -102,6 +103,7 @@ test('keeps GPU allocations bounded across fabric and silhouette edits',async({p
  test.setTimeout(90_000); // 24 material/geometry updates can be slow under CI software WebGL; assertions stay strict.
  await page.goto('/');
  await page.getByRole('button',{name:'3D preview'}).click();
+ await page.getByRole('button',{name:'Studio mannequin'}).click();
  const canvas=page.locator('.preview-stage canvas');
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:15000});
