@@ -30,3 +30,7 @@ This branch is deliberately isolated and does not auto-release.
 The first exact-head CI was green, but the actual Chromium screenshots **failed visual review**. They visibly showed detached upper-arm openings, a neck sphere segmented from the head/torso, oversized ball-shaped feet and a floating half-dome hoodie hood behind the head. Those are real product defects, not test-only artifacts.
 
 Corrections: overlap the arm roots into the shoulder torso, model the neck directly into the torso geometry, remove the decorative neck ball, flatten shoe/foot forms and attach a folded hood cowl at the garment's rear neckline. A geometry regression test now checks the head/neck and shoulder overlap. These corrections require **new exact-head** CI and new full-size screenshots; the previous passing screenshot run does not authorize release of the new revision.
+
+## Third visual iteration — topology rather than shader tuning
+
+The second full browser screenshot series passed functional checks but **still failed professional visual acceptance**: each bare arm had a conspicuous angular capped shoulder, and the shortened hood dome protruded like a mushroom in profile. Third revision buries the full arm-root caps within the torso and constructs a connected curved rear hood panel from sampled fabric surface rings. Geometry now has a bounded vertex/triangle budget and an explicit attachment test. The previous two green CI runs are retained as evidence but do not validate this change. Reinspect all rendered angles at full resolution before merge.
