@@ -8,6 +8,14 @@ test('studio mannequin is proportionate and can be inspected from front, back an
  const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
  await expect(canvas.or(fallback)).toBeVisible({timeout:20000});
  if(await fallback.isVisible())return;
+ await page.getByRole('button',{name:'Inspect mannequin form'}).click();
+ await expect(canvas).toHaveAttribute('data-mannequin-status','form-inspection',{timeout:15000});
+ await page.locator('.canvas').screenshot({path:info.outputPath('bare-mannequin-front.png')});
+ await page.getByRole('button',{name:'Side profile'}).click();
+ await expect(canvas).toHaveAttribute('data-camera-preset','profile');
+ await page.locator('.canvas').screenshot({path:info.outputPath('bare-mannequin-profile.png')});
+ await page.getByRole('button',{name:'Face-on view'}).click();
+ 
  await page.getByRole('button',{name:'Studio mannequin'}).click();
  await expect(canvas).toHaveAttribute('data-mannequin-status','studio-ready',{timeout:15000});
  await expect(canvas).toHaveAttribute('data-camera-preset','front',{timeout:15000});
