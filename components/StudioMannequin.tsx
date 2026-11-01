@@ -5,7 +5,7 @@ import {mannequinExposedArm,mannequinLeg,mannequinTorso,mannequinHead} from '../
 
 /** Continuous matte display form, intended to display clothing without claiming measured human fit. */
 export default function StudioMannequin({sleeve='short'}:{sleeve?:'short'|'long'}){
- const matte=useMemo(()=>new THREE.MeshStandardMaterial({color:'#80838a',metalness:0,roughness:.9,side:THREE.DoubleSide}),[]);
+ const matte=useMemo(()=>new THREE.MeshPhysicalMaterial({color:'#a8a9aa',metalness:0,roughness:.83,clearcoat:.06,clearcoatRoughness:.86,side:THREE.DoubleSide}),[]);
  const sculpt=useMemo(()=>({
   head:mannequinHead(),torso:mannequinTorso(),
   leftArm:mannequinExposedArm(-1,sleeve),rightArm:mannequinExposedArm(1,sleeve),
