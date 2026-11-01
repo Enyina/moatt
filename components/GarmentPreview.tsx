@@ -129,12 +129,23 @@ function RenderingDiagnostics(){
  useFrame(()=>{tick.count++;const canvas=gl.domElement;canvas.dataset.renderFrames=String(tick.count);canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);});
  return null;
 }
-function CameraPosition({side,modelStyle}:{side:Side;modelStyle:ModelStyle}){const {camera,invalidate}=useThree();useEffect(()=>{const distance=modelStyle==='garment'?4.2:5.7;camera.position.set(0,1.65,side==='front'?distance:-distance);camera.lookAt(0,1.55,0);invalidate()},[camera,side,modelStyle,invalidate]);return null}
+function CameraPosition({side,modelStyle,view}:{side:Side;modelStyle:ModelStyle;view:'face'|'profile'}){
+ const {camera,invalidate,gl}=useThree();
+ useEffect(()=>{
+  const distance=modelStyle==='garment'?4.2:5.7;
+  if(view==='profile')camera.position.set(distance,1.65,.18);
+  else camera.position.set(0,1.65,side==='front'?distance:-distance);
+  camera.lookAt(0,1.55,0);
+  gl.domElement.dataset.cameraPreset=view==='profile'?'profile':side;
+  invalidate();
+ },[camera,side,modelStyle,view,gl,invalidate]);
+ return null;
+}
 class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
  render(){return this.state.failed?<div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>:this.props.children;}
 }
-export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:StudioDocument;side:Side;modelStyle?:ModelStyle}){
+export default function GarmentPreview({doc,side,modelStyle='studio',view='face'}:{doc:StudioDocument;side:Side;modelStyle?:ModelStyle;view?:'face'|'profile'}){
  const [webgl,setWebgl]=useState<'checking'|'available'|'unavailable'>('checking');
  useEffect(()=>{
   let available=false;
@@ -150,11 +161,11 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
  return <PreviewBoundary><Canvas frameloop="demand" camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
  <color attach="background" args={['#292f39']}/>
- <ambientLight intensity={.85}/><hemisphereLight args={['#e6ebff','#30303c',1.2]}/>
- <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4"/>
- <directionalLight position={[-4,2,3]} intensity={.9} color="#d4e1ff"/>
- <directionalLight position={[1,5,-4]} intensity={1.6} color="#ffffff"/>
- <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side} modelStyle={modelStyle}/><RenderingDiagnostics/>
+ <ambientLight intensity={.50}/><hemisphereLight args={['#eff1fb','#30303c',.78]}/>
+ <directionalLight position={[3,6,7]} intensity={1.65} color="#fff2e4"/>
+ <directionalLight position={[-4,2,3]} intensity={.72} color="#d4e1ff"/>
+ <directionalLight position={[1,5,-4]} intensity={1.05} color="#ffffff"/>
+ <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side} modelStyle={modelStyle} view={view}/><RenderingDiagnostics/>
  <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
  {modelStyle!=='garment'&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,-.40,0]} receiveShadow>
   <circleGeometry args={[4.7,64]}/>
