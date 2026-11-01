@@ -1,16 +1,16 @@
 'use client';
 import {useEffect,useMemo} from 'react';
 import * as THREE from 'three';
-import {mannequinExposedArm,mannequinLeg,mannequinTorso,mannequinHead} from '../lib/mannequin-mesh';
+import {mannequinArm,mannequinExposedArm,mannequinLeg,mannequinTorso,mannequinHead} from '../lib/mannequin-mesh';
 
 /** Continuous matte display form, intended to display clothing without claiming measured human fit. */
-export default function StudioMannequin({sleeve='short'}:{sleeve?:'short'|'long'}){
+export default function StudioMannequin({sleeve='short',bare=false}:{sleeve?:'short'|'long';bare?:boolean}){
  const matte=useMemo(()=>new THREE.MeshPhysicalMaterial({color:'#a8a9aa',metalness:0,roughness:.83,clearcoat:.06,clearcoatRoughness:.86,side:THREE.DoubleSide}),[]);
  const sculpt=useMemo(()=>({
   head:mannequinHead(),torso:mannequinTorso(),
-  leftArm:mannequinExposedArm(-1,sleeve),rightArm:mannequinExposedArm(1,sleeve),
+  leftArm:bare?mannequinArm(-1):mannequinExposedArm(-1,sleeve),rightArm:bare?mannequinArm(1):mannequinExposedArm(1,sleeve),
   leftLeg:mannequinLeg(-1),rightLeg:mannequinLeg(1)
- }),[sleeve]);
+ }),[sleeve,bare]);
  useEffect(()=>()=>{matte.dispose();Object.values(sculpt).forEach(mesh=>mesh.dispose())},[matte,sculpt]);
  return <group>
   <mesh geometry={sculpt.head} material={matte}/>
