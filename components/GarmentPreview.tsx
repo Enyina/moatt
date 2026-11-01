@@ -88,8 +88,10 @@ function Garment({doc}:{doc:StudioDocument}){
    <boxGeometry args={[.31,.28,.035]}/>
   </mesh>}
   {doc.garment==='hoodie'&&<>
-   <mesh position={[0,.99,-.52]} material={clothMat}>
-    <sphereGeometry args={[.345,28,20,0,Math.PI*2,0,Math.PI*.59]}/>
+   {/* Folded cowl at the back neckline, attached to the garment rather
+      than a detached half-sphere behind the mannequin's head. */}
+   <mesh position={[0,.74,-.34]} scale={[.48,.32,.225]} material={clothMat}>
+    <sphereGeometry args={[1,36,24,0,Math.PI*2,0,Math.PI/2]}/>
    </mesh>
    {([-1,1] as const).map(sign=><mesh key={'drawstring'+sign} position={[sign*.18,.52,.47]} material={seamMat}>
     <cylinderGeometry args={[.012,.012,.43,8]}/>
