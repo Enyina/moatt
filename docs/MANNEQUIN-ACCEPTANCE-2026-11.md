@@ -24,3 +24,9 @@ Visual review of the previous mannequin and garment reference found oversized he
 6. Physically measured fit, detailed facial anatomy, true real-world drape and human likeness are **not claimed**. A perfect photorealistic or production mannequin requires calibrated/rigged higher-quality assets and independent aesthetics review.
 
 This branch is deliberately isolated and does not auto-release.
+
+## Screenshot-driven second correction pass
+
+The first exact-head CI was green, but the actual Chromium screenshots **failed visual review**. They visibly showed detached upper-arm openings, a neck sphere segmented from the head/torso, oversized ball-shaped feet and a floating half-dome hoodie hood behind the head. Those are real product defects, not test-only artifacts.
+
+Corrections: overlap the arm roots into the shoulder torso, model the neck directly into the torso geometry, remove the decorative neck ball, flatten shoe/foot forms and attach a folded hood cowl at the garment's rear neckline. A geometry regression test now checks the head/neck and shoulder overlap. These corrections require **new exact-head** CI and new full-size screenshots; the previous passing screenshot run does not authorize release of the new revision.
