@@ -31,6 +31,21 @@ describe('new mannequin display surface',()=>{
   expect(index.count).toBeGreaterThan(segments*radial*6);
   validate(geo);geo.dispose();
  });
+ it('connects the neck and shoulders to the body without visible detached joints',()=>{
+  const body=mannequinTorso(),head=mannequinHead(),left=mannequinArm(-1),right=mannequinArm(1);
+  const shoulderRow=body.getAttribute('position') as THREE.BufferAttribute;
+  // Body reaches the lower head, so a detached neck sphere is unnecessary.
+  expect(body.boundingBox!.max.y).toBeGreaterThan(2.68);
+  expect(body.boundingBox!.max.y).toBeGreaterThan(head.boundingBox!.min.y);
+  // The arm-root centres overlap the chest, not merely touch its edge.
+  for(const arm of [left,right]){
+   const p=arm.getAttribute('position') as THREE.BufferAttribute;
+   const firstRingXs=Array.from({length:19},(_,i)=>p.getX(i));
+   expect(Math.min(...firstRingXs.map(Math.abs))).toBeLessThan(.45);
+  }
+  expect(shoulderRow.count).toBeGreaterThan(100);
+  for(const geo of [body,head,left,right])geo.dispose();
+ });
  it('caps body openings and keeps left/right limb extents mirrored',()=>{
   const left=mannequinArm(-1),right=mannequinArm(1);
   validate(left);validate(right);
