@@ -16,8 +16,22 @@ export function makeSmoothLimb(sections:LimbSection[],radial=16,lengthSegments=2
   const second=new THREE.Vector3().crossVectors(tangent,first).normalize();
   const sectionPosition=t*(sections.length-1);
   const a=Math.min(sections.length-2,Math.floor(sectionPosition)),alpha=sectionPosition-a;
-  const radius=THREE.MathUtils.lerp(sections[a].radius,sections[a+1].radius,alpha);
-  const depth=THREE.MathUtils.lerp(sections[a].depth??sections[a].radius,sections[a+1].depth??sections[a+1].radius,alpha);
+  // Monotone cubic interpolation: smoothly transitions shoulders, wrists, knees
+  // without the visible linear radius kinks or Catmull-Rom radius overshoot.
+  const dimension=(value:(index:number)=>number)=>{
+   const v0=value(a),v1=value(a+1),delta=v1-v0;
+   const slope=(i:number)=>{
+    if(i===0)return value(1)-value(0);
+    if(i===sections.length-1)return value(i)-value(i-1);
+    const previous=value(i)-value(i-1),next=value(i+1)-value(i);
+    if(previous*next<=0)return 0;
+    return Math.sign(previous)*Math.min(Math.abs(previous),Math.abs(next));
+   };
+   const m0=slope(a),m1=slope(a+1),u=alpha,u2=u*u,u3=u2*u;
+   return Math.max(.005,(2*u3-3*u2+1)*v0+(u3-2*u2+u)*m0+(-2*u3+3*u2)*v1+(u3-u2)*m1);
+  };
+  const radius=dimension(i=>sections[i].radius);
+  const depth=dimension(i=>sections[i].depth??sections[i].radius);
   for(let j=0;j<=radial;j++){
    const theta=j/radial*Math.PI*2;
    const point=center.clone().addScaledVector(first,Math.cos(theta)*radius).addScaledVector(second,Math.sin(theta)*depth);
@@ -29,9 +43,30 @@ export function makeSmoothLimb(sections:LimbSection[],radial=16,lengthSegments=2
   indices.push(a,b,c,b,d,c);
  }
  const geom=new THREE.BufferGeometry();
+ // End caps close visible scalp/hand/ankle openings. The endpoints of hidden
+ // sections may overlap the torso, but no naked circular cut should show.
+ const topIndex=position.length/3;
+ const top=sections[0];position.push(top.x,top.y,top.z);uv.push(.5,0);
+ const bottomIndex=position.length/3;
+ const bottom=sections[sections.length-1];position.push(bottom.x,bottom.y,bottom.z);uv.push(.5,1);
+ for(let j=0;j<radial;j++){
+  indices.push(topIndex,j+1,j);
+  const last=lengthSegments*(radial+1);
+  indices.push(bottomIndex,last+j,last+j+1);
+ }
  geom.setAttribute('position',new THREE.Float32BufferAttribute(position,3));
  geom.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
- geom.setIndex(indices);geom.computeVertexNormals();geom.computeBoundingBox();
+ geom.setIndex(indices);geom.computeVertexNormals();
+ // UV seams duplicate a vertex. Average their normals so lighting stays smooth
+ // when viewed from the rear and at extreme mobile camera angles.
+ const normals=geom.getAttribute('normal') as THREE.BufferAttribute;
+ for(let i=0;i<=lengthSegments;i++){
+  const a=i*(radial+1),b=a+radial;
+  const normal=new THREE.Vector3(normals.getX(a)+normals.getX(b),normals.getY(a)+normals.getY(b),normals.getZ(a)+normals.getZ(b)).normalize();
+  normals.setXYZ(a,normal.x,normal.y,normal.z);normals.setXYZ(b,normal.x,normal.y,normal.z);
+ }
+ normals.needsUpdate=true;
+ geom.computeBoundingBox();
  return geom;
 }
 /** Both sides include the whole arm and hand; no visually exposed elbow or wrist joint. */
@@ -43,7 +78,7 @@ export function mannequinArm(sign:-1|1):THREE.BufferGeometry{
   {x:sign*.96,y:1.60,z:.045,radius:.129,depth:.122},
   {x:sign*1.04,y:1.31,z:.08,radius:.087,depth:.095},
   {x:sign*1.06,y:1.16,z:.11,radius:.107,depth:.06},
-  {x:sign*1.06,y:1.04,z:.15,radius:.064,depth:.045},
+  {x:sign*1.095,y:.96,z:.16,radius:.059,depth:.048},
  ],18,32);
 }
 export function mannequinLeg(sign:-1|1):THREE.BufferGeometry{
@@ -70,16 +105,18 @@ export function mannequinTorso():THREE.BufferGeometry{
   {x:0,y:.97,z:.01,radius:.39,depth:.235},
  ],32,40);
 }
+/** A balanced, neutral faceless head: closer to 7.5 heads in the full figure. */
 export function mannequinHead():THREE.BufferGeometry{
  return makeSmoothLimb([
-  {x:0,y:3.16,z:0,radius:.045,depth:.065},
-  {x:0,y:3.11,z:0,radius:.145,depth:.155},
-  {x:0,y:2.98,z:0,radius:.218,depth:.218},
-  {x:0,y:2.83,z:.014,radius:.222,depth:.218},
-  {x:0,y:2.73,z:.025,radius:.196,depth:.187},
-  {x:0,y:2.63,z:.04,radius:.133,depth:.14},
-  {x:0,y:2.60,z:.04,radius:.055,depth:.065},
- ],32,28);
+  {x:0,y:3.11,z:-.008,radius:.018,depth:.028},
+  {x:0,y:3.075,z:-.008,radius:.105,depth:.125},
+  {x:0,y:3.008,z:0,radius:.176,depth:.181},
+  {x:0,y:2.910,z:.008,radius:.201,depth:.202},
+  {x:0,y:2.817,z:.017,radius:.197,depth:.202},
+  {x:0,y:2.752,z:.025,radius:.168,depth:.179},
+  {x:0,y:2.688,z:.030,radius:.104,depth:.125},
+  {x:0,y:2.651,z:.033,radius:.041,depth:.060}
+ ],40,36);
 }
 
 /** Only skin outside the sleeve should remain visible; otherwise matte shoulder geometry clips through clothing. */
@@ -88,7 +125,7 @@ export function mannequinExposedArm(sign:-1|1,sleeve:'short'|'long'):THREE.Buffe
   return makeSmoothLimb([
    {x:sign*1.03,y:1.23,z:.07,radius:.091,depth:.092},
    {x:sign*1.055,y:1.16,z:.1,radius:.092,depth:.075},
-   {x:sign*1.06,y:1.04,z:.15,radius:.063,depth:.043}
+   {x:sign*1.095,y:.96,z:.16,radius:.059,depth:.048}
   ],16,12);
  }
  return makeSmoothLimb([
@@ -96,6 +133,6 @@ export function mannequinExposedArm(sign:-1|1,sleeve:'short'|'long'):THREE.Buffe
   {x:sign*.95,y:1.60,z:.045,radius:.126,depth:.121},
   {x:sign*1.04,y:1.32,z:.08,radius:.086,depth:.095},
   {x:sign*1.06,y:1.16,z:.1,radius:.106,depth:.06},
-  {x:sign*1.06,y:1.04,z:.15,radius:.063,depth:.045}
+  {x:sign*1.095,y:.96,z:.16,radius:.059,depth:.048}
  ],18,24);
 }
