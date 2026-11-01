@@ -19,7 +19,7 @@ export function makeSmoothLimb(sections:LimbSection[],radial=16,lengthSegments=2
   // Monotone cubic interpolation: smoothly transitions shoulders, wrists, knees
   // without the visible linear radius kinks or Catmull-Rom radius overshoot.
   const dimension=(value:(index:number)=>number)=>{
-   const v0=value(a),v1=value(a+1),delta=v1-v0;
+   const v0=value(a),v1=value(a+1);
    const slope=(i:number)=>{
     if(i===0)return value(1)-value(0);
     if(i===sections.length-1)return value(i)-value(i-1);
