@@ -72,8 +72,8 @@ export function makeSmoothLimb(sections:LimbSection[],radial=16,lengthSegments=2
 /** Both sides include the whole arm and hand; no visually exposed elbow or wrist joint. */
 export function mannequinArm(sign:-1|1):THREE.BufferGeometry{
  return makeSmoothLimb([
-  {x:sign*.49,y:2.29,z:0,radius:.215,depth:.188},
-  {x:sign*.71,y:2.08,z:.01,radius:.171,depth:.157},
+  {x:sign*.33,y:2.23,z:0,radius:.145,depth:.142},
+  {x:sign*.71,y:2.06,z:.01,radius:.171,depth:.157},
   {x:sign*.90,y:1.79,z:.025,radius:.126,depth:.133},
   {x:sign*.96,y:1.60,z:.045,radius:.129,depth:.122},
   {x:sign*1.04,y:1.31,z:.08,radius:.087,depth:.095},
