@@ -20,7 +20,7 @@ type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
- const [modelStyle,setModelStyle]=useState<'garment'|'studio'|'classic'|'realistic'>('garment');
+ const [modelStyle,setModelStyle]=useState<'garment'|'form'|'studio'|'classic'|'realistic'>('garment');
  const [cameraView,setCameraView]=useState<'face'|'profile'>('face');
  const [presentationFocused,setPresentationFocused]=useState(false);
  const [presentationMode,setPresentationMode]=useState<'overview'|'front'|'back'>('overview');
@@ -185,6 +185,7 @@ export default function Studio(){
  <button className={'button '+(cameraView==='profile'?'selected':'')} aria-pressed={cameraView==='profile'} onClick={()=>setCameraView('profile')}>Side profile</button>
  <button className={'button '+(modelStyle==='garment'?'selected':'')} onClick={()=>setModelStyle('garment')}>Garment only</button>
  <button className={'button '+(modelStyle==='studio'?'selected':'')} onClick={()=>setModelStyle('studio')}>Studio mannequin</button>
+ <button className={'button '+(modelStyle==='form'?'selected':'')} onClick={()=>setModelStyle('form')}>Inspect mannequin form</button>
  <button className={'button '+(modelStyle==='classic'?'selected':'')} onClick={()=>setModelStyle('classic')}>Classic mannequin</button>
  <button className={'button '+(modelStyle==='realistic'?'selected':'')} onClick={()=>setModelStyle('realistic')}>Human fit reference</button>
  </>}</div>
