@@ -9,6 +9,7 @@ import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
 import {createGarmentMesh,disposeGarmentMesh} from '../lib/garment-mesh';
 import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
+import {createFoldedHoodGeometry} from '../lib/folded-hood-mesh';
 import StudioMannequin from './StudioMannequin';
 import LicensedAvatarReference from './LicensedAvatarReference';
 
@@ -60,6 +61,8 @@ function Garment({doc}:{doc:StudioDocument}){
  },[gl,doc.garment]);
  const geo=useMemo(()=>createGarmentMesh({garment:doc.garment,fit:doc.fit,sleeve:doc.sleeve,hem:doc.hem,neck:doc.neck}),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>disposeGarmentMesh(geo),[geo]);
+ const hoodGeometry=useMemo(()=>doc.garment==='hoodie'?createFoldedHoodGeometry():null,[doc.garment]);
+ useEffect(()=>()=>hoodGeometry?.dispose(),[hoodGeometry]);
  const profile=FABRIC_PROFILES[doc.material];
  const appearance={roughness:profile.roughness,metalness:profile.metalness,sheen:profile.sheen,
   sheenColor:new THREE.Color('#ffffff'),sheenRoughness:profile.sheenRoughness,
@@ -88,11 +91,7 @@ function Garment({doc}:{doc:StudioDocument}){
    <boxGeometry args={[.31,.28,.035]}/>
   </mesh>}
   {doc.garment==='hoodie'&&<>
-   {/* Folded cowl at the back neckline, attached to the garment rather
-      than a detached half-sphere behind the mannequin's head. */}
-   <mesh position={[0,.74,-.34]} scale={[.48,.32,.225]} material={clothMat}>
-    <sphereGeometry args={[1,36,24,0,Math.PI*2,0,Math.PI/2]}/>
-   </mesh>
+   {hoodGeometry&&<mesh geometry={hoodGeometry} material={clothMat} receiveShadow/>}
    {([-1,1] as const).map(sign=><mesh key={'drawstring'+sign} position={[sign*.18,.52,.47]} material={seamMat}>
     <cylinderGeometry args={[.012,.012,.43,8]}/>
    </mesh>)}
