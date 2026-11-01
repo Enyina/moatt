@@ -100,7 +100,7 @@ function Garment({doc}:{doc:StudioDocument}){
   </>}
  </group>;
 }
-export type ModelStyle='garment'|'studio'|'classic'|'realistic';
+export type ModelStyle='garment'|'form'|'studio'|'classic'|'realistic';
 function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
  const {gl}=useThree();
  const [asset,setAsset]=useState<THREE.Group|null>(null);
@@ -111,7 +111,7 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
   return()=>{live=false};
  },[style]);
  useEffect(()=>{
-  gl.domElement.dataset.mannequinStatus=style==='garment'?'garment-only':style==='studio'?'studio-ready':style==='realistic'?'realistic-reference':asset?'loaded':'asset-fallback';
+  gl.domElement.dataset.mannequinStatus=style==='garment'?'garment-only':style==='form'?'form-inspection':style==='studio'?'studio-ready':style==='realistic'?'realistic-reference':asset?'loaded':'asset-fallback';
   gl.domElement.dataset.fabricMaterial=doc.material;
  },[asset,doc.material,gl,style]);
  const height=doc.body==='tall'?1.09:1;
@@ -119,8 +119,8 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
   {style==='realistic'?<LicensedAvatarReference doc={doc}/>:style==='garment'?null:
    style==='classic'&&asset
    ?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>
-   :<StudioMannequin sleeve={doc.sleeve}/>}
-  {style!=='realistic'&&<Garment doc={doc}/>}
+   :<StudioMannequin sleeve={doc.sleeve} bare={style==='form'}/> }
+  {style!=='realistic'&&style!=='form'&&<Garment doc={doc}/>}
  </group>;
 }
 function RenderingDiagnostics(){
