@@ -72,8 +72,8 @@ export function makeSmoothLimb(sections:LimbSection[],radial=16,lengthSegments=2
 /** Both sides include the whole arm and hand; no visually exposed elbow or wrist joint. */
 export function mannequinArm(sign:-1|1):THREE.BufferGeometry{
  return makeSmoothLimb([
-  {x:sign*.64,y:2.30,z:0,radius:.19,depth:.17},
-  {x:sign*.76,y:2.07,z:.01,radius:.16,depth:.155},
+  {x:sign*.49,y:2.29,z:0,radius:.215,depth:.188},
+  {x:sign*.71,y:2.08,z:.01,radius:.171,depth:.157},
   {x:sign*.90,y:1.79,z:.025,radius:.126,depth:.133},
   {x:sign*.96,y:1.60,z:.045,radius:.129,depth:.122},
   {x:sign*1.04,y:1.31,z:.08,radius:.087,depth:.095},
@@ -95,9 +95,11 @@ export function mannequinLeg(sign:-1|1):THREE.BufferGeometry{
 
 export function mannequinTorso():THREE.BufferGeometry{
  return makeSmoothLimb([
-  {x:0,y:2.48,z:0,radius:.147,depth:.145},
-  {x:0,y:2.31,z:0,radius:.45,depth:.255},
-  {x:0,y:2.17,z:-.01,radius:.56,depth:.28},
+  {x:0,y:2.70,z:.025,radius:.098,depth:.108},
+  {x:0,y:2.57,z:.018,radius:.135,depth:.129},
+  {x:0,y:2.44,z:0,radius:.191,depth:.159},
+  {x:0,y:2.31,z:0,radius:.475,depth:.27},
+  {x:0,y:2.17,z:-.01,radius:.565,depth:.292},
   {x:0,y:1.86,z:-.02,radius:.535,depth:.278},
   {x:0,y:1.54,z:0,radius:.45,depth:.235},
   {x:0,y:1.29,z:0,radius:.41,depth:.24},
