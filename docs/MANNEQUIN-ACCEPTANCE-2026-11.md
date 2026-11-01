@@ -12,7 +12,7 @@ Visual review of the previous mannequin and garment reference found oversized he
 - Smaller balanced neutral mannequin head and longer natural hand silhouette, sculpt-like matte finish (not an anatomical scan)
 - Smooth radii instead of piecewise-linear changes at each control ring, explicit mesh end caps and UV seam normal matching (front/back/side shading)
 - More balanced studio lighting, with accessible face-on and side-profile camera presets; save/export project schema is unchanged
-- Front, back and side screenshot evidence for shirt and hoodie across Chromium, mobile, Firefox and WebKit where WebGL is available
+- Bare full-body mannequin front/profile inspection without sleeve-hidden arms; front, back and side screenshot evidence for shirt and hoodie across Chromium, mobile, Firefox and WebKit where WebGL is available
 - Existing garment-only view remains the default: user can choose Studio mannequin or Human reference without losing artwork
 
 ## Acceptance criteria
