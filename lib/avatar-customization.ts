@@ -40,13 +40,16 @@ export function avatarMorphWeights(input:AvatarSettings):Record<string,number>{
  const weight=(sizeIndex-2)/3; // XS: light body, XXL: larger body, preview only
  const height=(s.heightCm-175)/30;
  const age=s.age>25?Math.min(.85,(s.age-25)/55*.85):-Math.min(.12,(25-s.age)/7*.12);
- return {
+ const out:Record<string,number>={
   gender_male:s.presentation==='masculine'?1:0,
   gender_female:s.presentation==='feminine'?1:0,
   age_child:Math.max(0,-age),age_old:Math.max(0,age),
   height_short:Math.max(0,-height),height_tall:Math.max(0,height)*.45,
   weight_min:Math.max(0,-weight),weight_max:Math.max(0,weight)
  };
+ for(const a of ['gender_male','gender_female'])for(const b of ['age_child','age_old','weight_min','weight_max'])
+  out['corr_'+a+'__'+b]=(out[a]||0)*(out[b]||0);
+ return out;
 }
 export type AvatarCapabilities={morphs:boolean;rig:boolean;clothingMorphs:boolean;clothingRig:boolean};
 /** Inspect the actual imported asset; never infer capability from the UI settings. */
@@ -77,15 +80,6 @@ export function applyAvatarMorphs(root:THREE.Object3D,settings:AvatarSettings):n
   for(const [name,weight] of Object.entries(weights)){
    const idx=mesh.morphTargetDictionary[name];
    if(idx!==undefined){mesh.morphTargetInfluences[idx]=weight;changed++;}
-  }
-  // Public CC0 exports have corrective morphs for certain combinations.
-  // These four common gender x age / gender x weight combinations prevent
-  // abrupt body changes at paired extremes without copying upstream logic.
-  for(const a of ['gender_male','gender_female']){
-   for(const b of ['age_child','age_old','weight_min','weight_max']){
-    const idx=mesh.morphTargetDictionary['corr_'+a+'__'+b];
-    if(idx!==undefined){mesh.morphTargetInfluences[idx]=(weights[a]||0)*(weights[b]||0);changed++;}
-   }
   }
  });
  return changed;
@@ -120,4 +114,62 @@ export function applyAvatarPlacement(scene:THREE.Group,original:THREE.Vector3,se
  const s=decodeAvatar(settings);
  scene.position.copy(original).add(new THREE.Vector3(s.positionX,s.positionY,s.positionZ));
  scene.rotation.y=s.turn*Math.PI/180;
+}
+
+export type JointMorphData={
+ version:number;rig:string;
+ bones:Record<string,[number,number,number]>;
+ morphs:Record<string,Record<string,[number,number,number]>>
+};
+export function validJointMorphData(value:unknown):value is JointMorphData{
+ if(!value||typeof value!=='object')return false;
+ const v=value as Partial<JointMorphData>;
+ return v.version===1&&v.rig==='game_engine'&&typeof v.bones==='object'&&!!v.bones&&
+  typeof v.morphs==='object'&&!!v.morphs&&Object.keys(v.bones).length>=40;
+}
+export function captureBoneRestPositions(root:THREE.Object3D):Map<THREE.Bone,THREE.Vector3>{
+ const rest=new Map<THREE.Bone,THREE.Vector3>();
+ root.traverse(o=>{if((o as THREE.Bone).isBone)rest.set(o as THREE.Bone,(o as THREE.Bone).position.clone());});
+ return rest;
+}
+/**
+ * Independently align the CC0 generated skeleton's bind joints with CC0 morph
+ * displacements. The joint sidecar is *data*, not upstream GPL runtime code.
+ * Recalculate skin inverse bind matrices at the MORPHED REST pose, then apply
+ * controlled pose offsets. Body and clothing skeletons are each rebound.
+ */
+export function rebaseAvatarSkeleton(
+ root:THREE.Object3D,restPositions:Map<THREE.Bone,THREE.Vector3>,
+ data:JointMorphData,settings:AvatarSettings
+):number{
+ const weights=avatarMorphWeights(settings);
+ const delta=(name:string)=>{
+  const d=new THREE.Vector3();
+  for(const [m,w] of Object.entries(weights)){
+   const v=data.morphs[m]?.[name];
+   if(v&&w>0)d.addScaledVector(new THREE.Vector3(v[0],v[1],v[2]),w);
+  }
+  return d;
+ };
+ let count=0;
+ root.updateWorldMatrix(true,true);
+ for(const [bone,baseline] of restPositions){
+  bone.position.copy(baseline);
+  if(!data.bones[bone.name])continue;
+  const parent=(bone.parent as THREE.Bone|null);
+  const offset=delta(bone.name);
+  if(parent?.isBone)offset.sub(delta(parent.name));
+  if(parent){
+   const q=new THREE.Quaternion();
+   parent.getWorldQuaternion(q);
+   offset.applyQuaternion(q.invert());
+  }
+  bone.position.add(offset);
+  count++;
+ }
+ root.updateWorldMatrix(true,true);
+ const skeletons=new Set<THREE.Skeleton>();
+ root.traverse(o=>{const mesh=o as THREE.SkinnedMesh;if(mesh.isSkinnedMesh)skeletons.add(mesh.skeleton);});
+ for(const skeleton of skeletons)skeleton.calculateInverses();
+ return count;
 }
