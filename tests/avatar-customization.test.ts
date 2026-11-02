@@ -2,6 +2,7 @@ import {describe,it,expect} from 'vitest';
 import * as THREE from 'three';
 import {DEFAULT_AVATAR,decodeAvatar,avatarMorphWeights,avatarCapabilities,applyAvatarMorphs,captureRestPose,applyAvatarPose,applyAvatarPlacement,captureBoneRestPositions,rebaseAvatarSkeleton,validJointMorphData} from '../lib/avatar-customization';
 import {initialDocument,decodeDocument,modify} from '../lib/studio-document';
+import type {JointMorphData} from '../lib/avatar-customization';
 
 describe('editable human avatar — truthful CC0 rig and body controls',()=>{
  it('clamps malicious values and rejects unsupported age/shape/pose/placement',()=>{
@@ -58,7 +59,7 @@ describe('editable human avatar — truthful CC0 rig and body controls',()=>{
   pelvis.name='pelvis';upperarm.name='upperarm_l';root.add(pelvis);pelvis.add(upperarm);
   pelvis.position.set(0,.9,0);upperarm.position.set(.2,.4,0);
   const positions=captureBoneRestPositions(root);
-  const j={version:1,rig:'game_engine',
+  const j:JointMorphData={version:1,rig:'game_engine',
    bones:Object.fromEntries(Array.from({length:40},(_,i)=>['bone_'+i,[0,0,0]])) as Record<string,[number,number,number]>,
    morphs:{gender_female:{pelvis:[0,-.04,0],upperarm_l:[-.04,-.08,0]}}};
   j.bones.pelvis=[0,.9,0];j.bones.upperarm_l=[.2,1.3,0];
