@@ -97,7 +97,7 @@ function poseAngles(settings:AvatarSettings):Record<string,THREE.Euler>{
  const right=s.rightArm+(s.pose==='arms-up'?80:s.pose==='hands-on-hips'?28:0);
  const e=(x=0,y=0,z=0)=>new THREE.Euler(x*d,y*d,z*d,'XYZ');
  return {
-  upperarm_l:e(-7,0,left), upperarm_r:e(-7,0,-right),
+  upperarm_l:e(0,0,left), upperarm_r:e(0,0,-right),
   lowerarm_l:e(s.pose==='hands-on-hips'?-48:0),lowerarm_r:e(s.pose==='hands-on-hips'?-48:0),
   spine_01:e(0,s.pose==='walking'?8:0),
   thigh_l:e(s.pose==='walking'?24:0),thigh_r:e(s.pose==='walking'?-21:0),
