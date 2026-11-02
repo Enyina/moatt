@@ -16,12 +16,17 @@ test('human avatar controls edit an adult body and save movement without changin
  await expect(canvas).toHaveAttribute('data-avatar-morphs','supported',{timeout:20000});
  await expect(canvas).toHaveAttribute('data-avatar-rig','supported',{timeout:20000});
  const original=await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png'));
+ await page.locator('.canvas').screenshot({path:info.outputPath('01-default-adult-clothed.png')});
+
 
  await page.getByRole('combobox',{name:'Avatar body presentation'}).selectOption('feminine');
+ await page.locator('.canvas').screenshot({path:info.outputPath('02-feminine-neutral-medium.png')});
  await page.getByRole('slider',{name:'Avatar age'}).press('End');
  await page.getByRole('slider',{name:'Avatar height'}).press('End');
  await page.getByRole('combobox',{name:'Avatar size'}).selectOption('XL');
+ await page.locator('.canvas').screenshot({path:info.outputPath('03-feminine-xl-neutral.png')});
  await page.getByRole('combobox',{name:'Avatar pose'}).selectOption('arms-up');
+ await page.locator('.canvas').screenshot({path:info.outputPath('04-feminine-xl-arms-up.png')});
  await page.getByRole('slider',{name:'Avatar left arm'}).press('End');
  await page.getByRole('slider',{name:'Avatar rotation'}).press('End');
  await page.getByRole('slider',{name:'Avatar horizontal position'}).press('End');
