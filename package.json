@@ -10,7 +10,7 @@
     "test": "vitest run",
     "lint": "next lint",
     "e2e": "playwright test",
-    "assets:verify": "REQUIRE_MANNEQUIN_ASSET=1 node scripts/sync-mannequin.mjs && REQUIRE_REALISTIC_ASSETS=1 node scripts/sync-realistic-assets.mjs"
+    "assets:verify": "REQUIRE_MANNEQUIN_ASSET=1 node scripts/sync-mannequin.mjs && REQUIRE_REALISTIC_ASSETS=1 node scripts/sync-realistic-assets.mjs && node scripts/check-avatar-joints.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.117.3",
