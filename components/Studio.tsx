@@ -4,6 +4,8 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ChangeEvent,PointerEvent} from 'react';
 import {StudioDocument,Side,Tool,Layer,initialDocument,decodeDocument,modify,uid,clamp,STORAGE_KEY} from '../lib/studio-document';
 import type {FontFamily,FontWeight,TextAlignment} from '../lib/studio-document';
+import {decodeAvatar,DEFAULT_AVATAR} from '../lib/avatar-customization';
+import type {AvatarSettings} from '../lib/avatar-customization';
 import {renderArtwork,downloadBlob,savePng} from '../lib/render-design';
 import {fitText} from '../lib/typography';
 import {analyzePrintPlacement,SAFE_REGION} from '../lib/print-guides';
@@ -51,6 +53,12 @@ export default function Studio(){
  },[active]);
  const layerAdd=(layer:Layer)=>{commit(d=>{d.layers[side].push(layer)});setSelected(layer.id);setTool('select')};
  const update=(id:string,patch:Partial<Layer>)=>commit(d=>{const l=d.layers[side].find(l=>l.id===id);if(l&&!l.locked)Object.assign(l,patch)});
+ const avatar=decodeAvatar(doc.avatar??DEFAULT_AVATAR);
+ const updateAvatar=(patch:Partial<AvatarSettings>)=>{
+  commit(d=>{d.avatar={...decodeAvatar(d.avatar),...patch}});
+  setModelStyle('realistic');setTab('3d');
+ };
+
  const addQuickLayout=(preset:LayoutPreset)=>{
   try{
    const result=applyLayoutPreset(doc,preset);
@@ -172,6 +180,41 @@ export default function Studio(){
  <p className="hint">Placement guides are illustrative, not supplier-verified print dimensions.</p></div>
  <div className="section"><h3>Garment</h3><div className="row">{(['tshirt','hoodie'] as const).map(g=><button key={g} className={'button '+(doc.garment===g?'selected':'')} onClick={()=>commit(d=>{if(d.garment===g)return;d.garment=g;d.sleeve=g==='hoodie'?'long':'short';d.pocket=g==='hoodie'?'kangaroo':'none'})}>{g==='tshirt'?'T-shirt':'Hoodie'}</button>)}</div></div>
  <div className="section"><h3>Fit and body</h3><label>Fit<select className="field" value={doc.fit} onChange={e=>commit(d=>{d.fit=e.target.value as StudioDocument['fit']})}><option value="regular">Regular</option><option value="oversized">Oversized</option></select></label><label>Mannequin<select className="field" value={doc.body} onChange={e=>commit(d=>{d.body=e.target.value as StudioDocument['body']})}><option value="standard">Standard</option><option value="tall">Tall</option></select></label></div>
+ <details className="section" data-testid="human-avatar-editor">
+ <summary style={{cursor:'pointer',fontWeight:700}}>Human avatar · body and poses (beta)</summary>
+ <p className="hint">Edit the licensed adult human reference, not the simplified mannequin. Shape changes use available morph targets. Clothing fit and movement are visual approximations, not measured sizing.</p>
+ <button className="button" onClick={()=>{setTab('3d');setModelStyle('realistic')}}>Preview editable human</button>
+ <label>Body presentation
+ <select aria-label="Avatar body presentation" className="field" value={avatar.presentation} onChange={e=>updateAvatar({presentation:e.target.value as AvatarSettings['presentation']})}>
+ <option value="masculine">Masculine body</option><option value="feminine">Feminine body</option>
+ </select></label>
+ <label>Adult age appearance: {avatar.age}
+ <input aria-label="Avatar age" type="range" min="18" max="80" value={avatar.age} onChange={e=>updateAvatar({age:Number(e.target.value)})}/></label>
+ <label>Height reference: {avatar.heightCm} cm
+ <input aria-label="Avatar height" type="range" min="150" max="205" value={avatar.heightCm} onChange={e=>updateAvatar({heightCm:Number(e.target.value)})}/></label>
+ <label>Body size
+ <select aria-label="Avatar size" className="field" value={avatar.size} onChange={e=>updateAvatar({size:e.target.value as AvatarSettings['size']})}>
+ {(['XS','S','M','L','XL','XXL'] as const).map(size=><option value={size} key={size}>{size}</option>)}
+ </select></label>
+ <label>Body movement
+ <select aria-label="Avatar pose" className="field" value={avatar.pose} onChange={e=>updateAvatar({pose:e.target.value as AvatarSettings['pose']})}>
+ <option value="neutral">Relaxed standing</option><option value="arms-up">Arms raised</option><option value="walking">Walking stance</option><option value="hands-on-hips">Hands near hips</option>
+ </select></label>
+ <label>Left arm movement: {avatar.leftArm}°
+ <input aria-label="Avatar left arm" type="range" min="-30" max="110" value={avatar.leftArm} onChange={e=>updateAvatar({leftArm:Number(e.target.value)})}/></label>
+ <label>Right arm movement: {avatar.rightArm}°
+ <input aria-label="Avatar right arm" type="range" min="-30" max="110" value={avatar.rightArm} onChange={e=>updateAvatar({rightArm:Number(e.target.value)})}/></label>
+ <label>Turn avatar: {avatar.turn}°
+ <input aria-label="Avatar rotation" type="range" min="-180" max="180" step="5" value={avatar.turn} onChange={e=>updateAvatar({turn:Number(e.target.value)})}/></label>
+ <label>Horizontal placement: {avatar.positionX.toFixed(1)}
+ <input aria-label="Avatar horizontal position" type="range" min="-1.5" max="1.5" step="0.1" value={avatar.positionX} onChange={e=>updateAvatar({positionX:Number(e.target.value)})}/></label>
+ <label>Vertical placement: {avatar.positionY.toFixed(1)}
+ <input aria-label="Avatar vertical position" type="range" min="-0.4" max="0.8" step="0.1" value={avatar.positionY} onChange={e=>updateAvatar({positionY:Number(e.target.value)})}/></label>
+ <label>Depth placement: {avatar.positionZ.toFixed(1)}
+ <input aria-label="Avatar depth position" type="range" min="-1.5" max="1.5" step="0.1" value={avatar.positionZ} onChange={e=>updateAvatar({positionZ:Number(e.target.value)})}/></label>
+ <div className="row"><button className="button" onClick={()=>updateAvatar({...DEFAULT_AVATAR})}>Reset human avatar</button></div>
+ <p role="note" className="hint">Age control currently covers adults (18–80). Clothing must have compatible morphs and a skeleton for its body shape and pose to follow correctly. Children's forms, physical fit, live animation and exact clothing sizes are not verified.</p>
+ </details>
  <div className="section"><h3>Garment details</h3><label>Sleeves<select aria-label="Sleeve length" className="field" value={doc.sleeve} onChange={e=>commit(d=>{d.sleeve=e.target.value as StudioDocument['sleeve']})}><option value="short">Short</option><option value="long">Long</option></select></label><label>Hem<select aria-label="Hem length" className="field" value={doc.hem} onChange={e=>commit(d=>{d.hem=e.target.value as StudioDocument['hem']})}><option value="standard">Standard</option><option value="cropped">Cropped</option></select></label><label>Neckline<select aria-label="Neckline" className="field" value={doc.neck} onChange={e=>commit(d=>{d.neck=e.target.value as StudioDocument['neck']})}><option value="crew">Crew</option><option value="wide">Wide</option></select></label><label>Pocket style<select aria-label="Pocket style" className="field" value={doc.pocket} onChange={e=>commit(d=>{d.pocket=e.target.value as StudioDocument['pocket']})}><option value="none">None</option><option value="chest">Chest pocket</option>{doc.garment==='hoodie'&&<option value="kangaroo">Kangaroo pouch</option>}</select></label></div><div className="section"><h3>Fabric material</h3><label>Fabric<select aria-label="Fabric material" className="field" value={doc.material} onChange={e=>commit(d=>{d.material=e.target.value as StudioDocument['material']})}><option value="cotton">Cotton / matte</option><option value="denim">Denim / textured</option><option value="satin">Satin / sheen</option></select></label><p className="hint">Visual material preview, not fabric simulation.</p></div><div className="section"><h3>Fabric color</h3><input aria-label="Fabric color" type="color" value={doc.baseColor} onChange={e=>commit(d=>{d.baseColor=e.target.value})}/></div>
  <div className="section"><h3>Artwork tools</h3><div className="row">{(['select','draw','erase'] as Tool[]).map(t=><button key={t} className={'button '+(tool===t?'selected':'')} onClick={()=>setTool(t)}>{t}</button>)}</div><div className="row"><button className="button" onClick={()=>layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:legibleInk(doc.baseColor),fontSize:85,value:'YOUR DESIGN'})}>Add text</button><button className="button" onClick={()=>fileRef.current?.click()}>Upload image</button></div><input type="file" hidden ref={fileRef} accept="image/png,image/jpeg,image/webp" onChange={e=>void upload(e)}/></div>
  <div className="section"><h3>Brush</h3><label>Ink color <input aria-label="Brush color" type="color" value={brushColor} onChange={e=>setBrushColor(e.target.value)}/></label><label>Size <input aria-label="Brush size" className="field" type="range" min="2" max="70" value={brushWidth} onChange={e=>setBrushWidth(Number(e.target.value))}/></label></div><p className="hint">2D: drag to move layers, or select Draw to paint. 3D: orbit and zoom independently. Preview geometry is illustrative, not a fitted sewing pattern.</p>
