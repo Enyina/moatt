@@ -20,7 +20,8 @@ type History={past:StudioDocument[];present:StudioDocument;future:StudioDocument
 const START:History={past:[],present:initialDocument(),future:[]};
 export default function Studio(){
  const [idea,setIdea]=useState(IDEA_EXAMPLES[0]),[ideaFeedback,setIdeaFeedback]=useState('');
- const [modelStyle,setModelStyle]=useState<'garment'|'studio'|'classic'|'realistic'>('garment');
+ const [modelStyle,setModelStyle]=useState<'garment'|'form'|'studio'|'classic'|'realistic'>('garment');
+ const [cameraView,setCameraView]=useState<'face'|'profile'>('face');
  const [presentationFocused,setPresentationFocused]=useState(false);
  const [presentationMode,setPresentationMode]=useState<'overview'|'front'|'back'>('overview');
  const [presentationZoom,setPresentationZoom]=useState(1);
@@ -180,13 +181,16 @@ export default function Studio(){
  <button className="button" onClick={()=>addQuickLayout('center-statement')}>Slogan layout</button>
  <button className="button" onClick={()=>addQuickLayout('brand-set')}>Both sides</button>
  <button className="button" onClick={()=>{setTab('2d');layerAdd({id:uid(),kind:'text',x:260,y:370,width:500,height:140,rotation:0,color:legibleInk(doc.baseColor),fontSize:85,value:'NEW DESIGN'})}}>New text</button><button className="button" onClick={()=>{setTab('2d');setTool('draw')}}>Paint design</button></div><div className="viewtools"><button className={'button '+(side==='front'?'selected':'')} onClick={()=>{setSide('front');setSelected(null)}}>Front</button><button className={'button '+(side==='back'?'selected':'')} onClick={()=>{setSide('back');setSelected(null)}}>Back</button><button className={'button '+(tab==='2d'?'selected':'')} onClick={()=>setTab('2d')}>2D edit</button><button className={'button '+(tab==='3d'?'selected':'')} onClick={()=>setTab('3d')}>3D preview</button><button className={'button '+(tab==='presentation'?'selected':'')} onClick={()=>setTab('presentation')}>Presentation</button>{tab==='presentation'&&<button className="button" onClick={()=>setPresentationFocused(true)}>Expand board</button>}{tab==='3d'&&<>
+ <button className={'button '+(cameraView==='face'?'selected':'')} aria-pressed={cameraView==='face'} onClick={()=>setCameraView('face')}>Face-on view</button>
+ <button className={'button '+(cameraView==='profile'?'selected':'')} aria-pressed={cameraView==='profile'} onClick={()=>setCameraView('profile')}>Side profile</button>
  <button className={'button '+(modelStyle==='garment'?'selected':'')} onClick={()=>setModelStyle('garment')}>Garment only</button>
  <button className={'button '+(modelStyle==='studio'?'selected':'')} onClick={()=>setModelStyle('studio')}>Studio mannequin</button>
+ <button className={'button '+(modelStyle==='form'?'selected':'')} onClick={()=>setModelStyle('form')}>Inspect mannequin form</button>
  <button className={'button '+(modelStyle==='classic'?'selected':'')} onClick={()=>setModelStyle('classic')}>Classic mannequin</button>
  <button className={'button '+(modelStyle==='realistic'?'selected':'')} onClick={()=>setModelStyle('realistic')}>Human fit reference</button>
  </>}</div>
  <div className="studio-stage" style={{display:tab==='2d'?'flex':'none'}}><div className="artboard"><canvas ref={canvasRef} width={1024} height={1024} aria-label={side+' artwork canvas'} style={{touchAction:'none',cursor:tool==='draw'?'crosshair':tool==='erase'?'not-allowed':'move'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null;void paint()}}/><div aria-hidden="true" className="safe-guide" style={{left:SAFE_REGION.left/1024*100+'%',top:SAFE_REGION.top/1024*100+'%',width:(SAFE_REGION.right-SAFE_REGION.left)/1024*100+'%',height:(SAFE_REGION.bottom-SAFE_REGION.top)/1024*100+'%'}}/>{active&&tool==='select'&&<div className="selection-outline" data-layer-id={active.id} style={{left:active.x/1024*100+'%',top:active.y/1024*100+'%',width:active.width/1024*100+'%',height:active.height/1024*100+'%',transform:'rotate('+active.rotation+'deg)'}}/>}</div></div>
- <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}>{tab==='3d'&&<Preview doc={doc} side={side} modelStyle={modelStyle}/>}</div>
+ <div className="preview-stage" style={{display:tab==='3d'?'block':'none'}}>{tab==='3d'&&<Preview doc={doc} side={side} modelStyle={modelStyle} view={cameraView}/>}</div>
  <div className={'presentation-stage '+(presentationFocused?'is-focused':'')} style={{display:tab==='presentation'?'flex':'none'}}>
  {tab==='presentation'&&<>
  <div className="presentation-controls" role="group" aria-label="Presentation view and zoom">

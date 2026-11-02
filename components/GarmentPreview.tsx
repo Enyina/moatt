@@ -9,6 +9,7 @@ import type {Side,StudioDocument} from '../lib/studio-document';
 import {renderArtwork} from '../lib/render-design';
 import {createGarmentMesh,disposeGarmentMesh} from '../lib/garment-mesh';
 import {makeFabricTile,FABRIC_PROFILES} from '../lib/fabric-material';
+import {createFoldedHoodGeometry} from '../lib/folded-hood-mesh';
 import StudioMannequin from './StudioMannequin';
 import LicensedAvatarReference from './LicensedAvatarReference';
 
@@ -60,6 +61,8 @@ function Garment({doc}:{doc:StudioDocument}){
  },[gl,doc.garment]);
  const geo=useMemo(()=>createGarmentMesh({garment:doc.garment,fit:doc.fit,sleeve:doc.sleeve,hem:doc.hem,neck:doc.neck}),[doc.fit,doc.garment,doc.sleeve,doc.hem,doc.neck]);
  useEffect(()=>()=>disposeGarmentMesh(geo),[geo]);
+ const hoodGeometry=useMemo(()=>doc.garment==='hoodie'?createFoldedHoodGeometry():null,[doc.garment]);
+ useEffect(()=>()=>hoodGeometry?.dispose(),[hoodGeometry]);
  const profile=FABRIC_PROFILES[doc.material];
  const appearance={roughness:profile.roughness,metalness:profile.metalness,sheen:profile.sheen,
   sheenColor:new THREE.Color('#ffffff'),sheenRoughness:profile.sheenRoughness,
@@ -88,9 +91,7 @@ function Garment({doc}:{doc:StudioDocument}){
    <boxGeometry args={[.31,.28,.035]}/>
   </mesh>}
   {doc.garment==='hoodie'&&<>
-   <mesh position={[0,.99,-.52]} material={clothMat}>
-    <sphereGeometry args={[.345,28,20,0,Math.PI*2,0,Math.PI*.59]}/>
-   </mesh>
+   {hoodGeometry&&<mesh geometry={hoodGeometry} material={clothMat} receiveShadow/>}
    {([-1,1] as const).map(sign=><mesh key={'drawstring'+sign} position={[sign*.18,.52,.47]} material={seamMat}>
     <cylinderGeometry args={[.012,.012,.43,8]}/>
    </mesh>)}
@@ -100,7 +101,7 @@ function Garment({doc}:{doc:StudioDocument}){
   </>}
  </group>;
 }
-export type ModelStyle='garment'|'studio'|'classic'|'realistic';
+export type ModelStyle='garment'|'form'|'studio'|'classic'|'realistic';
 function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
  const {gl}=useThree();
  const [asset,setAsset]=useState<THREE.Group|null>(null);
@@ -111,7 +112,7 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
   return()=>{live=false};
  },[style]);
  useEffect(()=>{
-  gl.domElement.dataset.mannequinStatus=style==='garment'?'garment-only':style==='studio'?'studio-ready':style==='realistic'?'realistic-reference':asset?'loaded':'asset-fallback';
+  gl.domElement.dataset.mannequinStatus=style==='garment'?'garment-only':style==='form'?'form-inspection':style==='studio'?'studio-ready':style==='realistic'?'realistic-reference':asset?'loaded':'asset-fallback';
   gl.domElement.dataset.fabricMaterial=doc.material;
  },[asset,doc.material,gl,style]);
  const height=doc.body==='tall'?1.09:1;
@@ -119,8 +120,8 @@ function Mannequin({doc,style}:{doc:StudioDocument;style:ModelStyle}){
   {style==='realistic'?<LicensedAvatarReference doc={doc}/>:style==='garment'?null:
    style==='classic'&&asset
    ?<primitive object={asset} scale={.56} rotation={[0,-Math.PI/2,0]} position={[0,1.43,0]}/>
-   :<StudioMannequin sleeve={doc.sleeve}/>}
-  {style!=='realistic'&&<Garment doc={doc}/>}
+   :<StudioMannequin sleeve={doc.sleeve} bare={style==='form'}/> }
+  {style!=='realistic'&&style!=='form'&&<Garment doc={doc}/>}
  </group>;
 }
 function RenderingDiagnostics(){
@@ -129,12 +130,23 @@ function RenderingDiagnostics(){
  useFrame(()=>{tick.count++;const canvas=gl.domElement;canvas.dataset.renderFrames=String(tick.count);canvas.dataset.gpuGeometries=String(gl.info.memory.geometries);canvas.dataset.gpuTextures=String(gl.info.memory.textures);});
  return null;
 }
-function CameraPosition({side,modelStyle}:{side:Side;modelStyle:ModelStyle}){const {camera,invalidate}=useThree();useEffect(()=>{const distance=modelStyle==='garment'?4.2:5.7;camera.position.set(0,1.65,side==='front'?distance:-distance);camera.lookAt(0,1.55,0);invalidate()},[camera,side,modelStyle,invalidate]);return null}
+function CameraPosition({side,modelStyle,view}:{side:Side;modelStyle:ModelStyle;view:'face'|'profile'}){
+ const {camera,invalidate,gl}=useThree();
+ useEffect(()=>{
+  const distance=modelStyle==='garment'?4.2:5.7;
+  if(view==='profile')camera.position.set(distance,1.65,.18);
+  else camera.position.set(0,1.65,side==='front'?distance:-distance);
+  camera.lookAt(0,1.55,0);
+  gl.domElement.dataset.cameraPreset=view==='profile'?'profile':side;
+  invalidate();
+ },[camera,side,modelStyle,view,gl,invalidate]);
+ return null;
+}
 class PreviewBoundary extends Component<{children:ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
  render(){return this.state.failed?<div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>:this.props.children;}
 }
-export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:StudioDocument;side:Side;modelStyle?:ModelStyle}){
+export default function GarmentPreview({doc,side,modelStyle='studio',view='face'}:{doc:StudioDocument;side:Side;modelStyle?:ModelStyle;view?:'face'|'profile'}){
  const [webgl,setWebgl]=useState<'checking'|'available'|'unavailable'>('checking');
  useEffect(()=>{
   let available=false;
@@ -150,11 +162,11 @@ export default function GarmentPreview({doc,side,modelStyle='studio'}:{doc:Studi
  if(webgl==='unavailable')return <div role="alert" className="empty3d">3D rendering is unavailable. Your artwork is still editable and exportable in 2D.</div>;
  return <PreviewBoundary><Canvas frameloop="demand" camera={{position:[0,1.65,5.7],fov:41}} gl={{preserveDrawingBuffer:true,antialias:true}} dpr={[1,1.5]}>
  <color attach="background" args={['#292f39']}/>
- <ambientLight intensity={.85}/><hemisphereLight args={['#e6ebff','#30303c',1.2]}/>
- <directionalLight position={[3,6,7]} intensity={2.1} color="#fff2e4"/>
- <directionalLight position={[-4,2,3]} intensity={.9} color="#d4e1ff"/>
- <directionalLight position={[1,5,-4]} intensity={1.6} color="#ffffff"/>
- <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side} modelStyle={modelStyle}/><RenderingDiagnostics/>
+ <ambientLight intensity={.50}/><hemisphereLight args={['#eff1fb','#30303c',.78]}/>
+ <directionalLight position={[3,6,7]} intensity={1.65} color="#fff2e4"/>
+ <directionalLight position={[-4,2,3]} intensity={.72} color="#d4e1ff"/>
+ <directionalLight position={[1,5,-4]} intensity={1.05} color="#ffffff"/>
+ <Mannequin doc={doc} style={modelStyle}/><CameraPosition side={side} modelStyle={modelStyle} view={view}/><RenderingDiagnostics/>
  <OrbitControls target={[0,1.4,0]} minDistance={3} maxDistance={10} enablePan={false}/>
  {modelStyle!=='garment'&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,-.40,0]} receiveShadow>
   <circleGeometry args={[4.7,64]}/>
