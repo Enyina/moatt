@@ -1,0 +1,52 @@
+import {test,expect} from '@playwright/test';
+
+test('human avatar controls edit an adult body and save movement without changing design art',async({page},info)=>{
+ test.setTimeout(110000);
+ await page.goto('/');
+ await page.getByRole('button',{name:'Small chest mark'}).click();
+ await page.getByText('Human avatar · body and poses (beta)').click();
+ await page.getByRole('button',{name:'Preview editable human'}).click();
+ const canvas=page.locator('.preview-stage canvas');
+ const fallback=page.getByRole('alert').filter({hasText:'3D rendering is unavailable'});
+ await expect(canvas.or(fallback)).toBeVisible({timeout:20000});
+ if(await fallback.isVisible())return;
+ await expect(canvas).toHaveAttribute('data-mannequin-status','realistic-reference');
+ await expect(canvas).toHaveAttribute('data-reference-status','loaded',{timeout:60000});
+ await page.getByRole('combobox',{name:'Avatar body presentation'}).selectOption('feminine');
+ await page.getByRole('slider',{name:'Avatar age'}).fill('65');
+ await page.getByRole('slider',{name:'Avatar height'}).fill('190');
+ await page.getByRole('combobox',{name:'Avatar size'}).selectOption('XL');
+ await page.getByRole('combobox',{name:'Avatar pose'}).selectOption('arms-up');
+ await page.getByRole('slider',{name:'Avatar left arm'}).fill('35');
+ await page.getByRole('slider',{name:'Avatar rotation'}).fill('45');
+ await page.getByRole('slider',{name:'Avatar horizontal position'}).fill('0.4');
+ await expect(canvas).toHaveAttribute('data-avatar-presentation','feminine');
+ await expect(canvas).toHaveAttribute('data-avatar-age','65');
+ await expect(canvas).toHaveAttribute('data-avatar-size','XL');
+ await expect(canvas).toHaveAttribute('data-avatar-pose','arms-up');
+ await expect(canvas).toHaveAttribute('data-avatar-turn','45');
+ await page.locator('.canvas').screenshot({path:info.outputPath('adult-avatar-adjusted-with-pose.png')});
+ await page.reload();
+ await page.getByText('Human avatar · body and poses (beta)').click();
+ await expect(page.getByRole('combobox',{name:'Avatar pose'})).toHaveValue('arms-up');
+ await expect(page.getByRole('combobox',{name:'Avatar body presentation'})).toHaveValue('feminine');
+ await expect(page.getByRole('slider',{name:'Avatar horizontal position'})).toHaveValue('0.4');
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await expect(page.getByText('text: YOUR BRAND')).toBeVisible();
+});
+
+test('reset human profile and separate front and back artwork survive pose changes',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'Two-sided branding'}).click();
+ await page.getByText('Human avatar · body and poses (beta)').click();
+ await page.getByRole('combobox',{name:'Avatar pose'}).selectOption('walking');
+ await page.getByRole('combobox',{name:'Avatar size'}).selectOption('XXL');
+ await page.getByRole('button',{name:'Reset human avatar'}).click();
+ await expect(page.getByRole('combobox',{name:'Avatar size'})).toHaveValue('M');
+ await expect(page.getByRole('combobox',{name:'Avatar pose'})).toHaveValue('neutral');
+ await page.getByRole('button',{name:'2D edit'}).click();
+ await page.getByRole('button',{name:'Front',exact:true}).click();
+ await expect(page.getByText('text: YOUR BRAND')).toBeVisible();
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await expect(page.getByText('text: YOUR MESSAGE')).toBeVisible();
+});
