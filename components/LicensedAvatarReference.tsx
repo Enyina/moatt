@@ -5,12 +5,12 @@ import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import type {StudioDocument} from '../lib/studio-document';
-import {DEFAULT_AVATAR,avatarCapabilities,applyAvatarMorphs,applyAvatarPose,applyAvatarPlacement,captureRestPose,decodeAvatar} from '../lib/avatar-customization';
-import type {AvatarCapabilities} from '../lib/avatar-customization';
+import {DEFAULT_AVATAR,avatarCapabilities,applyAvatarMorphs,applyAvatarPose,applyAvatarPlacement,captureRestPose,captureBoneRestPositions,rebaseAvatarSkeleton,validJointMorphData,decodeAvatar} from '../lib/avatar-customization';
+import type {AvatarCapabilities,JointMorphData} from '../lib/avatar-customization';
 
 type LoadedAvatar={
  scene:THREE.Group;body:THREE.Object3D;clothing:THREE.Object3D;
- rest:Map<THREE.Bone,THREE.Quaternion>;origin:THREE.Vector3;capabilities:AvatarCapabilities
+ rest:Map<THREE.Bone,THREE.Quaternion>;restPositions:Map<THREE.Bone,THREE.Vector3>;jointData:JointMorphData;origin:THREE.Vector3;capabilities:AvatarCapabilities
 };
 
 /**
@@ -29,8 +29,16 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   let current:LoadedAvatar|null=null;
   const prefix=(process.env.NEXT_PUBLIC_BASE_PATH||'')+'/models/realistic/';
   const loader=new GLTFLoader();
-  Promise.all([loader.loadAsync(prefix+'base_body.glb'),loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb')])
-   .then(([body,clothes])=>{
+  Promise.all([
+   loader.loadAsync(prefix+'base_body.glb'),
+   loader.loadAsync(prefix+'clothing_'+doc.garment+'.glb'),
+   fetch(prefix+'base_body.joints.json').then(async response=>{
+    if(!response.ok)throw Error('Human joint calibration unavailable');
+    const result:unknown=await response.json();
+    if(!validJointMorphData(result))throw Error('Invalid joint calibration data');
+    return result;
+   })
+  ]).then(([body,clothes,jointData])=>{
     const group=new THREE.Group();
     group.add(body.scene,clothes.scene);
     if(!active)return;
@@ -46,7 +54,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
      child.castShadow=false;child.frustumCulled=false;
     });
     const capabilities=avatarCapabilities(body.scene,clothes.scene);
-    current={scene:group,body:body.scene,clothing:clothes.scene,rest:captureRestPose(group),origin,capabilities};
+    current={scene:group,body:body.scene,clothing:clothes.scene,rest:captureRestPose(group),restPositions:captureBoneRestPositions(group),jointData,origin,capabilities};
     setModel(current);invalidate();
    })
    .catch(()=>{if(active){setFailed(true);invalidate();}});
@@ -64,10 +72,15 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  },[doc.garment,invalidate]);
  useEffect(()=>{
   if(!model)return;
-  const {scene,body,clothing,rest,origin,capabilities}=model;
+  const {scene,body,clothing,rest,restPositions,jointData,origin,capabilities}=model;
+  // Return bones to their original rotations before recalculating the bind
+  // skeleton for a different adult body shape.
+  applyAvatarPose(rest,DEFAULT_AVATAR);
   applyAvatarMorphs(body,settings);
   applyAvatarMorphs(clothing,settings);
+  const jointsUpdated=rebaseAvatarSkeleton(scene,restPositions,jointData,settings);
   applyAvatarPose(rest,settings);
+  gl.domElement.dataset.avatarAlignedJoints=String(jointsUpdated);
   applyAvatarPlacement(scene,origin,settings);
   gl.domElement.dataset.avatarMorphs=capabilities.morphs&&capabilities.clothingMorphs?'supported':'unverified';
   gl.domElement.dataset.avatarRig=capabilities.rig&&capabilities.clothingRig?'supported':'unverified';
