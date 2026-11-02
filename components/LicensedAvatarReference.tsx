@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {useThree} from '@react-three/fiber';
 import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -22,7 +22,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  const [model,setModel]=useState<LoadedAvatar|null>(null);
  const [failed,setFailed]=useState(false);
  const {gl,invalidate}=useThree();
- const settings=decodeAvatar(doc.avatar??DEFAULT_AVATAR);
+ const settings=useMemo(()=>decodeAvatar(doc.avatar??DEFAULT_AVATAR),[doc.avatar]);
  useEffect(()=>{
   let active=true;
   setModel(null);setFailed(false);
@@ -78,9 +78,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   gl.domElement.dataset.avatarTurn=String(settings.turn);
   invalidate();
  },[
-  model,gl,invalidate,settings.presentation,settings.age,settings.heightCm,
-  settings.size,settings.pose,settings.leftArm,settings.rightArm,
-  settings.turn,settings.positionX,settings.positionY,settings.positionZ
+  model,gl,invalidate,settings
  ]);
  useEffect(()=>{
   gl.domElement.dataset.referenceStatus=failed?'unavailable':model?'loaded':'loading';
