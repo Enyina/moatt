@@ -141,3 +141,10 @@ The prior evidence table describes an older starter state and **must not** be us
 - A live website is now reachable: [successful deployment and homepage/model smoke checks](https://github.com/Enyina/moatt/actions/runs/41077902623) verify the published main branch. The project remains blocked on visual garment acceptance and independent physical-device confirmation. Browser tests and CI do **not** establish professional material realism or production fit.
 
 **Acceptance priority:** (1) exact-head green CI and real screenshot review of integrated branch; (2) visually credible apparel silhouettes and material texture; (3) verify the exact integrated commit is deployed to the existing public site; (4) verify first-time-user journey on real phone/desktop; (5) user owner acceptance. No release claim before these.
+
+
+## Human avatar acceptance — November 2, 2026
+
+The faceless procedural mannequin is rejected as the final human. The first adult customization implementation uses the pinned MakeHuman-derived CC0 GLBs: physical presentation (masculine/feminine), adult age appearance 18–80, approximate height 150–205 cm, XS–XXL shape presets, neutral/raised arms/walking stance/hands-on-hips poses, individual arms, rotation and placement. Settings persist in saved projects.
+
+**Limits:** controls require matched body/clothing morphs and skinned rigs, otherwise no valid deformation is possible. Age/size describe appearance, not measured fit; pose presets are not physically simulated movement. Child models and verified children's clothing are unsupported. Do not accept until clothing intersections are checked across body sizes, ages and poses, and edited artwork appears on the selected human outfit.
