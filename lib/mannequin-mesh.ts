@@ -138,3 +138,65 @@ export function mannequinExposedArm(sign:-1|1,sleeve:'short'|'long'):THREE.Buffe
   {x:sign*1.095,y:.96,z:.16,radius:.059,depth:.048}
  ],18,24);
 }
+
+/**
+ * Sculptural foot with proper heel, instep and rounded toe, joined to the leg.
+ * Shape is a view-quality approximation, not a footwear last or measured sizing.
+ */
+export function mannequinFoot(sign:-1|1):THREE.BufferGeometry{
+ const stations=[
+  {z:.065,y:-.245,w:.097,h:.085},
+  {z:.125,y:-.257,w:.112,h:.080},
+  {z:.215,y:-.278,w:.118,h:.077},
+  {z:.305,y:-.288,w:.127,h:.069},
+  {z:.415,y:-.300,w:.118,h:.052},
+  {z:.490,y:-.302,w:.078,h:.041},
+  {z:.525,y:-.300,w:.020,h:.018}
+ ];
+ const radial=24,position:number[]=[],uv:number[]=[],indices:number[]=[];
+ for(let row=0;row<stations.length;row++){
+  const p=stations[row];
+  for(let j=0;j<=radial;j++){
+   const a=j/radial*Math.PI*2;
+   position.push(sign*.285+Math.cos(a)*p.w,p.y+Math.sin(a)*p.h,p.z);
+   uv.push(j/radial,row/(stations.length-1));
+  }
+ }
+ for(let row=0;row<stations.length-1;row++)for(let j=0;j<radial;j++){
+  const a=row*(radial+1)+j,b=a+1,c=a+(radial+1),d=c+1;
+  indices.push(a,c,b,b,c,d);
+ }
+ const heel=position.length/3;
+ position.push(sign*.285,stations[0].y,stations[0].z);uv.push(.5,0);
+ const toe=position.length/3;
+ position.push(sign*.285,stations[stations.length-1].y,stations[stations.length-1].z);uv.push(.5,1);
+ for(let j=0;j<radial;j++){
+  indices.push(heel,j,j+1);
+  const last=(stations.length-1)*(radial+1);
+  indices.push(toe,last+j+1,last+j);
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(position,3));
+ geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+ geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();
+ return geometry;
+}
+/**
+ * Articulated-looking, low-poly fingers for the faceless mannequin. Overlap the
+ * full hand tip so there is no exposed floating fingertip or ball joint.
+ * Index 0 is the thumb, 1..4 are fingers.
+ */
+export function mannequinFingers(sign:-1|1):THREE.BufferGeometry[]{
+ const fingerSpecs=[
+  {x:1.105,y:1.015,z:.214,r:.027,tipX:1.17,tipY:.94,tipZ:.242,tipR:.011},
+  {x:1.066,y:.982,z:.102,r:.023,tipX:1.064,tipY:.851,tipZ:.108,tipR:.010},
+  {x:1.082,y:.985,z:.137,r:.025,tipX:1.087,tipY:.828,tipZ:.144,tipR:.010},
+  {x:1.099,y:.989,z:.171,r:.023,tipX:1.104,tipY:.846,tipZ:.178,tipR:.010},
+  {x:1.109,y:.993,z:.202,r:.019,tipX:1.116,tipY:.874,tipZ:.209,tipR:.009}
+ ];
+ return fingerSpecs.map(f=>makeSmoothLimb([
+  {x:sign*f.x,y:f.y,z:f.z,radius:f.r,depth:f.r},
+  {x:sign*((f.x+f.tipX)/2),y:(f.y+f.tipY)/2,z:(f.z+f.tipZ)/2,radius:f.r*.85,depth:f.r*.85},
+  {x:sign*f.tipX,y:f.tipY,z:f.tipZ,radius:f.tipR,depth:f.tipR}
+ ],10,12));
+}
