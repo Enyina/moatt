@@ -12,6 +12,11 @@ test('human avatar controls edit an adult body and save movement without changin
  if(await fallback.isVisible())return;
  await expect(canvas).toHaveAttribute('data-mannequin-status','realistic-reference');
  await expect(canvas).toHaveAttribute('data-reference-status','loaded',{timeout:60000});
+ // A working editor must change the actual imported mesh, not only form state.
+ await expect(canvas).toHaveAttribute('data-avatar-morphs','supported',{timeout:20000});
+ await expect(canvas).toHaveAttribute('data-avatar-rig','supported',{timeout:20000});
+ const original=await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png'));
+
  await page.getByRole('combobox',{name:'Avatar body presentation'}).selectOption('feminine');
  await page.getByRole('slider',{name:'Avatar age'}).press('End');
  await page.getByRole('slider',{name:'Avatar height'}).press('End');
@@ -20,6 +25,8 @@ test('human avatar controls edit an adult body and save movement without changin
  await page.getByRole('slider',{name:'Avatar left arm'}).press('End');
  await page.getByRole('slider',{name:'Avatar rotation'}).press('End');
  await page.getByRole('slider',{name:'Avatar horizontal position'}).press('End');
+ await expect.poll(()=>canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL('image/png')),{timeout:20000}).not.toBe(original);
+
  await expect(canvas).toHaveAttribute('data-avatar-presentation','feminine');
  await expect(canvas).toHaveAttribute('data-avatar-age','80');
  await expect(canvas).toHaveAttribute('data-avatar-size','XL');
