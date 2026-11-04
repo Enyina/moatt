@@ -1,5 +1,13 @@
 # What's new in Moatt
 
+## November 4, 2026 — T-shirt artwork on the editable human (review only)
+
+**See your front design on the human's T-shirt**
+
+The experimental human preview can now show the front design from the existing clothing editor directly on its T-shirt. A special review view makes it easier to check whether the picture is straight and in the right place.
+
+This work is still under review. The print position and its appearance when the body changes shape need visual confirmation. Back designs and hoodies are not included in this experiment. Nothing here promises accurate clothing measurements or a print-ready garment, and this change is not confirmed live.
+
 ## October 17, 2026
 
 **Clearer updates about Moatt**
