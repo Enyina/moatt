@@ -26,7 +26,6 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  const [failed,setFailed]=useState(false);
  const {gl,invalidate}=useThree();
  const settings=useMemo(()=>decodeAvatar(doc.avatar??DEFAULT_AVATAR),[doc.avatar]);
- const [printTriangles,setPrintTriangles]=useState<number|null>(null);
  const [printError,setPrintError]=useState(false);
  useEffect(()=>{
   let active=true;
@@ -112,7 +111,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   const surface=model.printSurface;
   if(!surface){
    gl.domElement.dataset.realisticPrintStatus='unsupported-garment';
-   setPrintTriangles(null);
+   delete gl.domElement.dataset.realisticPrintTriangles;
    return;
   }
   let active=true;
@@ -123,7 +122,7 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   artwork.then(canvas=>{
    if(!active)return;
    const triangles=updateRealisticFrontAtlas(surface,doc.baseColor,canvas);
-   setPrintTriangles(triangles);
+   gl.domElement.dataset.realisticPrintTriangles=String(triangles);
    gl.domElement.dataset.realisticPrintStatus=triangles>0?'mapped':'no-front-triangles';
    gl.domElement.dataset.realisticPrintDebug=String(debug);
    invalidate();
