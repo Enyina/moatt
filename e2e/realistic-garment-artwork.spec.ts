@@ -39,7 +39,9 @@ test('existing front artwork maps into the real T-shirt native UV atlas',async({
  await expect(canvas).toHaveAttribute('data-realistic-print-status','mapped');
  await page.locator('.canvas').screenshot({path:info.outputPath('real-tshirt-front-xl-raised-arms.png')});
  await page.reload();
+ await page.getByText('Human avatar · body and poses (beta)').click();
  await expect(page.getByRole('combobox',{name:'Avatar size'})).toHaveValue('XL');
  await expect(page.getByRole('combobox',{name:'Avatar pose'})).toHaveValue('arms-up');
+ await page.getByRole('button',{name:'Preview editable human'}).click();
  await expect(canvas).toHaveAttribute('data-realistic-print-status','mapped',{timeout:60000});
 });
