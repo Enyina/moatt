@@ -5,12 +5,15 @@ import {Html} from '@react-three/drei';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import type {StudioDocument} from '../lib/studio-document';
+import {renderArtwork} from '../lib/render-design';
+import {createRealisticPrintSurface,createUvCalibrationArtwork,updateRealisticFrontAtlas} from '../lib/realistic-garment-atlas';
+import type {RealisticPrintSurface} from '../lib/realistic-garment-atlas';
 import {DEFAULT_AVATAR,avatarCapabilities,applyAvatarMorphs,applyAvatarPose,applyAvatarPlacement,captureRestPose,captureBoneRestPositions,rebaseAvatarSkeleton,validJointMorphData,decodeAvatar} from '../lib/avatar-customization';
 import type {AvatarCapabilities,JointMorphData} from '../lib/avatar-customization';
 
 type LoadedAvatar={
  scene:THREE.Group;body:THREE.Object3D;clothing:THREE.Object3D;
- rest:Map<THREE.Bone,THREE.Quaternion>;restPositions:Map<THREE.Bone,THREE.Vector3>;jointData:JointMorphData;origin:THREE.Vector3;capabilities:AvatarCapabilities
+ rest:Map<THREE.Bone,THREE.Quaternion>;restPositions:Map<THREE.Bone,THREE.Vector3>;jointData:JointMorphData;origin:THREE.Vector3;capabilities:AvatarCapabilities;printSurface:RealisticPrintSurface|null
 };
 
 /**
@@ -23,6 +26,8 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
  const [failed,setFailed]=useState(false);
  const {gl,invalidate}=useThree();
  const settings=useMemo(()=>decodeAvatar(doc.avatar??DEFAULT_AVATAR),[doc.avatar]);
+ const [printTriangles,setPrintTriangles]=useState<number|null>(null);
+ const [printError,setPrintError]=useState(false);
  useEffect(()=>{
   let active=true;
   setModel(null);setFailed(false);
@@ -54,13 +59,22 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
      child.castShadow=false;child.frustumCulled=false;
     });
     const capabilities=avatarCapabilities(body.scene,clothes.scene);
-    current={scene:group,body:body.scene,clothing:clothes.scene,rest:captureRestPose(group),restPositions:captureBoneRestPositions(group),jointData,origin,capabilities};
+    // The T-shirt GLB has a native UV atlas. Keep this experiment scoped to
+    // its single Cloth_tshirt primitive: other garment assets are unchanged.
+    let printSurface:RealisticPrintSurface|null=null;
+    if(doc.garment==='tshirt')clothes.scene.traverse(object=>{
+     if(printSurface || !(object instanceof THREE.Mesh) || !object.name.includes('Cloth_tshirt'))return;
+     printSurface=createRealisticPrintSurface(object);
+    });
+    current={scene:group,body:body.scene,clothing:clothes.scene,rest:captureRestPose(group),restPositions:captureBoneRestPositions(group),jointData,origin,capabilities,printSurface};
     setModel(current);invalidate();
    })
    .catch(()=>{if(active){setFailed(true);invalidate();}});
   return()=>{
    active=false;
    if(current){
+    current.printSurface?.atlas.dispose();
+    current.printSurface?.originalMaterial.dispose();
     current.scene.traverse(o=>{
      if(!(o instanceof THREE.Mesh))return;
      o.geometry?.dispose();
@@ -94,9 +108,37 @@ export default function LicensedAvatarReference({doc}:{doc:StudioDocument}){
   model,gl,invalidate,settings
  ]);
  useEffect(()=>{
+  if(!model)return;
+  const surface=model.printSurface;
+  if(!surface){
+   gl.domElement.dataset.realisticPrintStatus='unsupported-garment';
+   setPrintTriangles(null);
+   return;
+  }
+  let active=true;
+  setPrintError(false);
+  gl.domElement.dataset.realisticPrintStatus='loading';
+  const debug=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('moattUvDebug')==='1';
+  const artwork=debug?Promise.resolve(createUvCalibrationArtwork()):renderArtwork(doc,'front',true);
+  artwork.then(canvas=>{
+   if(!active)return;
+   const triangles=updateRealisticFrontAtlas(surface,doc.baseColor,canvas);
+   setPrintTriangles(triangles);
+   gl.domElement.dataset.realisticPrintStatus=triangles>0?'mapped':'no-front-triangles';
+   gl.domElement.dataset.realisticPrintDebug=String(debug);
+   invalidate();
+  }).catch(()=>{
+   if(active){setPrintError(true);gl.domElement.dataset.realisticPrintStatus='failed';invalidate();}
+  });
+  return()=>{active=false;};
+ },[model,doc.layers.front,doc.baseColor,doc.material,gl,invalidate]);
+ useEffect(()=>{
   gl.domElement.dataset.referenceStatus=failed?'unavailable':model?'loaded':'loading';
   invalidate();
  },[model,failed,gl,invalidate]);
  if(!model)return <Html center><div role={failed?'alert':'status'} style={{background:'#20252ddf',color:'#fff',padding:'12px 16px',borderRadius:9,whiteSpace:'nowrap'}}>{failed?'Human avatar unavailable. Continue editing in Garment only.':'Loading licensed adult human avatar…'}</div></Html>;
- return <primitive object={model.scene}/>;
+ return <>
+  {printError&&<Html center><div role="alert" style={{background:'#20252ddf',color:'#fff',padding:12}}>Unable to render the T-shirt print. Your 2D artwork is unchanged.</div></Html>}
+  <primitive object={model.scene}/>
+ </>;
 }
