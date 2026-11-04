@@ -22,3 +22,12 @@ Moatt now optionally downloads three *generated* GLB assets from the public Char
 Source: https://github.com/kblood/CharacterCreator. Origin project `LICENSE-NOTES.md` declares the generated `output/*.glb` CC0-1.0; it documents that the sources are MakeHuman system CC0 meshes/textures plus author-generated derivatives. **The upstream application's source code is GPL-3.0-or-later; none of it is copied into Moatt.** Moatt's downloader is independently authored and validates full Git object SHA-1 plus GLB headers and expected byte length before installation.
 
 The new **Human fit reference** button loads these original body-fitted assets as a reference, leaving the existing separately authored Moatt garment preview available for editing. The reference currently **does not receive the user's front/back artwork or tailoring choices**, so it is not ready as a final designer outcome or physical fit simulation. It must not be used as a production pattern, and external third-party source hosting remains an operational dependency at build time.
+
+
+## Human avatar runtime controls — November 2, 2026
+
+The previously pinned CC0 MakeHuman-derived body and clothing GLBs are still loaded. Moatt independently maps publicly documented morph names (gender_male/female, age_child/old, height_short/tall, weight_min/max) and game_engine skeleton bones to adult appearance and static pose controls. No GPL application scripts are copied into the runtime. Both body and clothing must have compatible morphs and rigging, otherwise the shape/pose is unverified.
+
+Core CC0 asset license: https://www.makehumancommunity.org/about/license.html
+Technical rig reference: https://threejs.org/docs/pages/SkinnedMesh.html
+The existing source revision and Git object hashes above remain authoritative.

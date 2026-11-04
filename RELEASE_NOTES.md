@@ -1,5 +1,13 @@
 # What's new in Moatt
 
+## November 4, 2026 — T-shirt artwork on the editable human (review only)
+
+**See your front design on the human's T-shirt**
+
+The experimental human preview can now show the front design from the existing clothing editor directly on its T-shirt. A special review view makes it easier to check whether the picture is straight and in the right place.
+
+This work is still under review. The print position and its appearance when the body changes shape need visual confirmation. Back designs and hoodies are not included in this experiment. Nothing here promises accurate clothing measurements or a print-ready garment, and this change is not confirmed live.
+
 ## October 17, 2026
 
 **Clearer updates about Moatt**
@@ -126,3 +134,10 @@ These are local font choices rather than purchased typefaces. If the words canno
 The 3D preview now opens on the clothing without an unfinished mannequin. You can still switch to the studio or classic mannequin, or inspect the separate human-fit reference. The garment-only camera comes closer to the clothing so small artwork is easier to review.
 
 In Presentation, inspect **Both views**, **Front detail**, or **Back detail**, and use Zoom +/− or Fit board to examine the actual saved design. A side-detail export includes a magnified close-up for discussion while the garment on the left keeps the original placement. The magnification is not actual factory print scale. This change is in review; nothing here asserts deployment or physically accurate clothing simulation.
+
+
+## November 2, 2026 — First editable human-avatar controls (experimental)
+
+The old procedural mannequin isn't realistic enough. The experimental Human avatar editor uses a licensed adult human model to offer masculine/feminine body templates, adult age appearance, height and body-size presets, four static pose choices, left/right arm controls, rotation and 3D placement. Reset and project save/reopen are supported.
+
+These are visual controls, NOT verified garment sizing, realistic cloth simulation, children's body forms or animated walking. Appearance depends on verified body/clothing rigging and morph targets; some shapes and poses may still clip. The garment-only editor and original customer artwork remain independent.
